@@ -1,26 +1,26 @@
-import express from 'express';
+import { Router } from 'express';
+import { analyzeResume } from '../controllers/resumeController.js';
 import multer from 'multer';
-import { reviewResume } from '../controllers/resumeController.js';
 
-const router = express.Router();
+const router = Router();
 
-// Configure multer with memory storage
-const storage = multer.memoryStorage();
+// Configure multer for memory storage (store as buffer)
 const upload = multer({
-    storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-    fileFilter: (req, file, cb) => {
-        // Accept only PDF and DOCX files
-        if (file.mimetype === 'application/pdf' || 
-                file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-            cb(null, true);
-        } else {
-            cb(new Error('Only PDF and DOCX files are allowed'), false);
-        }
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept only PDF files
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'), false);
     }
+  },
 });
 
-// Define route for resume review
-router.post('/review', upload.single('resume'), reviewResume);
+// Route for resume analysis
+router.post('/analyze', upload.single('resume'), analyzeResume);
 
 export default router;

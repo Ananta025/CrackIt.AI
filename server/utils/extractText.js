@@ -1,77 +1,49 @@
-// import pdf from 'pdf-parse';
-import mammoth from 'mammoth';
 import { promises as fs } from 'fs';
-import path from 'path';
+import pdf from 'pdf-parse';
 
 /**
- * Extract text content from various file formats
- * @param {Object} file - File object from multer middleware
- * @returns {Promise<string>} - Extracted text content
+ * Extract text from a PDF file or buffer
+ * @param {string|Buffer} input - Path to the PDF file or PDF buffer
+ * @returns {Promise<string>} - The extracted text content
  */
-async function extractText(file) {
+export async function extractTextFromPDF(input) {
     try {
-        const filePath = file.path;
-        const fileExtension = path.extname(file.originalname).toLowerCase();
-
-        switch (fileExtension) {
-            case '.pdf':
-                return await extractFromPDF(filePath);
-            case '.docx':
-                return await extractFromDOCX(filePath);
-            case '.txt':
-                return await extractFromTXT(filePath);
-            default:
-                throw new Error(`Unsupported file format: ${fileExtension}`);
+        // Check if input is a buffer or a file path
+        let dataBuffer;
+        if (Buffer.isBuffer(input)) {
+            dataBuffer = input;
+        } else {
+            // Read the PDF file as buffer if input is a file path
+            dataBuffer = await fs.readFile(input);
         }
-    } catch (error) {
-        console.error('Text extraction error:', error);
-        throw new Error(`Failed to extract text: ${error.message}`);
-    }
-}
-
-/**
- * Extract text from PDF files
- * @param {string} filePath - Path to the PDF file
- * @returns {Promise<string>} - Extracted text
- */
-async function extractFromPDF(filePath) {
-    try {
-        const dataBuffer = await fs.readFile(filePath);
-        // Dynamically import pdf-parse to avoid loading test files at startup
-        const pdfParse = await import('pdf-parse');
-        const data = await pdfParse.default(dataBuffer);
+        // Use pdf-parse to extract text
+        const data = await pdf(dataBuffer);
+        // Return the text content
         return data.text;
     } catch (error) {
-        throw new Error(`PDF extraction error: ${error.message}`);
+        console.error('Error extracting text from PDF:', error);
+        throw error;
     }
-}
+} 
 
 /**
- * Extract text from DOCX files
- * @param {string} filePath - Path to the DOCX file
- * @returns {Promise<string>} - Extracted text
+ * Extract text from PDF with additional options
+ * @param {string|Buffer} input - Path to the PDF file or PDF buffer
+ * @param {Object} options - Options for pdf-parse
+ * @returns {Promise<Object>} - The parsed PDF data
  */
-async function extractFromDOCX(filePath) {
+export async function extractPDFWithOptions(input, options = {}) {
     try {
-        const result = await mammoth.extractRawText({ path: filePath });
-        return result.value;
+        let dataBuffer;
+        if (Buffer.isBuffer(input)) {
+            dataBuffer = input;
+        } else {
+            dataBuffer = await fs.readFile(input);
+        }
+        const data = await pdf(dataBuffer, options);
+        return data;
     } catch (error) {
-        throw new Error(`DOCX extraction error: ${error.message}`);
+        console.error('Error processing PDF with options:', error);
+        throw error;
     }
 }
-
-/**
- * Extract text from plain text files
- * @param {string} filePath - Path to the text file
- * @returns {Promise<string>} - File content
- */
-async function extractFromTXT(filePath) {
-    try {
-        const content = await fs.readFile(filePath, 'utf8');
-        return content;
-    } catch (error) {
-        throw new Error(`Text file reading error: ${error.message}`);
-    }
-}
-
-export default extractText;

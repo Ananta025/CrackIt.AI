@@ -1,107 +1,89 @@
 import { GoogleGenAI } from "@google/genai";
-import { promises as fs } from 'fs';
-import path from 'path';
+import dotenv from "dotenv";
+import { extractTextFromPDF } from "../utils/extractText.js";
+dotenv.config();
 
-export default class ResumeService {
-    constructor(apiKey) {
-        this.ai = new GoogleGenAI({ apiKey });
-        this.model = this.ai.getGenerativeModel({ model: "gemini-2.0-flash" });
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+/**
+ * Analyze resume text and generate improvement suggestions
+ * @param {string} resumeText - Extracted text from resume
+ * @returns {Promise<Object>} - Structured analysis results
+ */
+export async function analyzeResume(resumeText) {
+  try {
+    const prompt = `
+    You are an expert resume reviewer and ATS specialist. Please analyze the following resume and provide 
+    detailed feedback in JSON format with the following categories:
+
+    1. ATS Compatibility: Analyze how well the resume would pass through Applicant Tracking Systems
+    2. Buzzwords: Identify missing industry keywords and suggest relevant ones to add
+    3. Structure: Review the resume structure and organization
+    4. Content Analysis: Review specific sections for improvements
+    5. Missing Sections: Identify any important sections that should be added
+    6. Overall Suggestions: Provide 3-5 key improvements
+
+    The response should be ONLY valid JSON in the following format:
+    {
+      "atsCompatibility": {
+        "score": (number between 1-10),
+        "issues": [],
+        "suggestions": []
+      },
+      "buzzwords": {
+        "present": [],
+        "missing": [],
+        "suggestions": []
+      },
+      "structure": {
+        "assessment": "",
+        "suggestions": []
+      },
+      "contentAnalysis": {
+        "strengths": [],
+        "weaknesses": [],
+        "suggestions": []
+      },
+      "missingSections": [],
+      "overallSuggestions": []
     }
 
-    /**
-     * Analyze resume and extract key information
-     * @param {string} resumeText - The text content of the resume
-     * @returns {Promise<Object>} - Structured resume data
-     */
-    async analyzeResume(resumeText) {
-        try {
-            const prompt = `Analyze the following resume and extract key information using this JSON schema:
-            
-            ResumeData = {
-                'personalInfo': {
-                    'name': string,
-                    'email': string,
-                    'phone': string,
-                    'location': string
-                },
-                'skills': Array<string>,
-                'workExperience': Array<{
-                    'company': string,
-                    'position': string,
-                    'duration': string,
-                    'description': Array<string>
-                }>,
-                'education': Array<{
-                    'institution': string,
-                    'degree': string,
-                    'year': string
-                }>
-            }
-            
-            Resume content:
-            ${resumeText}
-            
-            Return only valid JSON without explanations.`;
+    Resume text:
+    ${resumeText}
+    `;
 
-            const response = await this.model.generateContent(prompt);
-            const result = response.response.text();
-            return JSON.parse(result);
-        } catch (error) {
-            console.error("Error analyzing resume:", error);
-            throw error;
-        }
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: prompt,
+    });
+    
+    const responseText = response.text;
+    
+    // Extract JSON from response - handling potential text before/after the JSON
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Failed to parse JSON response');
     }
+    
+    return JSON.parse(jsonMatch[0]);
+  } catch (error) {
+    console.error('Error analyzing resume:', error);
+    throw new Error('Failed to analyze resume');
+  }
+}
 
-    /**
-     * Generate improvement suggestions for a resume
-     * @param {string} resumeText - The text content of the resume
-     * @returns {Promise<Array<string>>} - List of suggestions
-     */
-    async getSuggestions(resumeText) {
-        try {
-            const prompt = `Review the following resume and provide 5 specific improvement suggestions:
-            
-            ${resumeText}
-            
-            Return an array of suggestions in JSON format.`;
-
-            const response = await this.model.generateContent(prompt);
-            const result = response.response.text();
-            return JSON.parse(result);
-        } catch (error) {
-            console.error("Error getting resume suggestions:", error);
-            throw error;
-        }
-    }
-
-    /**
-     * Match resume with job description
-     * @param {string} resumeText - The text content of the resume
-     * @param {string} jobDescription - The job description
-     * @returns {Promise<Object>} - Match analysis
-     */
-    async matchWithJob(resumeText, jobDescription) {
-        try {
-            const prompt = `Compare this resume with the job description and analyze the match:
-            
-            Resume:
-            ${resumeText}
-            
-            Job Description:
-            ${jobDescription}
-            
-            Return JSON with:
-            1. Match percentage (0-100)
-            2. List of matching skills
-            3. List of missing skills
-            4. Overall assessment`;
-
-            const response = await this.model.generateContent(prompt);
-            const result = response.response.text();
-            return JSON.parse(result);
-        } catch (error) {
-            console.error("Error matching resume with job:", error);
-            throw error;
-        }
-    }
+/**
+ * Process a resume file and provide analysis
+ * @param {Buffer} pdfBuffer - PDF file buffer
+ * @returns {Promise<Object>} - Analysis results
+ */
+export async function processResumeFile(pdfBuffer) {
+  try {
+    const resumeText = await extractTextFromPDF(pdfBuffer);
+    return await analyzeResume(resumeText);
+  } catch (error) {
+    console.error('Error processing resume:', error);
+    throw new Error('Failed to process resume');
+  }
 }
