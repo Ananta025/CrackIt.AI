@@ -1,10 +1,16 @@
 import React from 'react'
+import Footer from '../components/common/Footer'
+import Navbar from '../components/common/Navbar'
+import CrackItAIBenefits from '../components/common/CrackItAIBenefits'
 
 export default function LearningPage() {
   return (
     <div>
-      This is the Learning Page
-      <p>Here you can find resources to improve your skills.</p>
+      <Navbar />
+      
+      
+      <CrackItAIBenefits />
+      <Footer />
     </div>
   )
 }
