@@ -1,10 +1,10 @@
 import React from 'react'
-import HeroScetion from '../components/landing_page/HeroScetion'
+import HeroSection from '../components/landing_page/HeroSection'
 
 export default function LandingPage() {
   return (
     <div>
-      <HeroScetion />
+      <HeroSection />
     </div>
   )
 }

@@ -1,38 +1,35 @@
 import React from 'react'
+import './HeroSection.css'
 
-export default function HeroScetion() {
+
+export default function HeroSection() {
   return (
-    <div class="hero">
-        <navbar>
-            <div class="navbar-compo">
-                <div class="logo">
+    <div className="hero">
+        <nav>
+            <div className="navbar-compo">
+                <div className="logo">
                     <a href="#">CrackIT.Ai</a>
                 </div>
-                <div class="link-list">
+                <div className="link-list">
                     <a href="#">Home</a>
                     <a href="#">About Us</a>
                     <a href="#">Services</a>
                     <a href="#">Contact Us</a>
                 </div>
             </div>
-        </navbar>
-
-
-
-        
-
-         <div class="hero-txt">
+        </nav>
+         <div className="hero-txt">
             <p id="hero-main-txt">Crack Your Next <br/><span id="interview">Interview</span> with<br/>Confidence 
             </p>
             <p id="hero-sub-txt"> Powered by<span id="ai-txt">AI</span><img src="./images/AI star.png" alt="Ai logo"/>
             </p>
          </div>
 
-          <div class="hero-img">
+          <div className="hero-img">
             <img src="./images/Group 36.png" alt="hero section image"/>
           </div>
-          <div class="get-started-btn">
-            <a href="#" id="get-started">Get Started</a>
+          <div className="get-started-btn">
+            <a href="/signup" id="get-started">Get Started</a>
           </div>
     </div>
   )

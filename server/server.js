@@ -5,6 +5,8 @@ dotenv.config();
 import userRoute from './routes/userRoute.js';
 import connectDB from './config/database.js';
 import resumeRoute from './routes/resumeRoute.js';
+import interviewRoute from './routes/interviewRoute.js';
+import { cookie } from 'express-validator';
 
 const app = express();
 const PORT = process.env.PORT;
@@ -13,6 +15,7 @@ const PORT = process.env.PORT;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookie());
 
 app.get("/",(req,res)=>{
     res.send("Server is running");
@@ -20,6 +23,7 @@ app.get("/",(req,res)=>{
 
 app.use("/api/user", userRoute);
 app.use("/api/resume", resumeRoute);
+app.use("/api/interview", interviewRoute);
 
 
 

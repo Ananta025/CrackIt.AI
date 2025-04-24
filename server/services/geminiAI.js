@@ -470,3 +470,7 @@ class GeminiAIServices {
     return allTips;
   }
 }
+
+// Add this at the bottom of the file
+const aiService = new GeminiAIServices();
+export default aiService;
