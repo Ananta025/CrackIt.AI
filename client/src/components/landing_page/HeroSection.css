@@ -1,0 +1,139 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body{
+    font-family: "Barlow", sans-serif;
+}
+
+.hero{
+    height: 100vh;
+    width: 100%;
+    display: grid;
+    grid-template-columns:1fr 1fr;
+    grid-template-rows: 10vh 70vh 20vh;
+}
+
+navbar{
+    grid-area: 1/1/2/3;
+}
+
+.navbar-compo{
+    display:grid;
+    grid-template-columns: 0.75fr 2.5fr 0.75fr;
+    grid-template-rows: 1fr;
+    height: 100%;
+    width: 100%;
+    margin-top: 5px;
+}
+.logo{
+    grid-area: 1/1/2/2;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+}
+.logo>a{
+    text-decoration: none;
+    color: white;
+    padding-left: 3rem;
+    font-size: 1.5rem;
+}
+.link-list{
+    grid-area: 1/2/2/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap:4rem;
+}
+.link-list>a{
+    text-decoration: none;
+    color: white;
+    font-size: 18px;
+    font-weight: 500;
+}
+.link-list>a:hover{
+    color: #77F663;
+}
+
+.hero-txt{
+    grid-area: 2/1/3/2;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: start;
+    justify-content: center;
+    padding-left: 90px;
+    color: white;
+    font-family: "Sarpanch", sans-serif;
+
+}
+#hero-main-txt
+{
+    font-size: 3.8rem;
+    
+}
+#interview{
+    color:#77F663;
+}
+#hero-sub-txt{
+    font-family: "Roboto", sans-serif;
+    margin-top: 2rem;
+    font-size: 25px;
+    display: flex;
+    flex-direction: row;
+    gap:8px;
+    align-items: center;
+    justify-content: center;
+}
+#hero-sub-txt>img{
+    height: 25px;
+    width: 25px;
+    margin-bottom: 2rem;
+}
+#ai-txt{
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.hero-img{
+    grid-area: 2/2/3/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.hero-img>img{
+    height: 460px;
+    padding-top: 2rem;
+    object-fit: contain;
+}
+
+.get-started-btn{
+    grid-area: 3/1/4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#get-started{
+    text-decoration: none;
+    color: white;
+    border: 2px solid #77F663;
+    border-radius: 15px;
+    padding: 0.75rem 2rem 0.75rem 2rem;
+    font-size: 1.5rem;
+}
+#get-started:hover{
+    color: #77F663;
+    border: 2px solid #ffffff;
+}
+
+
+
+.hero{
+    grid-area: 1/1/4/3;
+    z-index: -1;
+    background-image: url("../images/design\ 5\ \(1\).svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+}

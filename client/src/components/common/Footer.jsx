@@ -8,8 +8,8 @@ export default function Footer() {
           <div className="flex flex-col lg:flex-row justify-between">
             <div className="mb-8 lg:mb-0 lg:w-2/5 pl-2 lg:pl-4">
               <div className="flex items-center mb-5">
-                <div className="w-8 h-8 mr-2 bg-blue-500 rounded-full flex items-center justify-center">
-                  <i className="fa-solid fa-rocket text-lg text-white"></i>
+                <div className="w-7 h-7 mr-2 border-1 rounded-full flex items-center justify-center">
+                  <i className="fa-brands fa-airbnb text-md text-white"></i>
                 </div>
                 <h2 className="text-2xl font-bold text-white tracking-wide">CrackIt.AI</h2>
               </div>

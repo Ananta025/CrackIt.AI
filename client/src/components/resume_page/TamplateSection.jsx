@@ -103,11 +103,11 @@ export default function TamplateSection() {
   }, []);
   
   return (
-    <div className="bg-gray-50 py-12 px-3 sm:px-4 lg:px-2">
+    <div className="bg-gray-50 py-12">
       {/* Inject custom scrollbar hiding CSS */}
       <style>{hideScrollbarCSS}</style>
       
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full">
         {/* Heading */}
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900 sm:text-4xl">
@@ -124,7 +124,7 @@ export default function TamplateSection() {
           {showLeftArrow && (
             <button 
               onClick={scrollLeft}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 rounded-full p-2 shadow-md hover:bg-white transition-colors hidden md:block"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 rounded-full p-2 shadow-md hover:bg-white transition-colors hidden md:block"
               aria-label="Scroll left"
             >
               <ChevronLeft size={24} className="text-gray-800" />
@@ -134,28 +134,29 @@ export default function TamplateSection() {
           {/* Templates container */}
           <div 
             ref={carouselRef}
-            className="flex overflow-x-auto hide-scrollbar snap-x py-3"
+            className="flex overflow-x-auto hide-scrollbar snap-x py-4 gap-5"
             onScroll={handleScroll}
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
             style={{ 
               scrollbarWidth: 'none', 
               msOverflowStyle: 'none',
-              scrollBehavior: 'smooth' // Add smooth scrolling behavior
+              scrollBehavior: 'smooth',
+              paddingLeft: '1rem',
+              paddingRight: '1rem'
             }}
           >
             {templates.map(template => (
-              <div key={template.id} className="snap-start flex-shrink-0 px-1 first:pl-2 last:pr-2">
+              <div key={template.id} className="snap-start flex-shrink-0 first:ml-0 last:mr-0">
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  whileHover={{ scale: 1.02 }}
-                  className="w-[400px] h-[450px] group bg-white rounded-lg shadow-md overflow-hidden flex flex-col relative flex-none transition-shadow duration-300 hover:shadow-lg"
+                  className="w-[380px] h-[450px] group bg-white rounded-lg shadow-md overflow-hidden flex flex-col relative flex-none transition-all duration-300 hover:shadow-lg"
                   style={{ 
-                    minWidth: '400px',
-                    transform: 'translate3d(0,0,0)', // Force GPU acceleration
-                    backfaceVisibility: 'hidden' // Prevent flickering
+                    minWidth: '380px',
+                    transform: 'translate3d(0,0,0)',
+                    backfaceVisibility: 'hidden'
                   }}
                 >
                   <div className={`h-full w-full overflow-hidden ${imageErrors[template.id] ? template.color : 'bg-gray-200'}`}>
@@ -163,7 +164,7 @@ export default function TamplateSection() {
                       <img 
                         src={template.image} 
                         alt={`${template.title} template`} 
-                        className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-102"
                         onError={() => handleImageError(template.id)}
                       />
                     )}
@@ -173,10 +174,10 @@ export default function TamplateSection() {
                       </div>
                     )}
                     
-                    {/* Hover overlay with button - reduced opacity */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <p className="text-white text-xl font-medium mb-3">{template.title}</p>
-                      <button className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium">
+                    {/* Hover overlay with button - improved visibility */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <p className="text-white text-xl font-bold mb-3 transform translate-y-4 group-hover:translate-y-0 transition-transform">{template.title}</p>
+                      <button className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-all text-lg font-medium transform scale-90 opacity-0 group-hover:scale-100 group-hover:opacity-100 shadow-lg">
                         Use Template
                       </button>
                     </div>
@@ -190,7 +191,7 @@ export default function TamplateSection() {
           {showRightArrow && (
             <button 
               onClick={scrollRight}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 rounded-full p-2 shadow-md hover:bg-white transition-colors hidden md:block"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 rounded-full p-2 shadow-md hover:bg-white transition-colors hidden md:block"
               aria-label="Scroll right"
             >
               <ChevronRight size={24} className="text-gray-800" />

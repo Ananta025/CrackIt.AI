@@ -1,9 +1,10 @@
 import React from 'react'
+import HeroScetion from '../components/landing_page/HeroScetion'
 
 export default function LandingPage() {
   return (
     <div>
-      This is the Landing Page
+      <HeroScetion />
     </div>
   )
 }
