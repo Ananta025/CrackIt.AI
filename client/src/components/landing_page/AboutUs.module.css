@@ -1,0 +1,32 @@
+.about-us{
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    background-image: url("../images/background.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+}
+.text{
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    text-align: start;
+    margin-top: 100px;
+    padding-right: 120px;
+    padding-left: 90px;
+}
+.heading{
+    color: white;
+    font-size: 3.2rem;
+    margin-bottom: 4rem;
+    font-family: "Roboto", sans-serif;
+}
+.body-text{
+    font-size: 22px;
+    text-align:justify;
+    font-family: "Barlow", sans-serif;
+    color: rgb(199, 199, 199);
+}

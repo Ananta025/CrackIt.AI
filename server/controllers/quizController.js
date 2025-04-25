@@ -1,4 +1,3 @@
-import e from "express";
 import getClaudeResponse from "../services/claudeService";
 
 const getExplanation = async (req, res) => {

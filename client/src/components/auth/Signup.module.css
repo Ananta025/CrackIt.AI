@@ -1,14 +1,4 @@
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-body{
-    height: 100vh;
-}
-
 /* sign up whole page div */
-
 .sign-up{
     height: 100vh;
     color: white;
@@ -20,7 +10,6 @@ body{
     background-position: center;
     background-size:cover;
 }
-
 
 /* sign up animated card div */
 .sign-up-card{
@@ -48,7 +37,6 @@ body{
    
 }
 
-
 /* sign up form div */
 .sign-up-form{
     grid-area: 1/2/2/3;
@@ -66,20 +54,20 @@ body{
     justify-content: center;
 }
 
-#main-txt{
+.main-txt{
     font-size: 3.2rem;
-    
+    color: white;
 }
-#sub-txt{
+.sub-txt{
     margin-top: 1rem;
     font-size: 18px;
 }
-#sub-txt>a{
+.sub-txt>a{
     text-decoration: none;
     color: #40b644;
     font-weight: 600;
 }
-#sub-txt>a:hover{
+.sub-txt>a:hover{
     color: #74e978;
 }
 
@@ -110,9 +98,6 @@ input{
     border-radius:7px;
 }
 
-.name{
-    width:223px;
-}
 button{
     padding: 1.1rem;
     border-radius:10px;
@@ -125,4 +110,28 @@ button{
 }
 button:hover{
     background-color:#147E17;
+}
+
+/* Add error styling */
+.error {
+    color: #ff3333;
+    background-color: rgba(255, 51, 51, 0.1);
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 16px;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+/* Style for disabled button */
+button:disabled {
+    background-color: #7c7c7c;
+    cursor: not-allowed;
+}
+
+/* Make sure name input has proper styling */
+.name {
+    /* Inherits general input styling */
+    width: 100%;
 }

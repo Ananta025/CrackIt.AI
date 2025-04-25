@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import chatbotService from '../../services/chatbotService';
-import './ChatbotWidget.css';
+import styles from './ChatbotWidget.module.css';
 import DOMPurify from 'dompurify';
 
 const ChatbotWidget = () => {
@@ -130,19 +130,19 @@ const ChatbotWidget = () => {
 
   // Determine button animation classes
   const buttonClasses = [
-    "chatbot-toggle-button",
-    showInitialAnimation ? "chatbot-entry-animation" : "",
-    showInitialAnimation ? "chatbot-pulse" : ""
+    styles["chatbot-toggle-button"],
+    showInitialAnimation ? styles["chatbot-entry-animation"] : "",
+    showInitialAnimation ? styles["chatbot-pulse"] : ""
   ].filter(Boolean).join(" ");
 
   // Determine chat window animation classes
   const windowClasses = [
-    "chatbot-window",
-    isClosing ? "animate-fade-out-down" : "animate-fade-in-up"
+    styles["chatbot-window"],
+    isClosing ? styles["animate-fade-out-down"] : styles["animate-fade-in-up"]
   ].filter(Boolean).join(" ");
 
   return (
-    <div className="chatbot-widget">
+    <div className={styles["chatbot-widget"]}>
       {/* Chat Button */}
       <button
         onClick={toggleChat}
@@ -150,11 +150,11 @@ const ChatbotWidget = () => {
         aria-label="Open chat"
       >
         {isOpen ? (
-          <svg xmlns="http://www.w3.org/2000/svg" className="chatbot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" className={styles["chatbot-icon"]} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M6 18L18 6M6 6l12 12" />
           </svg>
         ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" className="chatbot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" className={styles["chatbot-icon"]} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
           </svg>
         )}
@@ -164,58 +164,58 @@ const ChatbotWidget = () => {
       {(isOpen || isClosing) && (
         <div className={windowClasses} ref={chatWindowRef}>
           {/* Chat Header */}
-          <div className="chatbot-header">
-            <div className="chatbot-title">
-              <div className="chatbot-avatar">
-                <svg xmlns="http://www.w3.org/2000/svg" className="chatbot-avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <div className={styles["chatbot-header"]}>
+            <div className={styles["chatbot-title"]}>
+              <div className={styles["chatbot-avatar"]}>
+                <svg xmlns="http://www.w3.org/2000/svg" className={styles["chatbot-avatar-icon"]} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <span className="chatbot-title-text">Your Assistant</span>
+              <span className={styles["chatbot-title-text"]}>Your Assistant</span>
             </div>
             <button 
               onClick={toggleChat}
-              className="chatbot-close-button"
+              className={styles["chatbot-close-button"]}
               aria-label="Close chat"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="chatbot-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" className={styles["chatbot-close-icon"]} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
           {/* Messages Container */}
-          <div className="chatbot-messages">
+          <div className={styles["chatbot-messages"]}>
             {messages.map(message => (
               <div 
                 key={message.id} 
-                className={`chatbot-message ${message.sender === 'user' ? 'chatbot-message-user' : 'chatbot-message-bot'} ${message.error ? 'chatbot-message-error' : ''} ${message.isNew ? 'chatbot-message-new' : ''}`}
+                className={`${styles["chatbot-message"]} ${message.sender === 'user' ? styles["chatbot-message-user"] : styles["chatbot-message-bot"]} ${message.error ? styles["chatbot-message-error"] : ''} ${message.isNew ? styles["chatbot-message-new"] : ''}`}
               >
-                <div className="chatbot-message-bubble">
+                <div className={styles["chatbot-message-bubble"]}>
                   {message.text}
                 </div>
               </div>
             ))}
             {isLoading && (
-              <div className="chatbot-typing-indicator">
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
+              <div className={styles["chatbot-typing-indicator"]}>
+                <div className={styles["typing-dot"]}></div>
+                <div className={styles["typing-dot"]}></div>
+                <div className={styles["typing-dot"]}></div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
           {/* Input Area */}
-          <div className="chatbot-input-area">
+          <div className={styles["chatbot-input-area"]}>
             {error && !isLoading && (
-              <div className="chatbot-error-message">
+              <div className={styles["chatbot-error-message"]}>
                 {error}
               </div>
             )}
-            <div className="chatbot-input-container">
+            <div className={styles["chatbot-input-container"]}>
               <textarea
-                className="chatbot-input"
+                className={styles["chatbot-input"]}
                 placeholder="Type your message..."
                 rows="1"
                 value={inputMessage}
@@ -224,12 +224,12 @@ const ChatbotWidget = () => {
                 disabled={isLoading}
               ></textarea>
               <button 
-                className={`chatbot-send-button ${isLoading ? 'chatbot-disabled' : ''}`}
+                className={`${styles["chatbot-send-button"]} ${isLoading ? styles["chatbot-disabled"] : ''}`}
                 onClick={handleSendMessage}
                 disabled={isLoading}
                 aria-label="Send message"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="chatbot-send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" className={styles["chatbot-send-icon"]} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
               </button>

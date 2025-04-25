@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import styles from './Navbar.module.css';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -15,26 +16,22 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50 py-2">
-      <div className="max-w-8xl mx-auto px-12 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
+    <nav className={styles.navbar}>
+      <div className={styles.container}>
+        <div className={styles.navWrapper}>
           {/* Brand Logo/Title */}
-          <NavLink to="/" className="text-xl font-bold text-blue-600 hover:text-blue-800 transition-colors duration-300">
+          <NavLink to="/" className={styles.brand}>
             CrackIt.AI
           </NavLink>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className={styles.desktopNav}>
             {navLinks.map((link) => (
               <NavLink
                 key={link.path}
                 to={link.path}
                 className={({ isActive }) =>
-                  `transition-all duration-300 py-2 px-3 rounded-md hover:bg-blue-50 ${
-                    isActive
-                      ? 'text-blue-600 font-semibold'
-                      : 'text-gray-600 hover:text-blue-500'
-                  }`
+                  `${styles.navLink} ${isActive ? styles.activeLink : styles.inactiveLink}`
                 }
               >
                 {link.name}
@@ -43,38 +40,30 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 focus:outline-none p-2 rounded-md transition-all duration-200"
-              aria-expanded={isMenuOpen}
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className={styles.mobileMenuButton}
+            aria-expanded={isMenuOpen}
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </div>
 
       {/* Mobile Navigation */}
       <div
-        className={`md:hidden transition-all duration-300 ease-in-out transform ${
-          isMenuOpen 
-            ? 'max-h-96 opacity-100' 
-            : 'max-h-0 opacity-0'
-        } overflow-hidden`}
+        className={`${styles.mobileNav} ${
+          isMenuOpen ? styles.mobileNavOpen : styles.mobileNavClosed
+        }`}
       >
-        <div className="px-4 pt-2 pb-3 space-y-2">
+        <div className={styles.mobileNavContent}>
           {navLinks.map((link) => (
             <NavLink
               key={link.path}
               to={link.path}
               className={({ isActive }) =>
-                `block py-3 px-3 rounded-md transition-all duration-200 hover:bg-blue-50 ${
-                  isActive
-                    ? 'text-blue-600 font-semibold'
-                    : 'text-gray-600 hover:text-blue-500'
-                }`
+                `${styles.mobileNavLink} ${isActive ? styles.activeLink : styles.inactiveLink}`
               }
               onClick={() => setIsMenuOpen(false)}
             >

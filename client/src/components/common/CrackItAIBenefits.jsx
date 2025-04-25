@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import styles from './CrackItAIBenefits.module.css';
 
 export default function CrackItAIBenefits() {
   const beneficiaries = [
@@ -42,10 +43,10 @@ export default function CrackItAIBenefits() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-16">
-      <div className="text-center mb-12">
-        <p className="text-sm font-medium text-blue-600 uppercase mb-2">OUR USERS</p>
-        <h2 className="text-4xl font-bold text-navy-800">Who can benefit from CrackIt.AI?</h2>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <p className={styles.tagline}>OUR USERS</p>
+        <h2 className={styles.title}>Who can benefit from CrackIt.AI?</h2>
       </div>
 
       <motion.div 
@@ -53,22 +54,22 @@ export default function CrackItAIBenefits() {
         initial="hidden"
         animate={inView ? "visible" : "hidden"}
         variants={fadeInUp}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+        className={styles.grid}
       >
         {beneficiaries.map((item, index) => (
           <div 
             key={index} 
-            className="shadow-lg rounded-lg p-6 md:p-8 flex flex-col items-center text-center hover:shadow-xl transition-all duration-300 bg-white w-full sm:min-w-[280px]"
+            className={styles.card}
           >
-            <div className="mb-6 transition-all duration-300 hover:scale-95 overflow-hidden w-full">
+            <div className={styles.imageContainer}>
               <img 
                 src={item.image} 
                 alt={item.title} 
-                className="h-56 md:h-64 w-auto object-contain transition-transform duration-300 mx-auto"
+                className={styles.image}
               />
             </div>
-            <h3 className="text-xl font-bold text-navy-800 mb-4">{item.title}</h3>
-            <p className="text-gray-600">{item.description}</p>
+            <h3 className={styles.cardTitle}>{item.title}</h3>
+            <p className={styles.cardDescription}>{item.description}</p>
           </div>
         ))}
       </motion.div>
