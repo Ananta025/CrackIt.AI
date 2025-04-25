@@ -1,0 +1,132 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    height: 100vh;
+}
+
+/* whole signin div */
+.sign-in{
+    height: 100vh;
+    color: white;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    font-family: "Roboto", sans-serif;
+    background-image: url("../images/signin-2.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size:cover;
+}
+
+/* animated card div */
+.sign-in-card{
+    grid-area: 1/1/2/2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100%;
+}
+.card{
+    height: 630px;
+    width:560px;
+    border-radius: 75px;
+    background: rgba(255, 255, 255, 0.626);
+}
+.card{
+    border-top: 3px solid #f1b6fb;
+    border-bottom: 3px solid #f3b5fd;
+  }
+
+.sign-in-card>img{
+    height: 90%;
+    object-fit: contain;
+   
+}
+
+/* sign in form div */
+
+.sign-in-form{
+    grid-area: 1/2/2/3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 100px;
+    margin-top: 80px;
+}
+
+.form-head-txt{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#main-txt{
+    font-size: 3.2rem;
+    
+}
+#sub-txt{
+    margin-top: 1rem;
+    font-size: 18px;
+    color: rgb(150, 150, 150);
+}
+
+
+form{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 30px;
+    height:400px;
+    width: 480px;
+    margin-top: 2rem;
+    
+}
+::placeholder{
+    color:#B9B6BE;
+}
+
+input{
+    padding: 1.2rem;
+    font-size: 18px;
+    color: white;
+    background-color: #56535F;
+    border: 1px solid #BDBDBD;
+    border-radius:7px;
+}
+
+.link{
+    text-decoration: none;
+    font-weight: 600;
+    color: rgb(200, 200, 200);
+}
+.forgot-password>a:hover{
+    color: #73dd77;
+}
+
+button{
+    padding: 1.1rem;
+    border-radius:10px;
+    border: none;
+    font-size: 20px;
+    margin-top: 2rem;
+    color: white;
+    background-color:#189d1c;
+    cursor: pointer;
+}
+button:hover{
+    background-color:#147E17;
+}
+
+.sign-up{
+    text-decoration: none;
+    color: #40b644;
+    font-weight: 600;
+}
+.sign-up:hover{
+    color: #87ea8a;
+}

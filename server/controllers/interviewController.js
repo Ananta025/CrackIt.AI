@@ -1,4 +1,5 @@
-import Interview from "../models/interviewModel";
+import Interview from "../models/interviewModel.js";
+import aiService from "../services/geminiAI.js";
 
 const startInterview = async (req, res) => {
   const { user, type, settings } = req.body;
@@ -50,6 +51,7 @@ const sendMessage = async (req, res) => {
       return res.status(400).json({ message: "Interview ID is required" });
     }
 
+    // Use the authenticated user ID from the middleware
     const interview = await Interview.findOne({
       _id: interviewId,
       user: req.user._id,
@@ -62,12 +64,14 @@ const sendMessage = async (req, res) => {
       return res.status(400).json({ message: "Interview is not in progress" });
     }
 
+    // Fix parameter order: message, interview.type, interview
     const aiResponse = await aiService.processUserResponse(
       message,
-      interview,
-      type
+      interview.type,  // Pass interview type first
+      interview        // Pass full interview object as the data
     );
 
+    // Rest of the function remains the same
     if (!aiResponse) {
       return res.status(500).json({ message: "Error processing AI response" });
     }
@@ -152,7 +156,7 @@ const getInterviewById = async (req, res) => {
       return res.status(404).json({ message: "Interview not found" });
     }
 
-    response.json({ interview });
+    res.json({ interview });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -279,9 +283,9 @@ const formatSkillName = (skill) => {
     return skillMap[skill] || skill;
 };
 
-export default {
+export {
   startInterview,
   sendMessage,
   getInterviewHistory,
-  getInterviewById,
+  getInterviewById
 };

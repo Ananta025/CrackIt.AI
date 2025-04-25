@@ -15,7 +15,7 @@ body{
     grid-template-rows: 10vh 70vh 20vh;
 }
 
-navbar{
+nav{
     grid-area: 1/1/2/3;
 }
 

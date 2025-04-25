@@ -1,0 +1,128 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body{
+    height: 100vh;
+}
+
+/* sign up whole page div */
+
+.sign-up{
+    height: 100vh;
+    color: white;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    font-family: "Roboto", sans-serif;
+    background-image: url("../images/signup-2.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size:cover;
+}
+
+
+/* sign up animated card div */
+.sign-up-card{
+    grid-area: 1/1/2/2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100%;
+}
+.card{
+    height: 630px;
+    width:530px;
+    border-radius: 75px;
+    background: rgba(255, 255, 255, 0.626);
+}
+.card{
+    border-top: 2px solid #D2EAFF;
+    border-bottom: 2px solid #D2EAFF;
+  }
+
+.sign-up-card>img{
+    height: 100%;
+    object-fit: contain;
+   
+}
+
+
+/* sign up form div */
+.sign-up-form{
+    grid-area: 1/2/2/3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 200px;
+    margin-top: 100px;
+}
+
+.form-head-txt{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#main-txt{
+    font-size: 3.2rem;
+    
+}
+#sub-txt{
+    margin-top: 1rem;
+    font-size: 18px;
+}
+#sub-txt>a{
+    text-decoration: none;
+    color: #40b644;
+    font-weight: 600;
+}
+#sub-txt>a:hover{
+    color: #74e978;
+}
+
+form{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 25px;
+    height:400px;
+    width: 480px;
+    margin-top: 2rem;
+    
+}
+::placeholder{
+    color:#B9B6BE;
+}
+.fullname{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+input{
+    padding: 1.2rem;
+    font-size: 18px;
+    color: white;
+    background-color: #56535F;
+    border: 1px solid #BDBDBD;
+    border-radius:7px;
+}
+
+.name{
+    width:223px;
+}
+button{
+    padding: 1.1rem;
+    border-radius:10px;
+    border: none;
+    font-size: 20px;
+    margin-top: 2rem;
+    color: white;
+    background-color:#189d1c;
+    cursor: pointer;
+}
+button:hover{
+    background-color:#147E17;
+}
