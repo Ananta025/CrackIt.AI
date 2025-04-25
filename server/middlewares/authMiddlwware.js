@@ -22,4 +22,35 @@ const authenticateUser = async (req, res, next) => {
     }
 }
 
-export default authenticateUser;
+const AIError = async (err, req, res, next) => {
+    console.error('Error:', err);
+  
+    // Default error status and message
+    const status = err.statusCode || 500;
+    const message = err.message || 'Internal Server Error';
+  
+    // Custom error response based on error type
+    if (err.name === 'ScrapingError') {
+      return res.status(400).json({
+        error: message,
+        type: 'ScrapingError',
+        details: err.details || {}
+      });
+    }
+  
+    if (err.name === 'AIServiceError') {
+      return res.status(503).json({
+        error: message,
+        type: 'AIServiceError',
+        details: err.details || {}
+      });
+    }
+  
+    // Default error response
+    return res.status(status).json({
+      error: message,
+      type: err.name || 'GeneralError'
+    });
+  };
+
+export default {authenticateUser, AIError};
