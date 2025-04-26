@@ -1,12 +1,21 @@
 import express from 'express';
-import { startInterview, sendMessage, getInterviewHistory, getInterviewById } from '../controllers/interviewController.js';
-import  authenticateUser from '../middlewares/authMiddlwware.js'
+import { 
+  startInterview,
+  sendMessage,
+  getInterviewHistory,
+  getInterviewById
+} from '../controllers/interviewController.js';
+import authMiddleware from '../middlewares/authMiddlwware.js';
 
 const router = express.Router();
 
-router.post('/start', authenticateUser, startInterview); 
-router.post('/message', authenticateUser, sendMessage);
-router.get('/history', authenticateUser, getInterviewHistory);
-router.get('/:id', authenticateUser, getInterviewById);
+// Fix: Correctly reference the authenticateUser function from the middleware object
+router.use(authMiddleware.authenticateUser);
+
+// Route handlers
+router.post('/start', startInterview);
+router.post('/message', sendMessage);
+router.get('/history', getInterviewHistory);
+router.get('/:id', getInterviewById);
 
 export default router;

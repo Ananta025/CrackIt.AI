@@ -1,7 +1,6 @@
 import React from 'react'
 import styles from './HeroSection.module.css'
 
-
 export default function HeroSection() {
   return (
     <div className={styles.hero}>
@@ -21,12 +20,17 @@ export default function HeroSection() {
          <div className={styles['hero-txt']}>
             <p className={styles['hero-main-txt']}>Crack Your Next <br/><span className={styles.interview}>Interview</span> with<br/>Confidence 
             </p>
-            <p className={styles['hero-sub-txt']}> Powered by<span className={styles['ai-txt']}>AI</span><img src="./images/AI star.png" alt="Ai logo"/>
+            <p className={styles['hero-sub-txt']}> Powered by<span className={styles['ai-txt']}>AI</span>
+              <img src="./images/AI star.png" alt="AI logo" loading="lazy"/>
             </p>
          </div>
 
           <div className={styles['hero-img']}>
-            <img src="./images/Group 36.png" alt="hero section image"/>
+            <img 
+              src="./images/Group 36.png" 
+              alt="Interview preparation illustration" 
+              loading="lazy"
+            />
           </div>
           <div className={styles['get-started-btn']}>
             <a href="/signup" className={styles['get-started']}>Get Started</a>

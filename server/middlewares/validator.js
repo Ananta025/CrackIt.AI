@@ -1,42 +1,111 @@
-import { body, validationResult } from 'express-validator';
+import { body, param, validationResult } from 'express-validator';
 
-// Helper function to validate request data
-function validateRequest(req, res, next) {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    next();
-}
-
-// Validate LinkedIn profile URL
-const validateProfileUrl = [
+/**
+ * Validate LinkedIn profile URL
+ */
+export const validateProfileUrl = [
   body('profileUrl')
     .notEmpty().withMessage('LinkedIn profile URL is required')
-    .isURL().withMessage('Invalid URL format')
+    .isURL().withMessage('Must be a valid URL')
     .matches(/linkedin\.com\/in\//).withMessage('Must be a valid LinkedIn profile URL'),
-  validateRequest
+  
+  validateResults
 ];
 
-// Validate manually inputted profile data
-const validateProfileData = [
-  body('profileData').notEmpty().withMessage('Profile data is required'),
-  body('profileData.name').notEmpty().withMessage('Name is required'),
-  body('profileData.headline').notEmpty().withMessage('Headline is required'),
-  body('profileData.about').notEmpty().withMessage('About section is required'),
-  validateRequest
+/**
+ * Validate manually entered LinkedIn profile data
+ */
+export const validateProfileData = [
+  body('profileData')
+    .notEmpty().withMessage('Profile data is required')
+    .isObject().withMessage('Profile data must be an object'),
+  
+  body('profileData.headline')
+    .optional()
+    .isString().withMessage('Headline must be a string')
+    .isLength({ max: 220 }).withMessage('Headline cannot exceed 220 characters'),
+  
+  body('profileData.about')
+    .optional()
+    .isString().withMessage('About section must be a string'),
+  
+  body('profileData.experience')
+    .optional()
+    .isArray().withMessage('Experience must be an array'),
+  
+  body('profileData.education')
+    .optional()
+    .isArray().withMessage('Education must be an array'),
+  
+  body('profileData.skills')
+    .optional()
+    .isArray().withMessage('Skills must be an array'),
+  
+  validateResults
 ];
 
-// Validate post data
-const validatePostData = [
-  body('postContent').notEmpty().withMessage('Post content is required'),
-  body('targetAudience').optional(),
-  body('purpose').optional(),
-  validateRequest
+/**
+ * Validate LinkedIn post optimization data
+ */
+export const validatePostData = [
+  body('postContent')
+    .notEmpty().withMessage('Post content is required')
+    .isString().withMessage('Post content must be a string')
+    .isLength({ min: 5, max: 3000 }).withMessage('Post content must be between 5 and 3000 characters'),
+  
+  body('targetAudience')
+    .optional()
+    .isString().withMessage('Target audience must be a string'),
+  
+  body('purpose')
+    .optional()
+    .isString().withMessage('Purpose must be a string'),
+  
+  validateResults
 ];
 
-export default {
-  validateProfileUrl,
-  validateProfileData,
-  validatePostData
-};
+/**
+ * Validate profile section regeneration request
+ */
+export const validateSectionRegeneration = [
+  body('profileData')
+    .notEmpty().withMessage('Profile data is required')
+    .isObject().withMessage('Profile data must be an object'),
+  
+  body('section')
+    .notEmpty().withMessage('Section name is required')
+    .isString().withMessage('Section must be a string')
+    .isIn(['headline', 'about', 'experience', 'skills', 'education'])
+    .withMessage('Invalid section. Must be headline, about, experience, skills, or education'),
+  
+  validateResults
+];
+
+/**
+ * Validate saved optimization access
+ */
+export const validateOptimizationAccess = [
+  param('userId')
+    .notEmpty().withMessage('User ID is required')
+    .isMongoId().withMessage('Invalid user ID format'),
+  
+  validateResults
+];
+
+/**
+ * Process validation results and return errors if any
+ */
+function validateResults(req, res, next) {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ 
+      errors: errors.array().map(error => ({
+        field: error.path,
+        message: error.msg
+      })) 
+    });
+  }
+  
+  next();
+}

@@ -53,4 +53,5 @@ const AIError = async (err, req, res, next) => {
     });
   };
 
-export default {authenticateUser, AIError};
+// Export as an object with named properties
+export default { authenticateUser, AIError };

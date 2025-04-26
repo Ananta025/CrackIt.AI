@@ -4,7 +4,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import httpStatus from 'http-status';
 
-
 export default function Signup() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -43,56 +42,56 @@ export default function Signup() {
         }
     }
 
-  return (
-    <div className={styles["sign-up"]}>
-        <div className={styles["sign-up-card"]}>
-            <div className={styles.card}>
-                <img src="./images/sign-up-animate.svg" alt="Sign up animation"/>
-            </div>
-        </div>
-
-        <div className={styles["sign-up-form"]}>
-            <div className={styles["form-head-txt"]}>
-                <p className={styles["main-txt"]}>Create an account</p>
-                <p className={styles["sub-txt"]}>Already have an account ? <Link to="/signin"> Login</Link></p>
+    return (
+        <div className={styles["sign-up"]}>
+            <div className={styles["sign-up-card"]}>
+                <div className={styles.card}>
+                    <img src="./images/sign-up-animate.svg" alt="Sign up animation" />
+                </div>
             </div>
 
-            <form onSubmit={handleSubmit}>
-                {error && <p className={styles.error}>{error}</p>}
-                <input 
-                    type="text" 
-                    className={styles.name} 
-                    placeholder="Name" 
-                    name="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required 
-                />
-                <input 
-                    type="email" 
-                    name="email" 
-                    id="email" 
-                    className={styles["signup-details"]} 
-                    placeholder="Email" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required 
-                />
-                <input 
-                    type="password" 
-                    name="password" 
-                    id="password" 
-                    className={styles["signup-details"]} 
-                    placeholder="Password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required 
-                />
-                <button type="submit" disabled={isLoading}>
-                    {isLoading ? 'Creating Account...' : 'Create Account'}
-                </button>
-            </form>
+            <div className={styles["sign-up-form"]}>
+                <div className={styles["form-head-txt"]}>
+                    <p className={styles["main-txt"]}>Create an account</p>
+                    <p className={styles["sub-txt"]}>Already have an account ? <Link to="/signin"> Login</Link></p>
+                </div>
+
+                <form onSubmit={handleSubmit}>
+                    {error && <p className={styles.error}>{error}</p>}
+                    <input 
+                        type="text" 
+                        className={styles.name} 
+                        placeholder="Name" 
+                        name="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required 
+                    />
+                    <input 
+                        type="email" 
+                        name="email" 
+                        id="email" 
+                        className={styles["signup-details"]} 
+                        placeholder="Email" 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required 
+                    />
+                    <input 
+                        type="password" 
+                        name="password" 
+                        id="password" 
+                        className={styles["signup-details"]} 
+                        placeholder="Password" 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required 
+                    />
+                    <button type="submit" disabled={isLoading}>
+                        {isLoading ? 'Creating Account...' : 'Create Account'}
+                    </button>
+                </form>
+            </div>
         </div>
-    </div>
-  )
+    )
 }

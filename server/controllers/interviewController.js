@@ -1,5 +1,5 @@
 import Interview from "../models/interviewModel.js";
-import aiService from "../services/geminiAI.js";
+import aiService from "../services/interviewService.js";
 
 const startInterview = async (req, res) => {
   const { user, type, settings } = req.body;
@@ -37,8 +37,6 @@ const startInterview = async (req, res) => {
       .json({ message: "Error starting the interview", error: error.message });
   }
 };
-
-// Send message in interview and get AI response
 
 const sendMessage = async (req, res) => {
   try {

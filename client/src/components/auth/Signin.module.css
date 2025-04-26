@@ -1,6 +1,6 @@
 /* whole signin div */
 .sign-in{
-    height: 100vh;
+    min-height: 100vh;
     color: white;
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -8,7 +8,7 @@
     background-image: url("../images/signin-2.svg");
     background-repeat: no-repeat;
     background-position: center;
-    background-size:cover;
+    background-size: cover;
 }
 
 /* animated card div */
@@ -21,31 +21,37 @@
     width: 100%;
 }
 .card{
-    height: 630px;
-    width:560px;
+    height: auto;
+    width: 90%;
+    max-width: 560px;
+    max-height: 630px;
     border-radius: 75px;
     background: rgba(255, 255, 255, 0.626);
-}
-.card{
     border-top: 3px solid #f1b6fb;
     border-bottom: 3px solid #f3b5fd;
-  }
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-.sign-in-card>img{
-    height: 90%;
+.card img {
+    max-width: 100%;
+    height: auto;
     object-fit: contain;
-   
 }
 
 /* sign in form div */
-
 .sign-in-form{
     grid-area: 1/2/2/3;
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-right: 100px;
-    margin-top: 80px;
+    justify-content: center;
+    width: 90%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
 }
 
 .form-head-txt{
@@ -53,40 +59,41 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    text-align: center;
+    width: 100%;
 }
 
 .main-txt{
-    font-size: 3.2rem;
-    
-}
-.sub-txt{
-    margin-top: 1rem;
-    font-size: 18px;
-    color: rgb(150, 150, 150);
+    font-size: clamp(2rem, 5vw, 3.2rem);
 }
 
+.sub-txt{
+    margin-top: 1rem;
+    font-size: clamp(0.9rem, 2vw, 1.125rem);
+    color: rgb(150, 150, 150);
+}
 
 form{
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 30px;
-    height:400px;
-    width: 480px;
+    gap: 1.5rem;
+    width: 100%;
     margin-top: 2rem;
-    
 }
+
 ::placeholder{
     color:#B9B6BE;
 }
 
 input{
-    padding: 1.2rem;
-    font-size: 18px;
+    padding: clamp(0.8rem, 2vw, 1.2rem);
+    font-size: clamp(0.9rem, 2vw, 1.125rem);
     color: white;
     background-color: #56535F;
     border: 1px solid #BDBDBD;
-    border-radius:7px;
+    border-radius: 7px;
+    width: 100%;
 }
 
 .link{
@@ -94,22 +101,35 @@ input{
     font-weight: 600;
     color: rgb(200, 200, 200);
 }
+
+.forgot-password{
+    width: 100%;
+    text-align: right;
+}
+
 .forgot-password>a:hover{
     color: #73dd77;
 }
 
 button{
-    padding: 1.1rem;
-    border-radius:10px;
+    padding: clamp(0.8rem, 2vw, 1.1rem);
+    border-radius: 10px;
     border: none;
-    font-size: 20px;
-    margin-top: 2rem;
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    margin-top: 1.5rem;
     color: white;
-    background-color:#189d1c;
+    background-color: #189d1c;
     cursor: pointer;
+    width: 100%;
 }
+
 button:hover{
-    background-color:#147E17;
+    background-color: #147E17;
+}
+
+button:disabled {
+    background-color: #7c7c7c;
+    cursor: not-allowed;
 }
 
 .sign-up{
@@ -117,6 +137,54 @@ button:hover{
     color: #40b644;
     font-weight: 600;
 }
+
 .sign-up:hover{
     color: #87ea8a;
+}
+
+.error {
+    color: #ff3333;
+    background-color: rgba(255, 51, 51, 0.1);
+    border-radius: 5px;
+    padding: 0.625rem;
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    text-align: center;
+    width: 100%;
+}
+
+/* Media queries for responsive design */
+@media screen and (max-width: 992px) {
+    .sign-in {
+        grid-template-columns: 1fr;
+    }
+    
+    .sign-in-card {
+        grid-area: auto;
+        height: auto;
+        padding: 2rem 0;
+    }
+    
+    .sign-in-form {
+        grid-area: auto;
+        margin: 1rem auto;
+    }
+    
+    .card {
+        max-height: 50vh;
+    }
+}
+
+@media screen and (max-width: 576px) {
+    .card {
+        border-radius: 40px;
+        max-height: 40vh;
+    }
+    
+    .form-head-txt {
+        margin-bottom: 1rem;
+    }
+    
+    form {
+        gap: 1rem;
+    }
 }

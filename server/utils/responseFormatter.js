@@ -1,52 +1,72 @@
 /**
- * Format profile optimization response
- * 
- * @param {Object} profileData - Original profile data
- * @param {Object} optimizationResults - AI optimization results
- * @returns {Object} - Formatted response
+ * Utility to format API responses consistently
  */
-function formatProfileResponse(profileData, optimizationResults) {
-    return {
-      status: 'success',
-      data: {
-        originalProfile: profileData,
-        optimizationResults,
-        meta: {
-          generatedAt: new Date().toISOString(),
-          version: '1.0'
-        }
-      }
-    };
-  }
-  
+export const responseFormatter = {
   /**
-   * Format post optimization response
-   * 
-   * @param {string} postContent - Original post content
-   * @param {string} targetAudience - Target audience
-   * @param {string} purpose - Post purpose
-   * @param {Object} optimizationResults - AI optimization results
-   * @returns {Object} - Formatted response
+   * Format LinkedIn profile optimization response
    */
-  function formatPostResponse(postContent, targetAudience, purpose, optimizationResults) {
+  formatProfileResponse: (originalProfile, optimizedProfile, comparison) => {
     return {
-      status: 'success',
-      data: {
-        originalPost: {
-          content: postContent,
-          targetAudience,
-          purpose
+      success: true,
+      originalProfile: {
+        name: originalProfile.name || '',
+        headline: originalProfile.headline || '',
+        about: originalProfile.about || '',
+        experience: originalProfile.experience || [],
+        education: originalProfile.education || [],
+        skills: originalProfile.skills || []
+      },
+      optimizedProfile: {
+        headline: optimizedProfile.headline?.optimized || '',
+        about: optimizedProfile.about?.optimized || '',
+        experience: optimizedProfile.experience?.optimized || [],
+        education: optimizedProfile.education?.optimized || [],
+        skills: optimizedProfile.skills?.optimized || [],
+        overallSuggestions: optimizedProfile.overallSuggestions || []
+      },
+      explanations: {
+        headline: optimizedProfile.headline?.explanation || '',
+        about: optimizedProfile.about?.explanation || '',
+        experience: optimizedProfile.experience?.explanation || '',
+        education: optimizedProfile.education?.explanation || '',
+        skills: optimizedProfile.skills?.explanation || ''
+      },
+      comparison: comparison || {
+        overallImprovement: 0,
+        headline: { improvement: 0 },
+        about: { improvement: 0 },
+        experience: { improvement: 0 },
+        education: { improvement: 0 },
+        skills: { improvement: 0 }
+      }
+    };
+  },
+
+  /**
+   * Format LinkedIn post optimization response
+   */
+  formatPostResponse: (originalPost, targetAudience, purpose, optimizedPost) => {
+    return {
+      success: true,
+      original: {
+        content: originalPost,
+        targetAudience: targetAudience || 'General LinkedIn users',
+        purpose: purpose || 'Engagement and visibility'
+      },
+      optimized: {
+        content: optimizedPost.optimizedPost || '',
+        hashtags: optimizedPost.hashtags || [],
+        improvements: optimizedPost.improvements || {
+          content: [],
+          structure: [],
+          engagement: []
         },
-        optimizationResults,
-        meta: {
-          generatedAt: new Date().toISOString(),
-          version: '1.0'
-        }
+        bestPractices: optimizedPost.bestPractices || []
+      },
+      analysis: optimizedPost.analysis || {
+        strengths: [],
+        weaknesses: []
       }
     };
   }
-  
-  export default {
-    formatProfileResponse,
-    formatPostResponse
-  };
+};

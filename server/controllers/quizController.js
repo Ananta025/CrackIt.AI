@@ -1,4 +1,4 @@
-import getClaudeResponse from "../services/claudeService";
+import getClaudeResponse from "../services/quizService";
 
 const getExplanation = async (req, res) => {
     try {

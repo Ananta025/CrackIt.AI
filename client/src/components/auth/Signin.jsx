@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import styles from './Signin.module.css'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import httpStatus from 'http-status';
 
@@ -45,7 +45,7 @@ export default function Signin() {
     <div className={styles['sign-in']}>
         <div className={styles['sign-in-card']}>
             <div className={styles.card}>
-                <img src="./images/signin-card.svg" alt="" />
+                <img src="./images/signin-card.svg" alt="Sign in animation" />
             </div>
         </div>
         <div className={styles['sign-in-form']}>
@@ -83,7 +83,7 @@ export default function Signin() {
                 </button>
                 {error && <p className={styles.error}>{error}</p>}
             </form>
-            <p>Don't have any account ? <a className={`${styles['sign-up']} ${styles.link}`} href="signup">Sign up</a></p>
+            <p>Don't have any account ? <Link className={`${styles['sign-up']} ${styles.link}`} to="/signup">Sign up</Link></p>
         </div>
     </div>
   )
