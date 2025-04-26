@@ -1,26 +1,43 @@
 import { Router } from 'express';
-import { analyzeResume } from '../controllers/resumeController.js';
+import { 
+  analyzeResume,
+  getResumeTemplates,
+  generateSection,
+  saveResume,
+  generatePDF,
+  getUserResumes
+} from '../controllers/resumeController.js';
+import authMiddleware from '../middlewares/authMiddlwware.js';
 import multer from 'multer';
+import config from '../config/config.js';
 
 const router = Router();
 
-// Configure multer for memory storage (store as buffer)
+// Configure multer for memory storage
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: config.resume.maxFileSize, // Use from config
   },
   fileFilter: (req, file, cb) => {
-    // Accept only PDF files
-    if (file.mimetype === 'application/pdf') {
+    // Accept configured file types
+    if (config.resume.allowedFileTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF files are allowed'), false);
+      cb(new Error('Unsupported file type. Allowed types: PDF, DOCX, and plain text.'), false);
     }
   },
 });
 
-// Route for resume analysis
+// Public routes
 router.post('/analyze', upload.single('resume'), analyzeResume);
+router.get('/templates', getResumeTemplates);
+
+// Protected routes
+router.use(authMiddleware.authenticateUser);
+router.post('/generate-section', generateSection);
+router.post('/save', saveResume);
+router.get('/download/:resumeId', generatePDF);
+router.get('/user', getUserResumes);
 
 export default router;

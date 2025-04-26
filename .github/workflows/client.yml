@@ -43,7 +43,7 @@ jobs:
     - name: Build
       run: npm run build
       env:
-        VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY || 'dummy_key_for_ci' }}
+        VITE_GOOGLE_API_KEY: ${ secrets.VITE_GOOGLE_API_KEY  }
       
     - name: Test
       run: npm test --if-present

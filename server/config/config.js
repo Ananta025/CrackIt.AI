@@ -45,6 +45,20 @@ const config = {
     url: process.env.MONGODB_URI || 'mongodb://localhost:27017/crackitai'
   },
   
+  // Resume features settings
+  resume: {
+    allowedFileTypes: ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'],
+    maxFileSize: 10 * 1024 * 1024, // 10MB limit
+    pdfGeneration: {
+      format: 'A4',
+      margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' },
+      printBackground: true
+    },
+    templates: {
+      directory: process.env.RESUME_TEMPLATES_DIR || 'e:/CrackIt.AI/server/templates/resumes'
+    }
+  },
+  
   // Application settings
   app: {
     port: process.env.PORT || 3000,

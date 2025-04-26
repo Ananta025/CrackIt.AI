@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import pdf from 'pdf-parse';
+import mammoth from 'mammoth'; // Add mammoth for DOCX handling
 
 /**
  * Extract text from a PDF file or buffer
@@ -27,12 +28,11 @@ export async function extractTextFromPDF(input) {
 } 
 
 /**
- * Extract text from PDF with additional options
- * @param {string|Buffer} input - Path to the PDF file or PDF buffer
- * @param {Object} options - Options for pdf-parse
- * @returns {Promise<Object>} - The parsed PDF data
+ * Extract text from a DOCX file or buffer
+ * @param {string|Buffer} input - Path to the DOCX file or DOCX buffer
+ * @returns {Promise<string>} - The extracted text content
  */
-export async function extractPDFWithOptions(input, options = {}) {
+export async function extractTextFromDOCX(input) {
     try {
         let dataBuffer;
         if (Buffer.isBuffer(input)) {
@@ -40,10 +40,33 @@ export async function extractPDFWithOptions(input, options = {}) {
         } else {
             dataBuffer = await fs.readFile(input);
         }
-        const data = await pdf(dataBuffer, options);
-        return data;
+        const result = await mammoth.extractRawText({ buffer: dataBuffer });
+        return result.value;
     } catch (error) {
-        console.error('Error processing PDF with options:', error);
+        console.error('Error extracting text from DOCX:', error);
+        throw error;
+    }
+}
+
+/**
+ * Extract text from any supported file format based on mime type
+ * @param {Buffer} buffer - The file buffer
+ * @param {string} mimeType - The file's mime type
+ * @returns {Promise<string>} - The extracted text content
+ */
+export async function extractTextFromFile(buffer, mimeType) {
+    try {
+        if (mimeType === 'application/pdf') {
+            return await extractTextFromPDF(buffer);
+        } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            return await extractTextFromDOCX(buffer);
+        } else if (mimeType === 'text/plain') {
+            return buffer.toString('utf-8');
+        } else {
+            throw new Error(`Unsupported file type: ${mimeType}`);
+        }
+    } catch (error) {
+        console.error('Error extracting text from file:', error);
         throw error;
     }
 }

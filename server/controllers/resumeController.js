@@ -1,4 +1,13 @@
-import { processResumeFile } from '../services/resumeService.js';
+import { 
+  processResumeFile,
+  processResumeFileStructured,
+  analyzeResumeStructured,
+  generateResumeSection
+} from '../services/resumeService.js';
+import ResumeTemplate from '../models/resumeTemplateModel.js';
+import UserResume from '../models/userResumeModel.js';
+import { generateResumePDF } from '../utils/pdfGenerator.js';
+import config from '../config/config.js';
 
 /**
  * Controller to handle resume analysis
@@ -13,7 +22,7 @@ export const analyzeResume = async (req, res) => {
     }
 
     // Process the resume file
-    const analysis = await processResumeFile(req.file.buffer);
+    const analysis = await processResumeFileStructured(req.file.buffer, req.file.mimetype);
     
     return res.status(200).json({
       success: true,
@@ -24,6 +33,186 @@ export const analyzeResume = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to analyze resume',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get available resume templates
+ */
+export const getResumeTemplates = async (req, res) => {
+  try {
+    const templates = await ResumeTemplate.find({ isActive: true }, 
+      'name category description previewImage');
+    
+    return res.status(200).json({
+      success: true,
+      data: templates
+    });
+  } catch (error) {
+    console.error('Error fetching templates:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch resume templates',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Generate content for a specific resume section
+ */
+export const generateSection = async (req, res) => {
+  try {
+    const { sectionType, userInput } = req.body;
+    
+    if (!sectionType || !userInput) {
+      return res.status(400).json({
+        success: false,
+        message: 'Section type and user input are required'
+      });
+    }
+    
+    const generatedContent = await generateResumeSection(sectionType, userInput);
+    
+    return res.status(200).json({
+      success: true,
+      data: generatedContent
+    });
+  } catch (error) {
+    console.error('Section generation error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate section content',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Save a new or updated resume
+ */
+export const saveResume = async (req, res) => {
+  try {
+    const { resumeId, name, templateId, content } = req.body;
+    
+    if (!name || !templateId || !content) {
+      return res.status(400).json({
+        success: false,
+        message: 'Resume name, template and content are required'
+      });
+    }
+    
+    let resume;
+    
+    if (resumeId) {
+      // Update existing resume
+      resume = await UserResume.findOneAndUpdate(
+        { _id: resumeId, user: req.user._id },
+        { name, template: templateId, content },
+        { new: true }
+      );
+      
+      if (!resume) {
+        return res.status(404).json({
+          success: false,
+          message: 'Resume not found or not owned by user'
+        });
+      }
+    } else {
+      // Create new resume
+      resume = new UserResume({
+        user: req.user._id,
+        name,
+        template: templateId,
+        content
+      });
+      
+      await resume.save();
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: resumeId ? 'Resume updated successfully' : 'Resume created successfully',
+      data: { resumeId: resume._id }
+    });
+  } catch (error) {
+    console.error('Resume save error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to save resume',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Generate and download resume as PDF
+ */
+export const generatePDF = async (req, res) => {
+  try {
+    const { resumeId } = req.params;
+    
+    // Find the resume and verify ownership
+    const resume = await UserResume.findOne({ 
+      _id: resumeId,
+      user: req.user._id
+    });
+    
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        message: 'Resume not found or not owned by user'
+      });
+    }
+    
+    // Get the template
+    const template = await ResumeTemplate.findById(resume.template);
+    if (!template) {
+      return res.status(404).json({
+        success: false,
+        message: 'Resume template not found'
+      });
+    }
+    
+    // Generate PDF
+    const pdfBuffer = await generateResumePDF(template, resume.content);
+    
+    // Set headers for download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 
+      `attachment; filename=${resume.name.replace(/\s+/g, '_')}.pdf`);
+    
+    return res.send(pdfBuffer);
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate PDF',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * List all resumes for the current user
+ */
+export const getUserResumes = async (req, res) => {
+  try {
+    const resumes = await UserResume.find({ user: req.user._id })
+      .select('name template atsScore createdAt updatedAt')
+      .populate('template', 'name category');
+    
+    return res.status(200).json({
+      success: true,
+      data: resumes
+    });
+  } catch (error) {
+    console.error('Error fetching user resumes:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch resumes',
       error: error.message
     });
   }
