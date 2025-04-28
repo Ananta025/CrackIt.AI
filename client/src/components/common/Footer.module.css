@@ -1,8 +1,8 @@
 /* Footer container */
 .footer {
-  background: linear-gradient(to bottom, #1f2937, #111827);
+  background: linear-gradient(to bottom, #130913, #000000);
   color: #d1d5db;
-  padding-top: 1.5rem;
+  padding-top: 3rem;
   padding-bottom: 1rem;
 }
 

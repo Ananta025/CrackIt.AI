@@ -1,0 +1,370 @@
+/* ===== NAVBAR CONTAINER STYLES ===== */
+.navbar {
+  width: 100%;
+  padding: 1.25rem 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  transition: all 0.6s ease;
+}
+
+.navbarContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 90%;
+  margin: 0 auto;
+  padding: 0 1rem;
+  transition: all 0.6s ease;
+  position: relative;
+}
+
+/* ===== BRAND LOGO STYLES ===== */
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 0;
+}
+
+.logo > a {
+  text-decoration: none;
+  color: white;
+  font-size: 1.25rem;
+  padding-left: 0;
+}
+
+/* ===== DESKTOP NAVIGATION STYLES ===== */
+.linkList {
+  display: none; /* Hidden on mobile, shown on desktop via media query */
+}
+
+/* ===== TEAM LOGO STYLES ===== */
+.teamLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #77F663;
+  font-size: 0.8rem;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.teamLogo:hover {
+  background: linear-gradient(135deg, #77F663, #41B3FF);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transform: translateX(-50%) scale(1.1);
+  text-shadow: 0 0 10px rgba(119, 246, 99, 0.3);
+}
+
+.desktopTeamLogo {
+  display: none;
+  color: #77F663;
+  transition: all 0.3s ease;
+}
+.desktopTeamLogo:hover {
+  background: linear-gradient(135deg, #77F663, #41B3FF);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transform: scale(1.1);
+  text-shadow: 0 0 10px rgba(119, 246, 99, 0.3);
+}
+
+
+/* ===== MOBILE NAVIGATION STYLES ===== */
+.mobileNavContainer {
+  position: relative;
+}
+
+.mobileMenuButton {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 20px;
+  height: 15px;
+  cursor: pointer;
+  z-index: 1001;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.hamburgerLine {
+  width: 100%;
+  height: 1.5px;
+  background-color: white;
+  transition: all 0.3s ease;
+  border-radius: 1px;
+}
+
+/* Hamburger menu animation */
+.hamburgerLine.open:nth-child(1) {
+  transform: translateY(6.5px) rotate(45deg);
+}
+
+.hamburgerLine.open:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburgerLine.open:nth-child(3) {
+  transform: translateY(-6.5px) rotate(-45deg);
+}
+
+/* ===== MOBILE DROPDOWN MENU ===== */
+.mobileMenu {
+  position: absolute;
+  top: calc(100% + 15px);
+  right: 0;
+  width: 180px;
+  background-color: #0b192f;
+  border: 1px solid rgba(186, 247, 176, 0.6);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(119, 246, 99, 0.2);
+  transform: translateY(-10px) scale(0.95);
+  overflow: hidden;
+}
+
+.mobileMenuOpen {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.mobileMenu > a {
+  text-decoration: none;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.25s ease;
+  padding: 0.5rem 0;
+  width: 100%;
+  text-align: center;
+  border-radius: 8px;
+  margin: 2px 0;
+  position: relative;
+  border-bottom: 1px solid rgba(119, 246, 99, 0.1);
+}
+
+.mobileMenu > a:last-child {
+  border-bottom: none;
+}
+
+.mobileMenuOpen > a {
+  animation: fadeInDown 0.4s forwards;
+  animation-delay: calc(0.05s * var(--delay, 0));
+  opacity: 0;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobileMenu > a:hover {
+  color: #77F663;
+  background-color: rgba(119, 246, 99, 0.1);
+}
+
+/* ===== SCROLLED NAVBAR STYLES ===== */
+.scrolled {
+  background-color: transparent;
+  padding: 0.9rem 0;
+}
+
+.scrolled .navbarContainer {
+  max-width: 90%;
+  margin: 0 auto;
+  background-color: #0b192f;
+  border-radius: 50px;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid rgba(186, 247, 176, 0.6);
+  transition: all 0.6s ease;
+}
+
+/* ===== RESPONSIVE STYLES ===== */
+/* Mobile styles (default) */
+@media screen and (max-width: 767px) {
+  .navbar {
+    padding: 1.25rem 1rem;
+  }
+  
+  .navbarContainer {
+    border-radius: 25px;
+    background-color: #0b192f;
+    border: 1px solid rgba(186, 247, 176, 0.6);
+    padding: 0.6rem 1.2rem;
+    max-width: 95%;
+  }
+  
+  .teamLogo {
+    font-size: 0.9rem;
+  }
+  
+  .mobileMenuButton {
+    position: absolute;
+    right: 15px; /* Adjusted positioning */
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  .mobileMenu {
+    right: 0;
+    width: 200px;
+  }
+}
+
+/* Small Tablet Styles */
+@media screen and (min-width: 576px) {
+  .navbarContainer {
+    padding: 0 1.5rem;
+    max-width: 90%;
+  }
+  
+  .logo > a {
+    font-size: 1.35rem;
+  }
+  
+  .scrolled .navbarContainer {
+    margin-top: 0.25rem;
+  }
+}
+
+/* Tablet Styles */
+@media screen and (min-width: 768px) {
+  .navbarContainer {
+    padding: 0 2.5rem;
+    max-width: 85%;
+  }
+  
+  .logo > a {
+    font-size: 1.4rem;
+  }
+  
+  .teamLogo {
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  
+  .scrolled .navbarContainer {
+    max-width: 80%;
+    padding: 0.35rem 1.5rem;
+  }
+}
+
+/* Desktop Styles */
+@media screen and (min-width: 1024px) {
+  .mobileMenuButton,
+  .mobileMenu,
+  .teamLogo,
+  .mobileNavContainer {
+    display: none;
+  }
+  
+  .desktopTeamLogo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-left: auto;
+    cursor: pointer;
+  }
+  
+  .navbarContainer {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    max-width: 80%;
+    padding: 0 3rem;
+  }
+  
+  .logo {
+    grid-column: 1;
+  }
+  
+  .linkList {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .desktopTeamLogo {
+    grid-column: 3;
+    justify-self: end;
+  }
+  
+  .linkList > a {
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  
+  .linkList > a:hover {
+    color: #77F663;
+  }
+  
+  .scrolled .navbarContainer {
+    max-width: 70%;
+  }
+}
+
+/* Large Desktop Styles */
+@media screen and (min-width: 1280px) {
+  .navbarContainer {
+    max-width: 90%;
+  }
+  
+  .linkList {
+    gap: 4rem;
+  }
+  
+  .linkList > a {
+    font-size: 18px;
+  }
+  
+  .scrolled .navbarContainer {
+    max-width: 80%;
+  }
+}
+
+/* Extra Large Desktop Styles */
+@media screen and (min-width: 1440px) {
+  .navbarContainer {
+    max-width: 90%;
+  }
+  
+  .scrolled .navbarContainer {
+    max-width: 80%;
+  }
+}
