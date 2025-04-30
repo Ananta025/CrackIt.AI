@@ -1,14 +1,31 @@
 .pageContainer {
   margin: 0;
-  padding: 5rem 3.2rem 15rem 3.2rem; 
+  padding: 10rem 3.2rem 15rem 3.2rem; 
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(to top, #121212, #000000);
+  /* Updated background to be similar to FAQ but with unique variation */
+  background: #030305;
+  background: linear-gradient(135deg, #030305, #0a0a12, #101020);
+  background-size: 400% 400%;
+  animation: contactGradientBg 15s ease infinite;
   font-family: 'Arial', sans-serif;
   color: white;
   box-sizing: border-box;
+}
+
+/* Add animation keyframes similar to FAQ */
+@keyframes contactGradientBg {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .pageContainer * {
@@ -32,6 +49,8 @@
 }
 
 .content {
+  position: relative;
+  z-index: 1;
   display: flex;
   gap: 90px; /* Increased gap between left and right sections */
   width: 100%;
@@ -146,6 +165,47 @@
 
 .contactForm button:hover {
   background: #008000;
+}
+
+/* Add subtle orbs similar to FAQ for visual consistency */
+.pageContainer::before,
+.pageContainer::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.2;
+  z-index: 0;
+}
+
+.pageContainer::before {
+  background: #4ecdc4;
+  width: 250px;
+  height: 250px;
+  top: 10%;
+  left: 5%;
+  animation: float 10s ease-in-out infinite;
+}
+
+.pageContainer::after {
+  background: #1a6985;
+  width: 350px;
+  height: 350px;
+  bottom: 10%;
+  right: 5%;
+  animation: float 12s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-15px) scale(1.05);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Responsive Design */
