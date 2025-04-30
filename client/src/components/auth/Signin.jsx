@@ -54,12 +54,12 @@ export default function Signin() {
                 <p className={styles['sub-txt']}>Welcome back ! Please enter your details</p>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className={styles['signin-form']}>
                 <input 
                   type="email" 
                   name="email" 
                   id="email" 
-                  className={styles['signup-details']} 
+                  className={styles['signin-input']} 
                   placeholder="Email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -69,7 +69,7 @@ export default function Signin() {
                   type="password" 
                   name="password" 
                   id="password" 
-                  className={styles['signup-details']} 
+                  className={styles['signin-input']} 
                   placeholder="Password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -78,7 +78,7 @@ export default function Signin() {
                 <div className={styles['forgot-password']}>
                     <a className={styles.link} href="#">Forgot password?</a>
                 </div>
-                <button type="submit" disabled={isLoading}>
+                <button type="submit" disabled={isLoading} className={styles['signin-button']}>
                   {isLoading ? 'Signing in...' : 'Sign in'}
                 </button>
                 {error && <p className={styles.error}>{error}</p>}

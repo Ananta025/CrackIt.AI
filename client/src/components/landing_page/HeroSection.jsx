@@ -4,12 +4,13 @@ import Navbar from './Navbar'
 
 export default function HeroSection() {
   return (
-    <div className={styles.hero}>
+    <div className={styles.heroWrapper}>
+      <div className={styles.hero}>
         <Navbar />
-        <div className={styles['hero-txt']}>
-            <p className={styles['hero-main-txt']}>Crack Your Next <br/><span className={styles.interview}>Interview</span> with<br/>Confidence 
+        <div className={styles.hero_txt}>
+            <p className={styles.hero_main_txt}>Crack Your Next <br/><span className={styles.interview}>Interview</span> with<br/>Confidence 
             </p>
-            <p className={styles['hero-sub-txt']}> Powered by<span className={styles['ai-txt']}>AI</span>
+            <p className={styles.hero_sub_txt}> Powered by<span className={styles.ai_txt}>AI</span>
               <img 
                 src="./images/AI star.png" 
                 alt="AI logo" 
@@ -20,7 +21,7 @@ export default function HeroSection() {
             </p>
         </div>
 
-        <div className={styles['hero-img']}>
+        <div className={styles.hero_img}>
             <img 
               src="./images/Group 36.png" 
               alt="Interview preparation illustration" 
@@ -29,9 +30,10 @@ export default function HeroSection() {
               height="460"
             />
         </div>
-        <div className={styles['get-started-btn']}>
-            <a href="/signup" className={styles['get-started']}>Get Started</a>
+        <div className={styles.get_started_btn}>
+            <a href="/signup" className={styles.get_started}>Get Started</a>
         </div>
+      </div>
     </div>
   )
 }

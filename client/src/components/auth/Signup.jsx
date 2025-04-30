@@ -60,7 +60,7 @@ export default function Signup() {
                     {error && <p className={styles.error}>{error}</p>}
                     <input 
                         type="text" 
-                        className={styles.name} 
+                        className={`${styles.name} ${styles.formInput}`}
                         placeholder="Name" 
                         name="name"
                         value={name}
@@ -71,7 +71,7 @@ export default function Signup() {
                         type="email" 
                         name="email" 
                         id="email" 
-                        className={styles["signup-details"]} 
+                        className={`${styles["signup-details"]} ${styles.formInput}`}
                         placeholder="Email" 
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -81,13 +81,13 @@ export default function Signup() {
                         type="password" 
                         name="password" 
                         id="password" 
-                        className={styles["signup-details"]} 
+                        className={`${styles["signup-details"]} ${styles.formInput}`}
                         placeholder="Password" 
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required 
                     />
-                    <button type="submit" disabled={isLoading}>
+                    <button type="submit" className={styles.submitButton} disabled={isLoading}>
                         {isLoading ? 'Creating Account...' : 'Create Account'}
                     </button>
                 </form>

@@ -1,0 +1,145 @@
+.sidebar {
+    color: white;
+    height: 100vh;
+    background-color: #212b34;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0 1rem;
+    font-family: "Roboto", sans-serif;
+}
+
+.sidebarContent {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* crackit ai title */
+.logo {
+    margin-top: 1rem;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* features list section */
+.featuresList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+}
+
+.features {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    gap: 10px;
+    font-size: 17px;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+.features:hover {
+    background-color: #0F1823;
+    color: rgb(31, 194, 28);
+}
+
+.active {
+    background-color: #0F1823;
+    color: rgb(31, 194, 28);
+    font-weight: 500;
+}
+
+.icon {
+    height: 20px;
+    width: 20px;
+}
+
+/* logout section */
+.logout {
+    height: 100px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 1.5rem 1.5rem;
+    margin-bottom: 1rem;
+    background-color: #0F1823;
+    border-radius: 15px;
+}
+
+.username {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.logoutButton {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #BE4A31;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 15px;
+    background-color: #F3B5B5;
+    cursor: pointer;
+}
+
+.logoutButton:hover {
+    background-color: #eba1a1;
+}
+
+.logoutButtonImg {
+    height: 25px;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 768px) {
+    .sidebar {
+        width: 80px;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .features p {
+        display: none;
+    }
+    
+    .features {
+        justify-content: center;
+    }
+    
+    .logo {
+        font-size: 1.2rem;
+        text-align: center;
+    }
+    
+    .logout {
+        padding: 1rem;
+    }
+    
+    .username {
+        font-size: 14px;
+    }
+    
+    .logoutButton {
+        padding: 0.3rem;
+    }
+    
+    .logoutButton span {
+        display: none;
+    }
+}

@@ -73,7 +73,7 @@
     color: rgb(150, 150, 150);
 }
 
-form{
+.signin-form{
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -82,11 +82,11 @@ form{
     margin-top: 2rem;
 }
 
-::placeholder{
+.signin-input::placeholder{
     color:#B9B6BE;
 }
 
-input{
+.signin-input{
     padding: clamp(0.8rem, 2vw, 1.2rem);
     font-size: clamp(0.9rem, 2vw, 1.125rem);
     color: white;
@@ -111,7 +111,7 @@ input{
     color: #73dd77;
 }
 
-button{
+.signin-button{
     padding: clamp(0.8rem, 2vw, 1.1rem);
     border-radius: 10px;
     border: none;
@@ -123,11 +123,11 @@ button{
     width: 100%;
 }
 
-button:hover{
+.signin-button:hover{
     background-color: #147E17;
 }
 
-button:disabled {
+.signin-button:disabled {
     background-color: #7c7c7c;
     cursor: not-allowed;
 }

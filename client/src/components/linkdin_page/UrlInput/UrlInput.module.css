@@ -1,0 +1,159 @@
+.url-input {
+    padding: 16px;
+  }
+  
+  .back-button {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px;
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+  }
+  
+  .back-button:hover {
+    color: var(--text-primary);
+  }
+  
+  .url-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  
+  .url-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .url-form {
+    max-width: 500px;
+    margin: 0 auto 40px;
+  }
+  
+  .url-input-container {
+    position: relative;
+    margin-bottom: 16px;
+  }
+  
+  .url-icon {
+    position: absolute;
+    top: 50%;
+    left: 16px;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+  }
+  
+  .url-input-container .input-field {
+    padding-left: 48px;
+  }
+  
+  .error-message {
+    color: #ff4d4d;
+    font-size: 14px;
+    margin-top: -8px;
+    margin-bottom: 16px;
+    padding-left: 8px;
+  }
+  
+  .btn-analyze {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  }
+  
+  .btn-analyze:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .loading-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .url-info {
+    background: rgba(0, 170, 255, 0.05);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 600px;
+    margin: 0 auto;
+    border: 1px solid rgba(0, 170, 255, 0.1);
+  }
+  
+  .url-info h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  
+  .info-steps {
+    list-style: none;
+  }
+  
+  .info-steps li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 16px;
+  }
+  
+  .info-steps li:last-child {
+    margin-bottom: 0;
+  }
+  
+  .step-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  
+  .step-text {
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  
+  @media (max-width: 768px) {
+    .url-title {
+      font-size: 22px;
+    }
+    
+    .url-subtitle {
+      font-size: 15px;
+    }
+    
+    .url-info {
+      padding: 16px;
+    }
+  }

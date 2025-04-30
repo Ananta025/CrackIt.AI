@@ -74,17 +74,18 @@
     font-size: clamp(0.9rem, 2vw, 1.125rem);
 }
 
-.sub-txt>a{
+.sub-txt a{
     text-decoration: none;
     color: #40b644;
     font-weight: 600;
 }
 
-.sub-txt>a:hover{
+.sub-txt a:hover{
     color: #74e978;
 }
 
-form{
+/* Scope form selector to sign-up-form to avoid affecting other components */
+.sign-up-form form{
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -93,17 +94,19 @@ form{
     margin-top: 2rem;
 }
 
-::placeholder{
+/* Make formInput selector more specific */
+.sign-up-form .formInput::placeholder{
     color:#B9B6BE;
 }
 
-.fullname{
+/* Make fullname selector more specific */
+.sign-up-form .fullname{
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-input{
+.formInput{
     padding: clamp(0.8rem, 2vw, 1.2rem);
     font-size: clamp(0.9rem, 2vw, 1.125rem);
     color: white;
@@ -113,7 +116,7 @@ input{
     width: 100%;
 }
 
-button{
+.submitButton{
     padding: clamp(0.8rem, 2vw, 1.1rem);
     border-radius: 10px;
     border: none;
@@ -125,7 +128,7 @@ button{
     width: 100%;
 }
 
-button:hover{
+.submitButton:hover{
     background-color: #147E17;
 }
 
@@ -141,7 +144,7 @@ button:hover{
 }
 
 /* Style for disabled button */
-button:disabled {
+.submitButton:disabled {
     background-color: #7c7c7c;
     cursor: not-allowed;
 }

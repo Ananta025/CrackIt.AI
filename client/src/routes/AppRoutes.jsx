@@ -9,21 +9,26 @@ import HomePage from '../pages/HomePage';
 import LearningPage from '../pages/LearningPage';
 import SignupPage from '../pages/SignupPage';
 import SigninPage from '../pages/SigninPage';
-
-
+import DashboardLayout from '../components/layout/DashboardLayout';
 
 export default function AppRoutes() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/home" element={<HomePage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/signin" element={<SigninPage />} />
-        <Route path="/resume" element={<ResumePage />} />
-        <Route path="/interview" element={<InterviewPage />} />
-        <Route path="/linkedin" element={<LinkedinPage />} />
-        <Route path="/learning" element={<LearningPage />} />
+        
+        {/* Protected routes with DashboardLayout */}
+        <Route element={<DashboardLayout />}>
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/resume" element={<ResumePage />} />
+          <Route path="/interview" element={<InterviewPage />} />
+          <Route path="/linkedin" element={<LinkedinPage />} />
+          <Route path="/learning" element={<LearningPage />} />
+          {/* Add more routes here for other features */}
+        </Route>
+        
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>

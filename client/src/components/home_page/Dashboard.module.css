@@ -1,0 +1,250 @@
+.dashboard {
+    display: grid;
+    height: 100vh;
+    width: 100%;
+    grid-template-columns:300px auto;
+}
+
+/* side bar section */
+.sidebar {
+    grid-area:1/1/2/2;
+    color: white;
+    height:100vh;
+    background-color:#212b34;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    font-family: "Roboto", sans-serif;
+}
+/* crackit ai title */
+.logo{
+    margin-top: 1rem;
+    font-size:2rem;
+    font-weight: 700;
+}
+/* features list section */
+.features-list{
+    display: flex;
+    flex-direction: column;
+    gap:12px;
+}
+.features{
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    gap:10px;
+    font-size: 17px;
+    padding: 0.5rem 1rem;
+    border-radius:10px;
+    border:none;
+    cursor: pointer;
+    
+}
+.features:hover{
+    background-color:#0F1823;
+    color:rgb(31, 194, 28)
+    
+}
+.icon{
+    height:28px;
+    width:28px;
+}
+
+/* logout section */
+.logout{
+    height:100px;
+    width:100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap:10px;
+    padding: 1.5rem 1.5rem;
+    margin-bottom: 1rem;
+    background-color: #0F1823;
+    border-radius: 15px;
+}
+.username{
+    font-size: 20px;
+    font-weight: 600;
+}
+.logout_button {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap:10px;
+    font-size:18px;
+    font-weight: 700;
+    color:#BE4A31;
+    padding:0.5rem;
+    border-radius: 15px;
+    background-color:#F3B5B5;
+    cursor: pointer;
+}
+.logout_button:hover{
+    background-color:#eba1a1;
+}
+.logout_button_img {
+    height: 25px;
+}
+
+/* main section  */
+.main{
+    grid-area: 1/2/2/3;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width:100%;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    background-color: #0F1823;
+    font-family: "Roboto", sans-serif;
+}
+/* upper section */
+.upper{
+    display: flex;
+    flex-direction: row;
+    width:100%;
+    color: white;
+    padding-top: 1.5rem;
+}
+.avatar{
+    height: 278px;
+    border:3px solid #4d5b68;
+    border-radius: 25px;
+}
+.user-details{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding-left: 1.5rem;
+}
+.top-skill{
+    width: 600px;
+    height: 275px;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    flex-wrap:wrap;
+    gap:10px;
+    border-radius: 20px;
+    border: 3px solid #394149;
+    padding: 1.5rem;
+}
+.skill-heading{
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 1.6rem;
+}
+.skill-list{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: start;
+    align-items: center;
+}
+.skill{
+    /* background-color: rgb(75, 18, 182); */
+    background: linear-gradient(99deg, #9728dc -16.6%, #336de0 105.88%);
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    
+}
+.activity{
+    height:275px;
+    width:100%;
+    background-color: #4d5b685c;
+    margin-left:1rem;
+    border-radius: 20px;
+    border:3px solid #394149;
+    text-align: center;
+}
+
+/* lower main section */
+.lower{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 1.5rem;
+    flex-direction: row;
+    background-color: #0F1823;
+    color: white;
+}
+
+/* score board css */
+.card{
+    height: 370px;
+    width:650px;
+    background-color: #35435037;
+    border-radius: 20px;
+    border:3px solid #394149;
+    text-align: center;
+    padding: 1rem 2rem 1rem 2rem;
+}
+
+.title {
+    color: rgb(224, 224, 224);
+    font-size: 25px;
+    margin-top: 0;
+    margin-bottom: 30px;
+    font-weight: 500;
+}
+
+.score-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.progress-container {
+    flex-grow: 1;
+    height: 10px;
+    background-color: #054d29;
+    border-radius: 5px;
+    margin-right: 20px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: #24bd6e;
+    border-radius: 5px;
+    width: 0%; /* Will be set dynamically */
+    transition: width 1s ease-in-out; /* Smooth transition when width changes */
+}
+
+.score-text {
+    color: rgb(222, 222, 222);
+    font-size: 20px;
+    min-width: 70px;
+    text-align: right;
+}
+.no-score{
+    color:rgb(255, 255, 255);
+    font-size: 23px;
+    font-weight: 500;
+}
+
+/* news and gihub section */
+.updates{
+    height: 370px;
+    width: 240px;
+    object-fit: cover;
+    border-radius: 20px;
+    border: 3px solid #2c3843;
+    cursor: pointer;
+}
+.updates:hover{
+    border: 3px solid rgb(97, 192, 221);
+    transition-duration: 0.5s;
+}
