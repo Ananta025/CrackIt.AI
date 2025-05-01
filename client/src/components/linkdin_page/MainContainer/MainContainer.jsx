@@ -4,21 +4,28 @@ import pageStyles from '../../../styles/LinkedinPage.module.css';
 import LinkSelection from '../LinkSelection/LinkSelection';
 import ProfileForm from '../ProfileForm/ProfileForm';
 import UrlInput from '../UrlInput/UrlInput';
+import OptimizationResults from '../OptimizationResults/OptimizationResults';
 import { useProfileOptimizer } from '../../../context/ProfileOptimizer';
 
 const MainContainer = () => {
-  const { selectedOption } = useProfileOptimizer();
+  const { selectedOption, showResults } = useProfileOptimizer();
+
+  const renderContent = () => {
+    if (showResults) {
+      return <OptimizationResults />;
+    }
+
+    if (!selectedOption) {
+      return <LinkSelection />;
+    }
+
+    return selectedOption === 'url' ? <UrlInput /> : <ProfileForm />;
+  };
 
   return (
     <main className={styles["main-container"]}>
       <div className={`${styles["optimizer-container"]} ${pageStyles.glassCard}`}>
-        {!selectedOption ? (
-          <LinkSelection />
-        ) : selectedOption === 'url' ? (
-          <UrlInput />
-        ) : (
-          <ProfileForm />
-        )}
+        {renderContent()}
       </div>
     </main>
   );

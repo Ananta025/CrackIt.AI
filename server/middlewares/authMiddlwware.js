@@ -3,24 +3,48 @@ import jwt from 'jsonwebtoken';
 import httpStatus from 'http-status';
 
 const authenticateUser = async (req, res, next) => {
-    // Safely check if req.cookies exists before accessing token
-    const token = (req.cookies && req.cookies.token) || req.headers['authorization']?.split(' ')[1];
-    if (!token) {
-        return res.status(httpStatus.UNAUTHORIZED).json({ message: 'No token provided' });
-    }
-
     try {
+        // Check for token in cookies first
+        let token = req.cookies && req.cookies.token;
+        
+        // If not in cookies, check Authorization header
+        if (!token && req.headers.authorization) {
+            const authHeader = req.headers.authorization;
+            if (authHeader.startsWith('Bearer ')) {
+                token = authHeader.substring(7);
+            }
+        }
+        
+        // If no token found at all
+        if (!token) {
+            return res.status(httpStatus.UNAUTHORIZED).json({ 
+                message: 'Authentication required', 
+                error: 'No authentication token provided'
+            });
+        }
+
+        // Verify the token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // Find the user
         const user = await userModel.findById(decoded.id);
         if (!user) {
-            return res.status(httpStatus.UNAUTHORIZED).json({ message: 'Invalid token' });
+            return res.status(httpStatus.UNAUTHORIZED).json({ 
+                message: 'Invalid authentication',
+                error: 'User not found'
+            });
         }
+        
+        // Attach user to request
         req.user = user;
         next();
     } catch (error) {
-        return res.status(httpStatus.UNAUTHORIZED).json({ message: 'Invalid token', error: error.message });
+        return res.status(httpStatus.UNAUTHORIZED).json({ 
+            message: 'Authentication failed', 
+            error: error.message 
+        });
     }
-}
+};
 
 const AIError = async (err, req, res, next) => {
     console.error('Error:', err);

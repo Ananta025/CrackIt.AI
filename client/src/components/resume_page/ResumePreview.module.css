@@ -1,0 +1,177 @@
+.previewContainer {
+  background-color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  color: #111827;
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+.previewContent {
+  padding: 1.5rem;
+}
+
+/* Modern Template */
+.templateModern {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.modernHeader {
+  padding: 1.5rem;
+  background-color: #2563eb;
+  color: white;
+}
+
+.modernName {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.modernContact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.modernContact span {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.modernSummary {
+  margin: 1.5rem 0;
+  font-size: 0.938rem;
+  line-height: 1.5;
+}
+
+.modernSection {
+  margin-bottom: 1.5rem;
+}
+
+.modernSectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2563eb;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #2563eb;
+  margin-bottom: 1rem;
+}
+
+.modernExperience {
+  margin-bottom: 1.25rem;
+}
+
+.modernCompanyHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.375rem;
+}
+
+.modernCompanyName {
+  font-weight: 600;
+  color: #111827;
+}
+
+.modernDate {
+  font-size: 0.813rem;
+  color: #4b5563;
+}
+
+.modernPosition {
+  font-weight: 500;
+  font-size: 0.938rem;
+  margin-bottom: 0.5rem;
+}
+
+.modernDescription {
+  font-size: 0.875rem;
+  color: #4b5563;
+  white-space: pre-line;
+  line-height: 1.5;
+}
+
+.modernSkills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.modernSkill {
+  background-color: #e0e7ff;
+  color: #4338ca;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* Classic Template */
+.templateClassic {
+  font-family: 'Merriweather', Georgia, serif;
+}
+
+.classicHeader {
+  text-align: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.classicName {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #111827;
+}
+
+.classicContact {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.classicSectionTitle {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #d1d5db;
+  padding-bottom: 0.375rem;
+}
+
+/* For other templates, add similar styling blocks */
+
+/* Empty state styling */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #9ca3af;
+}
+
+.emptyState i {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #60a5fa;
+}
+
+.emptyTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin-bottom: 0.5rem;
+}
+
+.emptyDescription {
+  font-size: 0.875rem;
+  max-width: 20rem;
+}

@@ -8,6 +8,7 @@ import ResumeTemplate from '../models/resumeTemplateModel.js';
 import UserResume from '../models/userResumeModel.js';
 import { generateResumePDF } from '../utils/pdfGenerator.js';
 import config from '../config/config.js';
+import mongoose from 'mongoose';
 
 /**
  * Controller to handle resume analysis
@@ -67,14 +68,24 @@ export const generateSection = async (req, res) => {
   try {
     const { sectionType, userInput } = req.body;
     
-    if (!sectionType || !userInput) {
+    if (!sectionType) {
       return res.status(400).json({
         success: false,
-        message: 'Section type and user input are required'
+        message: 'Section type is required'
       });
     }
     
-    const generatedContent = await generateResumeSection(sectionType, userInput);
+    // Generate content with proper error handling
+    let generatedContent;
+    try {
+      generatedContent = await generateResumeSection(sectionType, userInput || {});
+    } catch (error) {
+      console.error('Error generating content:', error);
+      return res.status(500).json({
+        success: false,
+        message: `Failed to generate ${sectionType} content: ${error.message}`
+      });
+    }
     
     return res.status(200).json({
       success: true,
@@ -104,13 +115,60 @@ export const saveResume = async (req, res) => {
       });
     }
     
+    // Process content to ensure data types are correct
+    const processedContent = {
+      ...content,
+      summary: typeof content.summary === 'string' ? content.summary : JSON.stringify(content.summary),
+    };
+    
+    // Find template by name or ID
+    let template;
+    try {
+      // First try to find by ID (if it's a valid ObjectId)
+      if (mongoose.Types.ObjectId.isValid(templateId)) {
+        template = await ResumeTemplate.findById(templateId);
+      }
+      
+      // If not found by ID, try to find by name
+      if (!template) {
+        template = await ResumeTemplate.findOne({ name: { $regex: new RegExp(`^${templateId}$`, 'i') } });
+      }
+      
+      // If still not found, use default template
+      if (!template) {
+        template = await ResumeTemplate.findOne({ name: 'Modern' });
+        if (!template) {
+          // Get the first available template as a fallback
+          template = await ResumeTemplate.findOne();
+        }
+      }
+      
+      if (!template) {
+        return res.status(404).json({
+          success: false,
+          message: 'No templates available. Please create a template first.'
+        });
+      }
+    } catch (error) {
+      console.error('Template lookup error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error finding template',
+        error: error.message
+      });
+    }
+    
     let resume;
     
     if (resumeId) {
       // Update existing resume
       resume = await UserResume.findOneAndUpdate(
         { _id: resumeId, user: req.user._id },
-        { name, template: templateId, content },
+        { 
+          name, 
+          template: template._id,
+          content: processedContent
+        },
         { new: true }
       );
       
@@ -125,8 +183,8 @@ export const saveResume = async (req, res) => {
       resume = new UserResume({
         user: req.user._id,
         name,
-        template: templateId,
-        content
+        template: template._id,
+        content: processedContent
       });
       
       await resume.save();

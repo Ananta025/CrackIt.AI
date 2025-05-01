@@ -1,5 +1,6 @@
 import Topic from '../models/topicModel.js';
 import quizService from './learnQuizService.js';
+import mongoose from 'mongoose';
 
 class LearningService {
   /**
@@ -62,23 +63,51 @@ class LearningService {
     // Try to find by ID first
     let topic;
     try {
+      // Check if topicId is a valid MongoDB ObjectId
       if (mongoose.Types.ObjectId.isValid(topicId)) {
         topic = await Topic.findById(topicId);
       }
       
       // If not found by ID, try by name
       if (!topic) {
-        topic = await Topic.findOne({ name: new RegExp(`^${topicId}$`, 'i') });
+        // Create case insensitive regex for exact match
+        const nameRegex = new RegExp(`^${topicId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i');
+        topic = await Topic.findOne({ name: nameRegex });
       }
       
+      // If still not found, check if it's similar to any existing topic
       if (!topic) {
-        throw new Error('Topic not found');
+        // Look for partial matches
+        const partialRegex = new RegExp(topicId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
+        topic = await Topic.findOne({ 
+          $or: [
+            { name: partialRegex },
+            { keywords: partialRegex }
+          ] 
+        });
+      }
+      
+      // If no topic found at all, create a temporary topic object
+      if (!topic) {
+        console.log(`Topic not found in database, generating content for: ${topicId}`);
+        // Create a temporary topic object to pass to the AI content generator
+        topic = {
+          name: topicId,
+          description: `Information about ${topicId}`,
+          difficulty: 'intermediate',
+          toObject: () => ({
+            name: topicId,
+            description: `Information about ${topicId}`,
+            difficulty: 'intermediate',
+            _id: null
+          })
+        };
       }
       
       // Generate explanation content using AI
       const topicContent = await quizService.generateTopicExplanation(
         topic.name,
-        topic.difficulty
+        topic.difficulty || 'intermediate'
       );
       
       return {

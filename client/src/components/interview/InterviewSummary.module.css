@@ -1,0 +1,156 @@
+.container {
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  background-color: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  border: 1px solid #1e3a8a;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 25px 30px -5px rgba(14, 165, 233, 0.1);
+  transform: translateY(-2px);
+}
+
+.headerCard {
+  composes: card;
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #0ea5e9;
+}
+
+.subtitle {
+  color: #d1d5db;
+  margin-bottom: 1rem;
+}
+
+.statisticsCard {
+  composes: card;
+  margin-top: 1.5rem;
+}
+
+.scoreCircle {
+  width: 8rem;
+  height: 8rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 2px;
+}
+
+.scoreGreen {
+  background-color: rgba(22, 101, 52, 0.2);
+  border-color: #22c55e;
+}
+
+.scoreBlue {
+  background-color: rgba(14, 165, 233, 0.2);
+  border-color: #0ea5e9;
+}
+
+.scoreYellow {
+  background-color: rgba(161, 98, 7, 0.3);
+  border-color: #eab308;
+}
+
+.scoreRed {
+  background-color: rgba(153, 27, 27, 0.3);
+  border-color: #ef4444;
+}
+
+.questionsReviewCard {
+  composes: card;
+  margin-top: 1.5rem;
+}
+
+.questionButton {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border-width: 1px;
+}
+
+.questionButtonSelected {
+  composes: questionButton;
+  background-color: rgba(14, 165, 233, 0.2);
+  border-color: #0ea5e9;
+}
+
+.questionButtonAnswered {
+  composes: questionButton;
+  background-color: #0f172a;
+  border-color: #1e293b;
+}
+
+.actionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  transition-property: background-color, border-color, color, transform;
+  transition-duration: 300ms;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+}
+
+.primaryButton {
+  composes: button;
+  background-color: #0ea5e9;
+  color: white;
+}
+
+.primaryButton:hover {
+  background-color: #22c55e;
+}
+
+.secondaryButton {
+  composes: button;
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  color: white;
+}
+
+.secondaryButton:hover {
+  background-color: #1e293b;
+  border-color: #0ea5e9;
+}
+
+.blueButton {
+  composes: button;
+  background-color: #0284c7;
+  color: white;
+}
+
+.blueButton:hover {
+  background-color: #0ea5e9;
+}
+
+.feedbackSection {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: rgba(14, 165, 233, 0.1);
+  border: 1px solid #0284c7;
+  border-radius: 0.5rem;
+}

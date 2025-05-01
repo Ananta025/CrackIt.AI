@@ -72,10 +72,16 @@ export const getTopicContent = async (req, res) => {
  */
 export const generateQuiz = async (req, res) => {
   try {
-    const { topic, difficulty = 'intermediate', questionCount = 5 } = req.body;
+    const { topic, difficulty = 'intermediate', questionCount = 5, isContentRequest = false } = req.body;
     
     if (!topic) {
       return res.status(400).json({ error: 'Topic is required' });
+    }
+    
+    // Special case: if this is a content request (fallback from client), generate topic explanation
+    if (isContentRequest) {
+      const content = await quizService.generateTopicExplanation(topic, difficulty);
+      return res.json(content);
     }
     
     if (questionCount < 3 || questionCount > 10) {

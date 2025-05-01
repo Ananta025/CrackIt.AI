@@ -1,15 +1,27 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ResumePage from '../pages/ResumePage';
 import LandingPage from '../pages/LandingPage';
 import InterviewPage from '../pages/InterviewPage';
 import LinkedinPage from '../pages/LinkedinPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import HomePage from '../pages/HomePage';
-import LearningPage from '../pages/LearningPage';
+import LearnQuizPage from '../pages/LearnQuizPage';
 import SignupPage from '../pages/SignupPage';
 import SigninPage from '../pages/SigninPage';
 import DashboardLayout from '../components/layout/DashboardLayout';
+
+// Protected Route component
+const ProtectedRoute = ({ children, redirectTo = "/signin" }) => {
+  const isAuthenticated = localStorage.getItem('token') !== null;
+  
+  if (!isAuthenticated) {
+    // Redirect to login page with return path
+    return <Navigate to={redirectTo} replace state={{ from: window.location.pathname }} />;
+  }
+  
+  return children;
+};
 
 export default function AppRoutes() {
   return (
@@ -21,11 +33,31 @@ export default function AppRoutes() {
         
         {/* Protected routes with DashboardLayout */}
         <Route element={<DashboardLayout />}>
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/resume" element={<ResumePage />} />
-          <Route path="/interview" element={<InterviewPage />} />
-          <Route path="/linkedin" element={<LinkedinPage />} />
-          <Route path="/learning" element={<LearningPage />} />
+          <Route path="/home" element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/resume" element={
+            <ProtectedRoute>
+              <ResumePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/interview" element={
+            <ProtectedRoute>
+              <InterviewPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/linkedin" element={
+            <ProtectedRoute>
+              <LinkedinPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/learning" element={
+            <ProtectedRoute>
+              <LearnQuizPage />
+            </ProtectedRoute>
+          } />
           {/* Add more routes here for other features */}
         </Route>
         

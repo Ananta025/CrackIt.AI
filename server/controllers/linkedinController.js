@@ -8,7 +8,9 @@ import { compareProfiles } from '../utils/profileComparer.js';
  */
 const optimizeProfileByUrl = async (req, res, next) => {
   try {
-    const { profileUrl, userId } = req.body;
+    const { profileUrl } = req.body;
+    // Get user ID from the authenticated user
+    const userId = req.user._id;
     
     // Scrape LinkedIn profile data
     let profileData;
@@ -65,7 +67,9 @@ const optimizeProfileByUrl = async (req, res, next) => {
  */
 const optimizeManualProfile = async (req, res, next) => {
   try {
-    const { profileData, userId } = req.body;
+    const { profileData } = req.body;
+    // Get user ID from the authenticated user
+    const userId = req.user._id;
     
     // Optimize profile using AI
     const optimizationResults = await linkedinService.optimizeProfile(profileData);
@@ -92,7 +96,9 @@ const optimizeManualProfile = async (req, res, next) => {
  */
 const regenerateProfileSection = async (req, res, next) => {
   try {
-    const { profileData, section, userId } = req.body;
+    const { profileData, section } = req.body;
+    // Get user ID from the authenticated user
+    const userId = req.user._id;
     
     if (!['headline', 'about', 'experience', 'skills', 'education'].includes(section)) {
       return res.status(400).json({ error: 'Invalid section specified' });
@@ -120,13 +126,15 @@ const regenerateProfileSection = async (req, res, next) => {
  */
 const saveProfileOptimization = async (req, res, next) => {
   try {
-    const { userId, originalProfile, optimizedProfile } = req.body;
+    const { originalProfile, optimizedProfile } = req.body;
+    // Get user ID from the authenticated user
+    const userId = req.user._id;
     
-    if (!userId || !originalProfile || !optimizedProfile) {
+    if (!originalProfile || !optimizedProfile) {
       return res.status(400).json({ error: 'Missing required data' });
     }
     
-    // Create new optimization record
+    // Create new optimization record with user ID from the authenticated user
     const savedOptimization = await ProfileOptimization.create({
       userId,
       originalProfile,

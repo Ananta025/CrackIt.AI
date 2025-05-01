@@ -232,6 +232,21 @@ export async function generateResumeSection(sectionType, userInput) {
         `;
         break;
         
+      case 'description':
+        // Adding support for description section type (similar to experience)
+        prompt = `
+        Create compelling bullet points for this position:
+        - Job Title: ${userInput.title || 'Not specified'}
+        - Company: ${userInput.company || 'Not specified'}
+        - Duration: ${userInput.duration || 'Not specified'}
+        
+        Create 3-5 achievement-focused bullet points using strong action verbs.
+        Quantify results whenever possible (numbers, percentages, metrics).
+        Start each bullet point with an action verb.
+        Return the response as plain text with each bullet point on a new line.
+        `;
+        break;
+        
       case 'skills':
         prompt = `
         Based on this job role and experience, suggest relevant skills to include on a resume:

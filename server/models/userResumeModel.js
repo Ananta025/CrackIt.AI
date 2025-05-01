@@ -25,7 +25,10 @@ const userResumeSchema = new mongoose.Schema(
         linkedin: String,
         portfolio: String
       },
-      summary: String,
+      summary: {
+        type: String,
+        default: ''
+      },
       education: [{
         institution: String,
         degree: String,
@@ -70,6 +73,14 @@ const userResumeSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Middleware to ensure summary is a string
+userResumeSchema.pre('save', function(next) {
+  if (this.content && this.content.summary && typeof this.content.summary !== 'string') {
+    this.content.summary = JSON.stringify(this.content.summary);
+  }
+  next();
+});
 
 const UserResume = mongoose.model('UserResume', userResumeSchema);
 

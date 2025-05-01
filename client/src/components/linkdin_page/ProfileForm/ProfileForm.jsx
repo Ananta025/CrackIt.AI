@@ -5,16 +5,24 @@ import { ArrowLeft, Send, CheckCircle2 } from "lucide-react";
 import { useProfileOptimizer } from "../../../context/ProfileOptimizer";
 
 const ProfileForm = () => {
-  const { setSelectedOption } = useProfileOptimizer();
+  const { 
+    setSelectedOption, 
+    optimizeManualProfile,
+    isLoading, 
+    error 
+  } = useProfileOptimizer();
+  
   const [formData, setFormData] = useState({
-    heading: "",
-    summary: "",
+    name: "",
+    headline: "",
+    about: "",
     experience: "",
-    skills: "",
+    education: "",
+    skills: ""
   });
+  
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
+  const [localError, setLocalError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,29 +30,70 @@ const ProfileForm = () => {
       ...prev,
       [name]: value,
     }));
+    setLocalError("");
   };
 
   const nextStep = () => {
+    // Validate current step
+    if (currentStep === 1 && !formData.headline.trim()) {
+      setLocalError("Please enter your headline");
+      return;
+    }
+    
+    if (currentStep === 2 && !formData.about.trim()) {
+      setLocalError("Please enter your professional summary");
+      return;
+    }
+    
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
+      setLocalError("");
     }
   };
 
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      setLocalError("");
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsComplete(true);
-    }, 2000);
+    
+    // Validate final step
+    if (!formData.skills.trim()) {
+      setLocalError("Please enter your skills");
+      return;
+    }
+    
+    // Format data for API
+    const profileData = {
+      name: formData.name,
+      headline: formData.headline,
+      about: formData.about,
+      // Convert comma-separated/line-break text to arrays
+      experience: formData.experience
+        .split(/\n|,/)
+        .filter(item => item.trim())
+        .map(item => ({ description: item.trim() })),
+      education: formData.education
+        .split(/\n|,/)
+        .filter(item => item.trim())
+        .map(item => ({ description: item.trim() })),
+      skills: formData.skills
+        .split(/\n|,/)
+        .filter(item => item.trim())
+        .map(item => item.trim())
+    };
+    
+    try {
+      // Call API through context
+      await optimizeManualProfile(profileData);
+      // Success handled through context state
+    } catch (err) {
+      setLocalError(err.message || "Failed to analyze profile. Please try again.");
+    }
   };
 
   const renderFormStep = () => {
@@ -52,17 +101,25 @@ const ProfileForm = () => {
       case 1:
         return (
           <div className={styles["form-step"]}>
-            <h3 className={styles["step-title"]}>Professional Headline</h3>
+            <h3 className={styles["step-title"]}>Basic Information</h3>
             <p className={styles["step-description"]}>
-              Enter your current LinkedIn headline or the position you'd like to
-              optimize for
+              Enter your name and current LinkedIn headline
             </p>
             <input
               type="text"
-              name="heading"
+              name="name"
+              className={pageStyles.inputField}
+              placeholder="Your full name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+            <input
+              type="text"
+              name="headline"
               className={pageStyles.inputField}
               placeholder="e.g., Senior Software Engineer at Tech Company"
-              value={formData.heading}
+              value={formData.headline}
               onChange={handleChange}
               required
             />
@@ -76,10 +133,10 @@ const ProfileForm = () => {
               Enter your current LinkedIn summary or key points about yourself
             </p>
             <textarea
-              name="summary"
+              name="about"
               className={`${pageStyles.inputField} ${pageStyles.textareaField}`}
               placeholder="Brief description of your professional background, achievements, and goals..."
-              value={formData.summary}
+              value={formData.about}
               onChange={handleChange}
               required
             />
@@ -88,18 +145,23 @@ const ProfileForm = () => {
       case 3:
         return (
           <div className={styles["form-step"]}>
-            <h3 className={styles["step-title"]}>Experience Details</h3>
+            <h3 className={styles["step-title"]}>Experience & Education</h3>
             <p className={styles["step-description"]}>
-              Describe your most relevant work experience that you'd like to
-              highlight
+              Describe your most relevant work experience and education details
             </p>
             <textarea
               name="experience"
               className={`${pageStyles.inputField} ${pageStyles.textareaField}`}
-              placeholder="Your recent role responsibilities, achievements, and impact..."
+              placeholder="Your recent roles and responsibilities (separate entries with commas or line breaks)"
               value={formData.experience}
               onChange={handleChange}
-              required
+            />
+            <textarea
+              name="education"
+              className={`${pageStyles.inputField} ${pageStyles.textareaField}`}
+              placeholder="Your education details (separate entries with commas or line breaks)"
+              value={formData.education}
+              onChange={handleChange}
             />
           </div>
         );
@@ -108,7 +170,7 @@ const ProfileForm = () => {
           <div className={styles["form-step"]}>
             <h3 className={styles["step-title"]}>Skills & Expertise</h3>
             <p className={styles["step-description"]}>
-              List your key skills, separated by commas
+              List your key skills, separated by commas or line breaks
             </p>
             <textarea
               name="skills"
@@ -125,24 +187,8 @@ const ProfileForm = () => {
     }
   };
 
-  if (isComplete) {
-    return (
-      <div className={styles["success-container"]}>
-        <div className={styles["success-icon"]}>
-          <CheckCircle2 size={48} />
-        </div>
-        <h2 className={styles["success-title"]}>Profile Analysis Complete!</h2>
-        <p className={styles["success-message"]}>
-          We've analyzed your information and prepared optimization suggestions
-          for your LinkedIn profile. In a complete implementation, you would see
-          personalized recommendations here.
-        </p>
-        <button className={pageStyles.btn} onClick={() => setSelectedOption("")}>
-          Start Over
-        </button>
-      </div>
-    );
-  }
+  // Display errors from context or local validation
+  const displayError = error || localError;
 
   return (
     <div className={styles["profile-form"]}>
@@ -167,7 +213,7 @@ const ProfileForm = () => {
             <div className={styles["step-indicator"]}>{step}</div>
             <div className={styles["step-label"]}>
               {step === 1
-                ? "Headline"
+                ? "Basic Info"
                 : step === 2
                 ? "Summary"
                 : step === 3
@@ -178,6 +224,12 @@ const ProfileForm = () => {
         ))}
       </div>
 
+      {displayError && (
+        <div className={styles["error-container"]}>
+          <p className={styles["error-message"]}>{displayError}</p>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         {renderFormStep()}
 
@@ -187,25 +239,31 @@ const ProfileForm = () => {
               type="button"
               className={`${pageStyles.btn} ${styles["btn-secondary"]}`}
               onClick={prevStep}
+              disabled={isLoading}
             >
               Previous
             </button>
           )}
 
           {currentStep < 4 ? (
-            <button type="button" className={pageStyles.btn} onClick={nextStep}>
+            <button 
+              type="button" 
+              className={pageStyles.btn} 
+              onClick={nextStep}
+              disabled={isLoading}
+            >
               Next
             </button>
           ) : (
             <button
               type="submit"
               className={`${pageStyles.btn} ${styles["btn-submit"]}`}
-              disabled={isSubmitting}
+              disabled={isLoading}
             >
-              {isSubmitting ? (
+              {isLoading ? (
                 <>
                   <span className={styles["loading-spinner"]}></span>
-                  Submitting...
+                  Analyzing Profile...
                 </>
               ) : (
                 <>

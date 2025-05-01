@@ -5,38 +5,44 @@ import { ArrowLeft, LinkedinIcon, Search } from "lucide-react";
 import { useProfileOptimizer } from "../../../context/ProfileOptimizer";
 
 const UrlInput = () => {
-  const { setSelectedOption } = useProfileOptimizer();
+  const { setSelectedOption, optimizeByUrl, isLoading, error, setError } = useProfileOptimizer();
   const [linkedinUrl, setLinkedinUrl] = useState("");
-  const [error, setError] = useState("");
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [localError, setLocalError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Basic validation
     if (!linkedinUrl.trim()) {
-      setError("Please enter your LinkedIn URL");
+      setLocalError("Please enter your LinkedIn URL");
       return;
     }
 
     if (!linkedinUrl.includes("linkedin.com/")) {
-      setError("Please enter a valid LinkedIn URL");
+      setLocalError("Please enter a valid LinkedIn URL");
       return;
     }
 
-    setError("");
-    setIsAnalyzing(true);
-
-    // Simulate analysis (this would be replaced with actual API call)
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      // This would normally redirect to results or next step
-      // For now just show a fake success message
-      alert(
-        "Profile analyzed successfully! In a complete implementation, optimization suggestions would be shown here."
-      );
-    }, 2000);
+    setLocalError("");
+    
+    try {
+      // Call the API through our context function
+      await optimizeByUrl(linkedinUrl);
+      // Success will automatically show results via context state
+    } catch (error) {
+      // Handle specific errors from the API
+      if (error.requiresManualEntry) {
+        // If scraping failed but we can still proceed with manual entry
+        alert("We couldn't automatically analyze your profile. Let's enter the information manually.");
+        setSelectedOption("form");
+      } else {
+        setLocalError(error.message || "Failed to analyze profile. Please try again.");
+      }
+    }
   };
+
+  // Display either context error or local validation error
+  const displayError = error || localError;
 
   return (
     <div className={styles["url-input"]}>
@@ -59,14 +65,18 @@ const UrlInput = () => {
             className={`${styles["input-field"]} ${pageStyles.inputField}`}
             placeholder="https://www.linkedin.com/in/your-profile"
             value={linkedinUrl}
-            onChange={(e) => setLinkedinUrl(e.target.value)}
+            onChange={(e) => {
+              setLinkedinUrl(e.target.value);
+              setLocalError("");
+              setError(null);
+            }}
           />
         </div>
 
-        {error && <p className={styles["error-message"]}>{error}</p>}
+        {displayError && <p className={styles["error-message"]}>{displayError}</p>}
 
-        <button type="submit" className={`${pageStyles.btn} ${styles["btn-analyze"]}`} disabled={isAnalyzing}>
-          {isAnalyzing ? (
+        <button type="submit" className={`${pageStyles.btn} ${styles["btn-analyze"]}`} disabled={isLoading}>
+          {isLoading ? (
             <>
               <span className={styles["loading-spinner"]}></span>
               Analyzing Profile...

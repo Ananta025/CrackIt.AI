@@ -1,0 +1,43 @@
+.pageContainer {
+  min-height: 100vh;
+  background-color: #0f172a;
+  padding: 2rem 1rem;
+}
+
+.contentWrapper {
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.setupContainer,
+.sessionContainer,
+.summaryContainer {
+  background-color: rgba(15, 23, 42, 0.9);
+  border-radius: 0.5rem;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.setupContainer:hover,
+.sessionContainer:hover,
+.summaryContainer:hover {
+  box-shadow: 0 6px 8px rgba(14, 165, 233, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Add animation for transitions between stages */
+.stageTransition {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

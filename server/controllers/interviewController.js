@@ -204,10 +204,10 @@ const getInterviewTags = (interview) => {
   return tags;
 };
 
-const calculateUserStats = (interview) => {
+const calculateUserStats = (interviews) => {
   // Initialize stats object
   const stats = {
-    totalInterviews: interview.length,
+    totalInterviews: interviews.length,
     completedInterviews: 0,
     averageScore: 0,
     scores: {
