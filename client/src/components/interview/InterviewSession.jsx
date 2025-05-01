@@ -53,12 +53,14 @@ export default function InterviewSession({
   const handleSubmit = () => {
     if (answer.trim().length === 0 || isLoading) return
     
+    console.log("Submitting answer:", answer.substring(0, 30) + "...");
     submitAnswer(answer)
     setIsAnswerSubmitted(true)
   }
 
   // Handle moving to next question
   const handleNext = () => {
+    console.log("Moving to next question, current index:", currentQuestionIndex, "total questions:", questions.length);
     setAnswer('')
     setIsAnswerSubmitted(false)
     setShowHint(false)
@@ -85,8 +87,59 @@ export default function InterviewSession({
   const currentFeedback = feedback[currentQuestionIndex]
   const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100
 
+  // Get current question type (with fallback)
+  const getQuestionType = () => {
+    if (currentQuestion && currentQuestion.type) {
+      return currentQuestion.type;
+    }
+    // Default based on role if not explicitly set
+    const technicalRoles = ['Frontend Developer', 'Backend Developer', 'Full Stack Developer'];
+    if (technicalRoles.includes(role)) {
+      return 'technical';
+    }
+    return 'behavioral';
+  }
+
   // Early return if no questions
   if (!currentQuestion) return <div>Loading questions...</div>
+
+  // Get safe question text
+  const getQuestionText = () => {
+    if (typeof currentQuestion.text === 'string') {
+      return currentQuestion.text;
+    }
+    
+    // Handle when text is an object (could be from API response)
+    if (typeof currentQuestion.text === 'object' && currentQuestion.text !== null) {
+      // Try to extract message property if available
+      if (currentQuestion.text.message) {
+        return currentQuestion.text.message;
+      }
+      
+      // Otherwise stringify the object
+      try {
+        return JSON.stringify(currentQuestion.text);
+      } catch (e) {
+        console.error('Failed to stringify question text:', e);
+      }
+    }
+    
+    return "No question available. Please try restarting the interview.";
+  };
+
+  // Add safe handling for missing ideaPoints
+  const getHints = () => {
+    // Provide default hints if ideaPoints don't exist in the question
+    if (!currentQuestion.ideaPoints) {
+      return [
+        "Structure your answer using the STAR method (Situation, Task, Action, Result)",
+        "Be specific with examples from your past experience",
+        "Quantify your achievements when possible",
+        "Focus on your individual contributions"
+      ];
+    }
+    return currentQuestion.ideaPoints;
+  };
 
   return (
     <div className={styles.container}>
@@ -107,7 +160,7 @@ export default function InterviewSession({
               Q{currentQuestionIndex + 1}/{questions.length}
             </span>
             <span className={styles.typeBadge}>
-              {currentQuestion.type}
+              {getQuestionType()}
             </span>
           </div>
           <div className={styles.difficultyBadge}>
@@ -115,9 +168,9 @@ export default function InterviewSession({
           </div>
         </div>
         
-        {/* Question */}
+        {/* Question - Fixed to safely handle different types */}
         <h2 className={styles.question}>
-          {currentQuestion.text}
+          {getQuestionText()}
         </h2>
         
         {/* Answer area */}
@@ -293,7 +346,7 @@ export default function InterviewSession({
               <div className="animate-fadeIn">
                 <p className="text-gray-300 text-sm mb-2">Consider these points:</p>
                 <ul className="list-disc list-inside space-y-1">
-                  {currentQuestion.ideaPoints.map((point, idx) => (
+                  {getHints().map((point, idx) => (
                     <li key={idx} className="text-sm text-yellow-200">{point}</li>
                   ))}
                 </ul>

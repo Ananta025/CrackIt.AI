@@ -21,7 +21,8 @@ export default function InterviewPage() {
     feedback: [],
     currentQuestionIndex: 0,
     overallScore: 0,
-    interviewId: null
+    interviewId: null,
+    expectedQuestionCount: 0
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -36,6 +37,8 @@ export default function InterviewPage() {
       // Convert role to interview type
       const interviewType = getInterviewType(settings.role)
       
+      console.log('Starting interview with type:', interviewType);
+      
       // Prepare settings object for the API
       const apiSettings = {
         difficulty: settings.difficulty,
@@ -46,29 +49,55 @@ export default function InterviewPage() {
       // Start interview on server
       const result = await interviewService.startInterview(interviewType, apiSettings)
       
-      // Set up the initial interview data
+      if (!result || !result.interview || !result.interview._id) {
+        throw new Error('Invalid response from server when starting interview');
+      }
+      
+      console.log('Interview created with ID:', result.interview._id);
+      
+      // Set up the initial interview data with placeholder for first question
       setInterviewData({
-        questions: [{ text: "Loading your first question..." }],
+        questions: [{ text: "Starting your interview... Please wait." }],
         responses: [],
         feedback: [],
         currentQuestionIndex: 0,
         overallScore: 0,
-        interviewId: result.interview._id
+        interviewId: result.interview._id,
+        expectedQuestionCount: getMaxQuestionsCount(settings.duration)
       })
       
       setInterviewSettings(settings)
       setStage('session')
       
-      // Get the first question by sending an empty message to trigger the interview start
+      // Get the first question by sending a ready message to trigger the interview start
+      console.log('Requesting first question...');
       const firstMessage = await interviewService.sendMessage(
         result.interview._id,
         "I'm ready to begin the interview."
       )
       
+      // Extract the message text with thorough error handling
+      let questionText = "Could not load the first question. Please try again.";
+      
+      if (firstMessage) {
+        if (typeof firstMessage.message === 'string') {
+          questionText = firstMessage.message;
+        } else if (firstMessage.message && typeof firstMessage.message.response === 'string') {
+          questionText = firstMessage.message.response;
+        } else if (firstMessage.response && typeof firstMessage.response === 'string') {
+          questionText = firstMessage.response;
+        }
+      }
+      
+      console.log('First question processed:', questionText);
+      
       // Update with the first question
       setInterviewData(prev => ({
         ...prev,
-        questions: [{ text: firstMessage.message }]
+        questions: [{ 
+          text: questionText,
+          type: interviewType
+        }]
       }))
       
     } catch (err) {
@@ -89,15 +118,38 @@ export default function InterviewPage() {
     }
   }
 
+  // Get maximum question count based on duration
+  const getMaxQuestionsCount = (duration) => {
+    switch (duration) {
+      case "short": return 5;
+      case "medium": return 10;
+      case "long": return 15;
+      default: return 10;
+    }
+  }
+
   // Submit an answer to the current question
   const submitAnswer = async (answer) => {
-    const { currentQuestionIndex, questions, interviewId } = interviewData
+    const { currentQuestionIndex, questions, interviewId, expectedQuestionCount } = interviewData
     
     try {
       setIsLoading(true)
       
+      console.log(`Submitting answer for question ${currentQuestionIndex + 1}`);
+      
       // Send the answer to the server
       const result = await interviewService.sendMessage(interviewId, answer)
+      
+      console.log('Response received:', result);
+      
+      if (!result) {
+        throw new Error('Invalid response from server');
+      }
+      
+      // Ensure message is a string
+      const nextQuestionText = typeof result.message === 'string' 
+        ? result.message 
+        : (result.message?.text || "Unable to load next question");
       
       // Update the interview data with the response and feedback
       setInterviewData(prev => {
@@ -105,12 +157,24 @@ export default function InterviewPage() {
         newResponses[currentQuestionIndex] = answer
         
         const newFeedback = [...prev.feedback]
-        newFeedback[currentQuestionIndex] = result.feedback
+        newFeedback[currentQuestionIndex] = result.feedback || { 
+          score: 5, 
+          strengths: ['No specific feedback available'],
+          improvements: ['Continue practicing your responses']
+        }
         
         // Add the next question if the interview hasn't ended
         const newQuestions = [...prev.questions]
-        if (!result.interviewEnded) {
-          newQuestions.push({ text: result.message })
+        
+        // Check if this should be the last question based on expected count
+        const shouldAddNextQuestion = !result.interviewEnded && 
+                                     newQuestions.length < expectedQuestionCount;
+                                     
+        if (shouldAddNextQuestion) {
+          newQuestions.push({ 
+            text: nextQuestionText,
+            type: getInterviewType(interviewSettings.role)
+          })
         }
         
         return {
@@ -121,8 +185,9 @@ export default function InterviewPage() {
         }
       })
       
-      // If interview ended, fetch the complete interview to get the results
-      if (result.interviewEnded) {
+      // If interview ended or we've reached the expected question count
+      if (result.interviewEnded || 
+          questions.length >= expectedQuestionCount) {
         try {
           const interview = await interviewService.getInterview(interviewId)
           
@@ -151,9 +216,15 @@ export default function InterviewPage() {
   // Move to the next question
   const nextQuestion = () => {
     setInterviewData(prev => {
-      // If there are no more questions, move to the summary
+      // Check if we have more questions to show
       if (prev.currentQuestionIndex >= prev.questions.length - 2) {
-        setStage('summary')
+        // If we're at the last question and have expected count of questions,
+        // move to the summary
+        if (prev.questions.length >= prev.expectedQuestionCount) {
+          setStage('summary')
+          return prev
+        }
+        // Otherwise stay at current index
         return prev
       }
       
@@ -180,7 +251,8 @@ export default function InterviewPage() {
       feedback: [],
       currentQuestionIndex: 0,
       overallScore: 0,
-      interviewId: null
+      interviewId: null,
+      expectedQuestionCount: 0
     })
   }
 

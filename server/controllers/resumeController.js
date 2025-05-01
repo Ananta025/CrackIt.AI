@@ -9,6 +9,7 @@ import UserResume from '../models/userResumeModel.js';
 import { generateResumePDF } from '../utils/pdfGenerator.js';
 import config from '../config/config.js';
 import mongoose from 'mongoose';
+import { responseFormatter } from '../utils/responseFormatter.js';
 
 /**
  * Controller to handle resume analysis
@@ -47,10 +48,14 @@ export const getResumeTemplates = async (req, res) => {
     const templates = await ResumeTemplate.find({ isActive: true }, 
       'name category description previewImage');
     
-    return res.status(200).json({
-      success: true,
-      data: templates
-    });
+    if (templates.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No templates available. Please create a template first.'
+      });
+    }
+    
+    return res.status(200).json(responseFormatter.formatResumeTemplatesResponse(templates));
   } catch (error) {
     console.error('Error fetching templates:', error);
     return res.status(500).json({
@@ -159,6 +164,7 @@ export const saveResume = async (req, res) => {
     }
     
     let resume;
+    let isNewResume = !resumeId;
     
     if (resumeId) {
       // Update existing resume
@@ -190,11 +196,9 @@ export const saveResume = async (req, res) => {
       await resume.save();
     }
     
-    return res.status(200).json({
-      success: true,
-      message: resumeId ? 'Resume updated successfully' : 'Resume created successfully',
-      data: { resumeId: resume._id }
-    });
+    return res.status(200).json(
+      responseFormatter.formatResumeSaveResponse(resume._id, isNewResume)
+    );
   } catch (error) {
     console.error('Resume save error:', error);
     return res.status(500).json({

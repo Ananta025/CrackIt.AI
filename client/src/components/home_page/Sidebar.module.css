@@ -1,7 +1,7 @@
 .sidebar {
     color: white;
     height: 100vh;
-    background-color: #212b34;
+    background-color: #1e1e1e;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -19,8 +19,8 @@
 /* crackit ai title */
 .logo {
     margin-top: 1rem;
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 600;
 }
 
 /* features list section */
@@ -51,7 +51,7 @@
 }
 
 .active {
-    background-color: #0F1823;
+    background-color: #121212;
     color: rgb(31, 194, 28);
     font-weight: 500;
 }

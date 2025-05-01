@@ -102,7 +102,7 @@
     width:100%;
     padding-left: 2rem;
     padding-right: 2rem;
-    background-color: #0F1823;
+    background-color: #121212; /* Updated background color */
     font-family: "Roboto", sans-serif;
 }
 /* upper section */
@@ -122,23 +122,60 @@
     width: 100%;
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    justify-content: space-between;
     padding-left: 1.5rem;
+    gap: 1rem; /* Add gap to ensure separation */
 }
 .top-skill{
-    width: 600px;
+    width: 37%;
     height: 275px;
     display: flex;
     flex-direction: column;
     text-align: center;
     flex-wrap:wrap;
-    gap:10px;
     border-radius: 20px;
     border: 3px solid #394149;
-    padding: 1.5rem;
+    padding: 1rem;
+    position: relative; /* For absolute positioning of edit button */
+    background-color: #1e1e1e; /* Updated card background color */
+    overflow-y: auto; /* Allow scrolling if content exceeds container */
 }
+
+/* Skill header with edit button */
+.skillHeader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 100%;
+}
+
+.editButton {
+    position: absolute;
+    right: 0;
+    top: 0;
+    background: none;
+    border: none;
+    color: #24bd6e;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.editIcon {
+    font-size: 1.1rem;
+    transition: transform 0.3s ease;
+}
+
+.editButton:hover .editIcon {
+    transform: scale(1.1.15);
+    color: #36d685;
+}
+
 .skill-heading{
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 500;
     margin-bottom: 1.6rem;
 }
@@ -146,27 +183,131 @@
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 0.75rem;
     justify-content: start;
     align-items: center;
 }
 .skill{
     /* background-color: rgb(75, 18, 182); */
     background: linear-gradient(99deg, #9728dc -16.6%, #336de0 105.88%);
-    padding: 0.5rem 1rem;
-    border-radius: 10px;
-    font-size: 15px;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.6rem;
+    font-size: 0.85rem;
     font-weight: 500;
     
 }
 .activity{
-    height:275px;
-    width:100%;
-    background-color: #4d5b685c;
-    margin-left:1rem;
+    flex: 1; /* Use flex to take remaining space instead of fixed width */
+    min-width: 50%; /* Ensure minimum width */
+    height: 275px;
+    background-color: #1e1e1e; /* Updated card background color */
+    margin-left: 0; /* Remove margin as we're using gap */
     border-radius: 20px;
-    border:3px solid #394149;
+    border: 3px solid #394149;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* Prevent chart overflow */
+}
+
+/* Empty skills state */
+.emptySkills {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 70%;
+    width: 100%;
+}
+
+.emptySkillMessage {
+    color: #aaa;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.emptySkillsMessage {
+    color: #aaa;
+    font-size: 1rem;
+    width: 100%;
+    text-align: center;
+    padding: 2rem 0;
+}
+
+/* Skill input styles */
+.skillInputContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.skillInput {
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 2px solid #394149;
+    background-color: #2a3744;
+    color: white;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.skillInput:focus {
+    outline: none;
+    border-color: #336de0;
+}
+
+.skillButtonGroup {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.iconButton {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.checkIcon {
+    color: white;
+    font-size: 1.05rem;
+}
+
+.cancelIcon {
+    color: white;
+    font-size: 1.05rem;
+}
+
+.iconButton:first-child {
+    background: linear-gradient(99deg, #9728dc -16.6%, #336de0 105.88%);
+}
+
+.iconButton:first-child:hover {
+    transform: scale(1.05);
+}
+
+.iconButton:last-child {
+    background-color: #394149;
+}
+
+.iconButton:last-child:hover {
+    background-color: #4d5b68;
+    transform: scale(1.05);
+}
+
+/* Remove unused classes */
+.addSkillBtn,
+.addSkillButton,
+.cancelSkillButton {
+    display: none;
 }
 
 /* lower main section */
@@ -177,7 +318,7 @@
     width: 100%;
     margin-top: 1.5rem;
     flex-direction: row;
-    background-color: #0F1823;
+    background-color: #121212; /* Updated background color */
     color: white;
 }
 
@@ -185,11 +326,20 @@
 .card{
     height: 370px;
     width:650px;
-    background-color: #35435037;
+    background-color: #1e1e1e; /* Updated card background color */
     border-radius: 20px;
     border:3px solid #394149;
     text-align: center;
-    padding: 1rem 2rem 1rem 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.card > div {
+    /* For the score-container div */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .title {
@@ -235,6 +385,38 @@
     font-weight: 500;
 }
 
+/* No data containers */
+.noDataContainer, .noScoreContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 1rem;
+}
+
+.noDataMessage {
+    color: #aaa;
+    font-size: 1rem;
+    margin-top: 1rem;
+    max-width: 80%;
+    text-align: center;
+}
+
+.quizHeading {
+    color: #ffffff;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.noScoreSubtext {
+    color: #aaa;
+    font-size: 1rem;
+    max-width: 80%;
+    text-align: center;
+}
+
 /* news and gihub section */
 .updates{
     height: 370px;
@@ -247,4 +429,154 @@
 .updates:hover{
     border: 3px solid rgb(97, 192, 221);
     transition-duration: 0.5s;
+}
+
+/* Welcome section */
+.welcomeContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+    border-radius: 20px;
+    padding: 1.5rem;
+    border: 3px solid #394149;
+}
+
+.welcomeText {
+    font-size: 1.8rem;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+/* Chart container */
+.chartContainer {
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+    position: relative;
+    overflow: hidden; /* Prevent chart overflow */
+}
+
+/* Improved card info styles */
+.infoCard {
+    background-color: #1e1e1e; /* Updated card background color */
+    border-radius: 20px;
+    border: 3px solid #394149;
+    height: 370px;
+    width: 240px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.infoCard:hover {
+    border-color: rgb(97, 192, 221);
+    transform: translateY(-5px);
+}
+
+.cardIcon {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    color: #24bd6e;
+}
+
+.cardTitle {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.cardSubtitle {
+    font-size: 1rem;
+    color: #bbb;
+    text-align: center;
+    padding: 0 1rem;
+}
+
+/* Score item styles */
+.scoreItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: #2a3744;
+    border-radius: 10px;
+}
+
+.scoreTopic {
+    font-weight: 500;
+    text-align: left;
+}
+
+.scoreValue {
+    font-weight: 600;
+    color: #24bd6e;
+}
+
+.scoreDate {
+    font-size: 0.85rem;
+    color: #aaa;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 1200px) {
+    .upper {
+        flex-direction: column;
+    }
+    
+    .welcomeContainer {
+        margin-bottom: 1.5rem;
+    }
+    
+    .lower {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1.5rem;
+    }
+    
+    .card {
+        width: 100%;
+        margin-bottom: 1.5rem;
+    }
+    
+    .user-details {
+        flex-direction: column;
+        padding-left: 0;
+    }
+    
+    .top-skill {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .activity {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .user-details {
+        flex-direction: column;
+    }
+    
+    .top-skill {
+        width: 100%;
+        margin-bottom: 1.5rem;
+    }
+    
+    .activity {
+        width: 100%;
+        margin-left: 0;
+    }
+    
+    .infoCard {
+        width: 100%;
+        margin-bottom: 1.5rem;
+    }
 }

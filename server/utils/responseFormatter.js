@@ -68,5 +68,34 @@ export const responseFormatter = {
         weaknesses: []
       }
     };
+  },
+
+  /**
+   * Format resume template response
+   */
+  formatResumeTemplatesResponse: (templates) => {
+    return {
+      success: true,
+      data: templates.map(template => ({
+        _id: template._id,
+        name: template.name,
+        category: template.category,
+        description: template.description,
+        previewImage: template.previewImage || null
+      }))
+    };
+  },
+
+  /**
+   * Format resume save response
+   */
+  formatResumeSaveResponse: (resumeId, isNewResume = true) => {
+    return {
+      success: true,
+      message: isNewResume ? 'Resume created successfully' : 'Resume updated successfully',
+      data: {
+        resumeId
+      }
+    };
   }
 };

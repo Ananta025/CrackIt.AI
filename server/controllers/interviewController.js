@@ -40,7 +40,7 @@ const startInterview = async (req, res) => {
 
 const sendMessage = async (req, res) => {
   try {
-    const { message, interviewId, type } = req.body;
+    const { message, interviewId } = req.body;
 
     if (!message) {
       return res.status(400).json({ message: "Message is required" });
@@ -62,32 +62,46 @@ const sendMessage = async (req, res) => {
       return res.status(400).json({ message: "Interview is not in progress" });
     }
 
-    // Fix parameter order: message, interview.type, interview
+    // Check if this is the first message (special case for starting the interview)
+    const isFirstMessage = interview.questions.length === 0 && 
+                          message.toLowerCase().includes("ready to begin");
+
+    // Process the user response with our AI service
     const aiResponse = await aiService.processUserResponse(
       message,
-      interview.type,  // Pass interview type first
-      interview        // Pass full interview object as the data
+      interview.type,
+      interview
     );
 
-    // Rest of the function remains the same
     if (!aiResponse) {
       return res.status(500).json({ message: "Error processing AI response" });
     }
 
+    // For the first message, we don't store it as an answer but just get the first question
+    if (isFirstMessage) {
+      // Return first question as a string
+      return res.json({
+        message: aiResponse.response,
+        feedback: null,
+        interviewEnded: false,
+      });
+    }
+
     // Update interview in database with the new question and answer
     interview.questions.push({
-      text:
-        interview.questions.length === 0
-          ? aiResponse.lastQuestion
-          : interview.questions[interview.questions.length - 1].text,
+      text: interview.questions.length === 0
+        ? aiResponse.lastQuestion
+        : interview.questions[interview.questions.length - 1].text,
       answer: message,
       feedback: aiResponse.feedback,
     });
 
-    // Check if interview should end
-    const shouldInterviewEnd =
-      interview.questions.length >=
-      getMaxQuestions(interview.settings.duration);
+    // Check if interview should end based on max questions
+    const maxQuestions = getMaxQuestions(interview.settings.duration);
+    const shouldInterviewEnd = interview.questions.length >= maxQuestions;
+    
+    console.log(`Question count: ${interview.questions.length}, Max: ${maxQuestions}, Should end: ${shouldInterviewEnd}`);
+
     if (shouldInterviewEnd) {
       interview.status = "completed";
       interview.endTime = new Date();
@@ -95,7 +109,9 @@ const sendMessage = async (req, res) => {
         (interview.endTime - interview.startTime) / (1000 * 60)
       );
 
+      // Generate results and clean up context
       interview.results = await aiService.generateInterviewResults(interview);
+      aiService.clearInterviewContext(interviewId);
     }
 
     await interview.save();
@@ -106,6 +122,7 @@ const sendMessage = async (req, res) => {
       interviewEnded: shouldInterviewEnd,
     });
   } catch (error) {
+    console.error("Interview error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -187,7 +204,7 @@ const getInterviewTitle = (interview) => {
 
 const getInterviewTags = (interview) => {
   const tags = [];
-  if (interview.settings.diffiulty) {
+  if (interview.settings.difficulty) {  // Fixed from diffiulty to difficulty
     tags.push(
       interview.settings.difficulty.charAt(0).toUpperCase() +
         interview.settings.difficulty.slice(1)

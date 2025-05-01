@@ -1,476 +1,533 @@
+import { GoogleGenAI } from "@google/genai";
+import dotenv from "dotenv";
+
+dotenv.config();
+
 class GeminiAIServices {
-    constructor(){
-        this.interviewContexts = new Map(); // Store interview contexts for each user
+  constructor() {
+    // Initialize the Gemini API client with the new format
+    this.genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    this.model = "gemini-2.0-flash"; // Updated to use newer model
+    this.interviewContexts = new Map(); // Store interview contexts for each user
+    this.setupPrompts();
+  }
+
+  setupPrompts() {
+    // Interview type specific system prompts
+    this.systemPrompts = {
+      technical: `You are an expert technical interviewer for software engineering roles. 
+Your goal is to conduct a professional technical interview following best practices:
+1. Ask relevant questions based on the candidate's role focus
+2. Start with fundamental concepts before moving to more complex topics
+3. Follow up on the candidate's answers to explore their depth of understanding
+4. Evaluate responses using the STAR method where applicable
+5. Provide constructive feedback on technical accuracy, problem-solving approach, and communication
+6. Adjust difficulty based on the candidate's responses`,
+
+      behavioral: `You are an expert behavioral interviewer for professional roles.
+Your goal is to assess a candidate's soft skills and past experiences using the STAR method:
+1. Ask questions that reveal how candidates have handled specific workplace situations
+2. Probe for details about the Situation, Task, Action, and Result in their responses
+3. Focus on leadership, teamwork, conflict resolution, problem-solving, and adaptability
+4. Provide feedback on the structure, specificity, and impact described in responses
+5. Ask follow-up questions that build on previous answers to explore depth of experience`,
+
+      hr: `You are an experienced HR interviewer conducting a screening interview.
+Your goal is to evaluate the candidate's fit for roles they're applying to:
+1. Ask questions about career goals, background, and motivations
+2. Explore what they're looking for in their next role and company
+3. Assess communication skills, self-awareness, and professional presentation
+4. Provide feedback on interview performance and alignment with typical expectations
+5. Focus on general skills and career narrative rather than deep technical knowledge`
+    };
+
+    // Interview difficulty modifiers
+    this.difficultyModifiers = {
+      easy: "Keep questions at an entry-level, focusing on fundamentals and common scenarios. Be encouraging in feedback.",
+      medium: "Ask moderately challenging questions suitable for professionals with 2-3 years of experience. Be balanced in feedback.",
+      hard: "Ask challenging questions that test deep understanding and edge cases. Suitable for senior candidates. Be rigorous but fair in feedback."
+    };
+  }
+
+  /**
+   * Get a new conversation for an interview
+   * @param {string} interviewId - Unique interview identifier
+   * @param {string} interviewType - Type of interview (technical, behavioral, hr)
+   * @param {Object} settings - Interview settings
+   * @returns {Object} - Conversation object
+   */
+  async getOrCreateConversation(interviewId, interviewType, settings) {
+    if (!this.interviewContexts.has(interviewId)) {
+      // Create system prompt based on interview type and settings
+      const systemPrompt = `${this.systemPrompts[interviewType]}
+${this.difficultyModifiers[settings.difficulty]}
+${settings.focus && settings.focus.length > 0 ? `Focus areas for this interview: ${settings.focus.join(", ")}` : ""}
+
+Please conduct this interview professionally. Start with an appropriate introduction and first question.
+Each of your responses should have the following JSON structure:
+{
+  "question": "Your next interview question",
+  "feedback": {
+    "strengths": ["list of 2-3 specific strengths in the candidate's previous answer"],
+    "improvements": ["list of 2-3 specific areas for improvement"],
+    "rating": <numeric score between 1-10 based on answer quality>,
+    "star": {
+      "situation": "extracted situation component from answer or null",
+      "task": "extracted task component from answer or null",
+      "action": "extracted action component from answer or null",
+      "result": "extracted result component from answer or null"
+    }
+  }
+}
+
+For the first question, include only the "question" field without feedback.`;
+
+      // Create a new conversation
+      const history = [
+        { role: "user", text: `I'm ready to begin my ${interviewType} interview. Please give me my first question.` },
+      ];
+
+      this.interviewContexts.set(interviewId, { history });
+      console.log(`Created new interview conversation for interview ID: ${interviewId}`);
     }
 
-    async generateIntroduction(interviewType, settings) {
-        // In a real implementation, this would call Gemini API
-        
-        const difficultyLevel = settings.difficulty.charAt(0).toUpperCase() + settings.difficulty.slice(1);
-        const focusAreas = settings.focus.length > 0 
-          ? `with focus on ${settings.focus.join(', ')}` 
-          : '';
-        
-        let introduction = '';
-        
-        switch (interviewType) {
-          case 'technical':
-            introduction = `Welcome to your ${difficultyLevel} level Technical Interview ${focusAreas}. I'll be asking you questions to assess your programming skills and problem-solving abilities. Let's start with your first question: Could you explain the difference between REST and GraphQL APIs, and when you might choose one over the other?`;
-            break;
-          case 'behavioral':
-            introduction = `Welcome to your ${difficultyLevel} level Behavioral Interview ${focusAreas}. I'll be asking questions about your past experiences to understand how you handle various workplace situations. Let's begin: Tell me about a time when you faced a significant challenge in a project. How did you approach it, and what was the outcome?`;
-            break;
-          case 'hr':
-            introduction = `Welcome to your ${difficultyLevel} level HR Interview ${focusAreas}. I'll be asking general questions about your background, career goals, and fit for potential roles. Let's start: Could you walk me through your professional background and what you're looking for in your next role?`;
-            break;
-          default:
-            introduction = `Welcome to your interview session. Let's start with your first question: Tell me about your professional background and what brings you to this interview today?`;
-        }
-        return introduction;
+    return this.interviewContexts.get(interviewId);
   }
+
+  /**
+   * Generate first interview question
+   * @param {string} interviewType - Type of interview
+   * @param {Object} settings - Interview settings
+   * @returns {string} - Introduction and first question
+   */
+  async generateIntroduction(interviewType, settings) {
+    try {
+      // Create system prompt
+      const systemPrompt = `${this.systemPrompts[interviewType]}
+${this.difficultyModifiers[settings.difficulty]}
+${settings.focus && settings.focus.length > 0 ? `Focus areas for this interview: ${settings.focus.join(", ")}` : ""}
+
+Generate a brief introduction and first question for a ${settings.difficulty} ${interviewType} interview.
+Return ONLY the introduction and question in plain text format, keeping it concise and professional.`;
+
+      // Use new format for generating content
+      const response = await this.genAI.models.generateContent({
+        model: this.model,
+        contents: [
+          { role: "system", text: systemPrompt },
+          { role: "user", text: `I'm starting a ${interviewType} interview. Please provide an introduction and first question.` }
+        ],
+      });
+
+      const result = response.text;
+      console.log("Generated introduction:", result);
+      return result;
+    } catch (error) {
+      console.error("Error generating introduction:", error);
+      // Fallback to default introduction
+      return this.getFallbackIntroduction(interviewType, settings);
+    }
+  }
+
+  /**
+   * Process a user's response and generate the next question with feedback
+   */
   async processUserResponse(userMessage, interviewType, interviewData) {
-    // In a real implementation, this would call Gemini API
-    // Here we'll simulate the AI response and feedback
-    
-    // Generate feedback using STAR method
-    const feedback = this.generateSTARFeedback(userMessage, interviewType);
-    
-    // Generate follow-up question based on interview type and context
-    const response = this.generateFollowUpQuestion(userMessage, interviewType, interviewData);
-    
+    try {
+      const interviewId = interviewData._id.toString();
+      const settings = interviewData.settings;
+      
+      // Check if this is the first message
+      const isFirstMessage = interviewData.questions.length === 0 || 
+        (interviewData.questions.length === 1 && 
+         userMessage.includes("ready to begin"));
+
+      if (isFirstMessage) {
+        // For the first message, just return an introduction with the first question
+        const introduction = await this.generateIntroduction(interviewType, settings);
+        return {
+          response: introduction,
+          feedback: null,
+          lastQuestion: introduction
+        };
+      }
+
+      // Get conversation context
+      const history = this.getInterviewHistory(interviewId, interviewType, settings);
+      
+      // Add user message to history
+      history.push({ role: "user", text: userMessage });
+      
+      // Prepare system prompt
+      const systemPrompt = `${this.systemPrompts[interviewType]}
+${this.difficultyModifiers[settings.difficulty]}
+${settings.focus && settings.focus.length > 0 ? `Focus areas for this interview: ${settings.focus.join(", ")}` : ""}
+
+Please conduct this interview professionally and provide feedback on the candidate's answer.
+Each of your responses should be in the following JSON structure:
+{
+  "question": "Your next interview question",
+  "feedback": {
+    "strengths": ["list of 2-3 specific strengths in the candidate's previous answer"],
+    "improvements": ["list of 2-3 specific areas for improvement"],
+    "rating": <numeric score between 1-10 based on answer quality>,
+    "star": {
+      "situation": "extracted situation component from answer or null",
+      "task": "extracted task component from answer or null",
+      "action": "extracted action component from answer or null",
+      "result": "extracted result component from answer or null"
+    }
+  }
+}`;
+
+      try {
+        // Generate AI response with new format
+        const response = await this.genAI.models.generateContent({
+          model: this.model,
+          contents: [
+            { role: "system", text: systemPrompt },
+            ...history
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            responseFormat: { type: "json" }
+          }
+        });
+        
+        let responseText = response.text;
+        
+        // Parse the response as JSON
+        let parsedResponse;
+        try {
+          // Clean up potential text around JSON
+          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            responseText = jsonMatch[0];
+            parsedResponse = JSON.parse(responseText);
+          } else {
+            // If no JSON found, create a structured response from the text
+            console.log("No JSON found in response, creating structured response from text");
+            parsedResponse = {
+              question: "What other aspects of this topic would you like to discuss?",
+              feedback: this.generateFallbackFeedback(userMessage, interviewType)
+            };
+          }
+        } catch (jsonError) {
+          console.error("Error parsing Gemini response as JSON:", jsonError);
+          console.log("Raw response:", responseText);
+          
+          // Use fallback parsing
+          parsedResponse = this.extractResponseComponents(responseText);
+        }
+        
+        // Extract components
+        const nextQuestion = parsedResponse.question || "Could you elaborate more on your previous answer?";
+        const feedback = parsedResponse.feedback || this.generateFallbackFeedback(userMessage, interviewType);
+        
+        // Store the updated history
+        this.updateInterviewContext(interviewId, history, { role: "assistant", text: JSON.stringify({ question: nextQuestion, feedback }) });
+        
+        return {
+          response: nextQuestion,
+          feedback,
+          lastQuestion: interviewData.questions.length > 0 ? 
+            interviewData.questions[interviewData.questions.length - 1].text : 
+            nextQuestion
+        };
+      } catch (aiError) {
+        console.error("Error calling AI service:", aiError);
+        return this.createFallbackResponse(userMessage, interviewType, interviewData);
+      }
+    } catch (error) {
+      console.error("Error processing user response:", error);
+      return this.createFallbackResponse(userMessage, interviewType, interviewData);
+    }
+  }
+  
+  /**
+   * Create a fallback response when AI processing fails
+   */
+  createFallbackResponse(userMessage, interviewType, interviewData) {
     return {
-      response,
-      feedback,
-      lastQuestion: this.getLastQuestion(interviewType, interviewData)
+      response: this.getFallbackQuestion(interviewType),
+      feedback: this.generateFallbackFeedback(userMessage, interviewType),
+      lastQuestion: interviewData.questions.length > 0 ? 
+        interviewData.questions[interviewData.questions.length - 1].text : 
+        this.getFallbackQuestion(interviewType)
     };
   }
 
-  generateSTARFeedback(answer, interviewType) {
-    // Simulate AI analysis of the STAR components in the answer
-    const starAnalysis = {
-      situation: this.extractSTARComponent(answer, 'situation'),
-      task: this.extractSTARComponent(answer, 'task'),
-      action: this.extractSTARComponent(answer, 'action'),
-      result: this.extractSTARComponent(answer, 'result')
-    };
+  /**
+   * Extract response components from text if JSON parsing fails
+   */
+  extractResponseComponents(text) {
+    // Try to find a question in the text
+    const lines = text.split(/[\n\r]+/);
+    let questionText = "";
     
-    // Generate feedback based on the completeness of STAR elements
+    // Look for a line that looks like a question (ends with ?)
+    for (const line of lines) {
+      if (line.trim().endsWith('?')) {
+        questionText = line.trim();
+        break;
+      }
+    }
+    
+    // If no question mark found, use the first substantial line
+    if (!questionText) {
+      for (const line of lines) {
+        if (line.trim().length > 20) {
+          questionText = line.trim();
+          break;
+        }
+      }
+    }
+    
+    // If still no question, use a default
+    if (!questionText) {
+      questionText = "Could you tell me more about your experience in this area?";
+    }
+    
+    // Generate feedback based on text content
     const strengths = [];
     const improvements = [];
     
-    // Simulate identifying strengths
-    if (starAnalysis.situation) strengths.push("Good context setting");
-    if (starAnalysis.action && starAnalysis.action.length > 30) strengths.push("Detailed description of actions taken");
-    if (starAnalysis.result) strengths.push("Clear articulation of outcomes");
-    if (answer.length > 100) strengths.push("Comprehensive response");
-    
-    // Ensure at least one strength is provided
-    if (strengths.length === 0) strengths.push("Addressed the question directly");
-    
-    // Simulate identifying areas for improvement
-    if (!starAnalysis.situation || starAnalysis.situation.length < 20) 
-      improvements.push("Provide more context about the situation");
-    if (!starAnalysis.task || starAnalysis.task.length < 15) 
-      improvements.push("Clarify your specific responsibilities or objectives");
-    if (!starAnalysis.action || starAnalysis.action.length < 25) 
-      improvements.push("Elaborate on the specific actions you took");
-    if (!starAnalysis.result || starAnalysis.result.length < 20) 
-      improvements.push("Quantify results or explain the impact of your actions");
-    
-    // Ensure we don't overwhelm with too many improvement points
-    if (improvements.length > 3) improvements.length = 3;
-    
-    // If no improvements needed, add a general suggestion
-    if (improvements.length === 0) 
-      improvements.push("Consider adding more specific examples to strengthen your answer");
-    
-    // Simulate a rating based on completeness of STAR and answer quality
-    const starElementsPresent = Object.values(starAnalysis).filter(Boolean).length;
-    let rating = 5 + starElementsPresent; // Base rating of 5, +1 for each STAR element
-    
-    // Adjust rating based on answer length and quality (simplified simulation)
-    if (answer.length > 200) rating += 1;
-    if (answer.length < 50) rating -= 2;
-    
-    // Clamp rating between 1-10
-    rating = Math.max(1, Math.min(10, rating));
-    
-    return {
-      star: starAnalysis,
-      strengths,
-      improvements,
-      rating
-    };
-  }
-
-  extractSTARComponent(text, component) {
-    // In a real implementation, this would use Gemini to intelligently extract STAR components
-    // Here we'll use a simplified approach to simulate extraction
-    
-    const keywords = {
-      situation: ['situation', 'context', 'background', 'faced', 'setting', 'scenario', 'environment'],
-      task: ['task', 'goal', 'objective', 'assigned', 'responsibility', 'needed to', 'had to'],
-      action: ['action', 'approach', 'steps', 'implemented', 'strategy', 'method', 'executed', 'did', 'took', 'handled'],
-      result: ['result', 'outcome', 'achievement', 'accomplishment', 'impact', 'effect', 'learned', 'benefit', 'success']
-    };
-    
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    
-    // Look for sentences that might contain the component based on keywords
-    const relevantSentences = sentences.filter(sentence => {
-      const lowerSentence = sentence.toLowerCase();
-      return keywords[component].some(keyword => lowerSentence.includes(keyword));
-    });
-    
-    if (relevantSentences.length > 0) {
-      return relevantSentences.join('. ') + '.';
+    // Simple heuristic: positive words likely indicate strengths
+    if (text.match(/good|great|excellent|well done|impressive|clear|concise|detailed|thorough/i)) {
+      strengths.push("You provided a clear response");
+    }
+    if (text.match(/example|specific|detail/i)) {
+      strengths.push("You included specific examples");
+    }
+    if (text.match(/structure|organized|logical/i)) {
+      strengths.push("Your answer was well-structured");
     }
     
-    return null;
+    // Negative or improvement-oriented phrases likely indicate areas for improvement
+    if (text.match(/could have|should|might want to|consider|try to|would be better/i)) {
+      improvements.push("Consider providing more specific examples");
+    }
+    if (text.match(/unclear|vague|general|broad/i)) {
+      improvements.push("Be more specific in your explanations");
+    }
+    if (text.match(/STAR|structure|organize/i)) {
+      improvements.push("Structure your answer using the STAR method");
+    }
+    
+    // Ensure we have at least one item in each category
+    if (strengths.length === 0) strengths.push("You addressed the question");
+    if (improvements.length === 0) improvements.push("Provide more context in your answers");
+    
+    // Estimate a rating based on the tone of the response
+    let rating = 5; // Default middle rating
+    
+    // Adjust based on positive/negative language
+    const positiveMatches = (text.match(/good|great|excellent|well|impressive|clear|concise|detailed|thorough/gi) || []).length;
+    const negativeMatches = (text.match(/improve|should|could|better|unclear|vague|missing|lack/gi) || []).length;
+    
+    rating += Math.min(positiveMatches, 3); // Up to +3 for positive language
+    rating -= Math.min(negativeMatches, 3); // Up to -3 for improvement language
+    
+    // Clamp between 2-9 to avoid extremes
+    rating = Math.max(2, Math.min(9, rating));
+    
+    return {
+      question: questionText,
+      feedback: {
+        strengths: strengths,
+        improvements: improvements,
+        rating: rating,
+        star: {
+          situation: null,
+          task: null,
+          action: null,
+          result: null
+        }
+      }
+    };
   }
 
-  generateFollowUpQuestion(userMessage, interviewType, interviewData) {
-    // In a real implementation, this would use Gemini to generate contextual follow-up questions
-    // Here we'll provide pre-defined questions based on interview type and progress
+  /**
+   * Generate fallback feedback when AI processing fails
+   */
+  generateFallbackFeedback(answer, interviewType) {
+    const wordCount = answer.split(/\s+/).length;
+    const rating = wordCount > 100 ? 7 : wordCount > 50 ? 5 : 3;
     
-    const questionNumber = interviewData.questions.length;
-    const difficulty = interviewData.settings.difficulty;
-    
-    // Hardcoded follow-up questions based on interview type
+    return {
+      strengths: [
+        "You provided a response to the question",
+        wordCount > 100 ? "Your answer was detailed" : "You addressed the core question"
+      ],
+      improvements: [
+        "Consider structuring your answer using the STAR method",
+        "Add specific examples to strengthen your response",
+        "Quantify results where possible"
+      ],
+      rating: rating,
+      star: {
+        situation: null,
+        task: null,
+        action: null,
+        result: null
+      }
+    };
+  }
+
+  /**
+   * Get a fallback question if Gemini API call fails
+   */
+  getFallbackQuestion(interviewType) {
     const questions = {
       technical: [
         "How would you approach debugging a complex performance issue in a web application?",
-        "Explain your experience with CI/CD pipelines and how they improve development workflows.",
         "What's your approach to ensuring code quality and maintainability in team projects?",
-        "Describe a time when you had to make a technical decision that involved trade-offs.",
-        "How do you stay current with industry trends and new technologies?",
-        "Tell me about a challenging technical problem you solved recently.",
-        "How would you design a scalable system for a service that needs to handle millions of requests?",
-        "What considerations would you make when designing an API for external use?"
+        "How do you stay current with industry trends and new technologies?"
       ],
       behavioral: [
         "Describe a situation where you had to influence someone without having direct authority.",
         "Tell me about a time when you received difficult feedback. How did you respond?",
-        "Give an example of a goal you didn't meet and how you handled it.",
-        "Describe a time when you had to adapt quickly to a significant change.",
-        "Tell me about a time when you needed to deliver results under a tight deadline.",
-        "How have you handled disagreements with team members?",
-        "Describe a situation where you took initiative on a project.",
-        "Tell me about a time when you failed. What did you learn from it?"
+        "How have you handled disagreements with team members?"
       ],
       hr: [
-        "What are your salary expectations for this role?",
-        "Why are you interested in joining our company specifically?",
+        "What are you looking for in your next role?",
         "How would you describe your ideal work environment?",
-        "Where do you see yourself professionally in five years?",
-        "What are your greatest strengths and areas for improvement?",
-        "How do you handle stress and pressure?",
-        "What questions do you have about the company or role?",
-        "Why are you looking to leave your current position?"
+        "What are your greatest strengths and areas for improvement?"
       ]
     };
     
-    // Additional questions for higher difficulty levels
-    const advancedQuestions = {
-      technical: [
-        "How would you architect a microservices solution for a complex e-commerce platform?",
-        "Explain your approach to handling distributed systems challenges like eventual consistency."
-      ],
-      behavioral: [
-        "Describe a scenario where you had to make an unpopular decision and how you managed stakeholder expectations.",
-        "Tell me about a time when you had to lead a project with inadequate resources."
-      ],
-      hr: [
-        "How do you evaluate the success of your current role?",
-        "What leadership style brings out your best performance?"
-      ]
-    };
-    
-    // Select question based on progress and difficulty
     const questionPool = questions[interviewType] || questions.behavioral;
-    let nextQuestion = "";
-    
-    if (difficulty === 'hard' && questionNumber > 3 && Math.random() > 0.5) {
-      // Occasionally use advanced questions for hard difficulty
-      const advancedPool = advancedQuestions[interviewType] || advancedQuestions.behavioral;
-      nextQuestion = advancedPool[questionNumber % advancedPool.length];
-    } else {
-      nextQuestion = questionPool[questionNumber % questionPool.length];
-    }
-    
-    // Add a personalized response before the next question
-    const acknowledgments = [
-      "Thank you for sharing that.",
-      "I appreciate your detailed response.",
-      "That's helpful context.",
-      "Thanks for explaining your approach."
-    ];
-    
-    const transitions = [
-      "Now, let's move to another question.",
-      "Let's explore another area.",
-      "Moving forward with our interview,",
-      "For my next question,"
-    ];
-    
-    const acknowledgment = acknowledgments[Math.floor(Math.random() * acknowledgments.length)];
-    const transition = transitions[Math.floor(Math.random() * transitions.length)];
-    
-    return `${acknowledgment} ${transition} ${nextQuestion}`;
+    return questionPool[Math.floor(Math.random() * questionPool.length)];
   }
 
-  getLastQuestion(interviewType, interviewData) {
-    // This returns the last question asked to associate with the user's answer
-    // In a real implementation with Gemini, this would be tracked in the conversation
-    const questions = interviewData.questions;
-    
-    if (questions.length === 0) {
-      // Return the default first question based on interview type
-      switch (interviewType) {
-        case 'technical':
-          return "Could you explain the difference between REST and GraphQL APIs, and when you might choose one over the other?";
-        case 'behavioral':
-          return "Tell me about a time when you faced a significant challenge in a project. How did you approach it, and what was the outcome?";
-        case 'hr':
-          return "Could you walk me through your professional background and what you're looking for in your next role?";
-        default:
-          return "Tell me about your professional background and what brings you to this interview today?";
-      }
+  /**
+   * Get or create interview context history
+   */
+  getInterviewHistory(interviewId, interviewType, settings) {
+    if (!this.interviewContexts.has(interviewId)) {
+      // Create a new context
+      this.interviewContexts.set(interviewId, {
+        history: [
+          { role: "user", text: `I'm ready to begin my ${interviewType} interview. Please give me my first question.` }
+        ]
+      });
+      console.log(`Created new interview context for interview ID: ${interviewId}`);
     }
     
-    // Extract the last question from the AI's response
-    const lastResponse = questions[questions.length - 1].text;
-    return lastResponse;
+    return this.interviewContexts.get(interviewId).history;
+  }
+  
+  /**
+   * Update interview context with new messages
+   */
+  updateInterviewContext(interviewId, history, newMessage) {
+    if (!this.interviewContexts.has(interviewId)) {
+      this.interviewContexts.set(interviewId, { history: [] });
+    }
+    
+    this.interviewContexts.get(interviewId).history = [...history, newMessage];
   }
 
+  /**
+   * Generate comprehensive interview results
+   */
   async generateInterviewResults(interview) {
-    // In a real implementation, this would use Gemini to analyze the entire interview
-    // Here we'll simulate the results generation
-    
-    // Calculate overall score based on individual question ratings
-    let totalScore = 0;
-    let questionCount = 0;
-    
-    interview.questions.forEach(question => {
-      if (question.feedback && question.feedback.rating) {
-        totalScore += question.feedback.rating;
-        questionCount++;
-      }
-    });
-    
-    const overallScore = questionCount > 0 ? Math.round((totalScore / questionCount) * 10) / 10 : 5;
-    
-    // Generate skill scores
-    const skillScores = {
-      communication: this.calculateSkillScore(interview, 'communication'),
-      technical: interview.type === 'technical' ? this.calculateSkillScore(interview, 'technical') : null,
-      problemSolving: this.calculateSkillScore(interview, 'problemSolving'),
-      behavioral: interview.type === 'behavioral' ? this.calculateSkillScore(interview, 'behavioral') : null,
-      leadership: this.calculateSkillScore(interview, 'leadership')
-    };
-    
-    // Remove null scores
-    Object.keys(skillScores).forEach(key => {
-      if (skillScores[key] === null) {
-        delete skillScores[key];
-      }
-    });
-    
-    // Compile strengths and weaknesses
-    const strengths = this.compileStrengths(interview);
-    const weaknesses = this.compileWeaknesses(interview);
-    
-    // Generate feedback summary
-    const feedback = this.generateFeedbackSummary(interview, overallScore);
-    
-    // Generate improvement tips
-    const improvementTips = this.generateImprovementTips(interview, weaknesses);
-    
-    return {
-      overallScore,
-      feedback,
-      skillScores,
-      strengths,
-      weaknesses,
-      improvementTips
-    };
-  }
+    try {
+      // Use Gemini to analyze the entire interview
+      const interviewSummary = this.prepareInterviewSummary(interview);
+      
+      const systemPrompt = `You are an expert interview coach analyzing an interview.
+Based on the interview summary provided, generate a comprehensive evaluation with the following structure:
+{
+  "overallScore": <number between 1-10>,
+  "feedback": "<detailed paragraph with overall assessment>",
+  "skillScores": {
+    "communication": <number between 1-10>,
+    "technical": <number between 1-10 or null if not applicable>,
+    "problemSolving": <number between 1-10>,
+    "behavioral": <number between 1-10 or null if not applicable>,
+    "leadership": <number between 1-10>
+  },
+  "strengths": ["list of 3-5 key strengths demonstrated"],
+  "weaknesses": ["list of 3-4 key areas for improvement"],
+  "improvementTips": ["list of 5 specific actionable tips to improve"]
+}`;
 
-  calculateSkillScore(interview, skillType) {
-    // This would be much more sophisticated with actual Gemini integration
-    // Here we'll use a simplified approach
-    
-    const baseScore = 6; // Start with a default score
-    let modifier = 0;
-    
-    // Analyze questions and responses to calculate skill score
-    interview.questions.forEach(question => {
-      if (!question.feedback) return;
-      
-      // Apply modifiers based on feedback
-      const feedback = question.feedback;
-      
-      // Communication skill modifiers
-      if (skillType === 'communication') {
-        if (question.answer && question.answer.length > 100) modifier += 0.2;
-        if (question.answer && question.answer.length < 50) modifier -= 0.3;
-        if (feedback.star.situation && feedback.star.result) modifier += 0.3;
-      }
-      
-      // Technical skill modifiers
-      if (skillType === 'technical' && interview.type === 'technical') {
-        if (feedback.rating > 7) modifier += 0.4;
-        if (feedback.rating < 5) modifier -= 0.4;
-      }
-      
-      // Problem solving modifiers
-      if (skillType === 'problemSolving') {
-        if (feedback.star.action) modifier += 0.2;
-        if (feedback.strengths.some(s => s.toLowerCase().includes('detail'))) modifier += 0.3;
-      }
-      
-      // Behavioral skill modifiers
-      if (skillType === 'behavioral' && interview.type === 'behavioral') {
-        if (Object.values(feedback.star).filter(Boolean).length >= 3) modifier += 0.5;
-        if (Object.values(feedback.star).filter(Boolean).length <= 1) modifier -= 0.4;
-      }
-      
-      // Leadership modifiers
-      if (skillType === 'leadership') {
-        if (question.answer && question.answer.toLowerCase().includes('lead')) modifier += 0.3;
-        if (question.answer && question.answer.toLowerCase().includes('team')) modifier += 0.2;
-        if (feedback.star.action && feedback.star.result) modifier += 0.2;
-      }
-    });
-    
-    // Calculate final score with limits
-    const finalScore = Math.max(1, Math.min(10, baseScore + modifier));
-    return Math.round(finalScore * 10) / 10;
-  }
+      // Generate interview results with new format
+      const response = await this.genAI.models.generateContent({
+        model: this.model,
+        contents: [
+          { role: "system", text: systemPrompt },
+          { role: "user", text: `Please analyze this interview and provide feedback: ${interviewSummary}` }
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          responseFormat: { type: "json" }
+        }
+      });
 
-  compileStrengths(interview) {
-    // Collect strengths mentioned in feedback
-    const allStrengths = [];
-    
-    interview.questions.forEach(question => {
-      if (question.feedback && question.feedback.strengths) {
-        allStrengths.push(...question.feedback.strengths);
+      // Handle the response
+      const responseText = response.text;
+      
+      try {
+        // Clean up potential text around JSON
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsedResults = JSON.parse(jsonMatch[0]);
+          console.log("Generated interview results successfully");
+          return parsedResults;
+        }
+      } catch (error) {
+        console.error("Error parsing interview results:", error);
       }
-    });
-    
-    // Count frequencies of each strength
-    const strengthCounts = {};
-    allStrengths.forEach(strength => {
-      strengthCounts[strength] = (strengthCounts[strength] || 0) + 1;
-    });
-    
-    // Sort by frequency
-    const sortedStrengths = Object.entries(strengthCounts)
-      .sort((a, b) => b[1] - a[1])
-      .map(([strength]) => strength);
-    
-    // Return top strengths (up to 5)
-    return sortedStrengths.slice(0, 5);
-  }
-
-  compileWeaknesses(interview) {
-    // Collect improvement areas mentioned in feedback
-    const allWeaknesses = [];
-    
-    interview.questions.forEach(question => {
-      if (question.feedback && question.feedback.improvements) {
-        allWeaknesses.push(...question.feedback.improvements);
-      }
-    });
-    
-    // Count frequencies
-    const weaknessCounts = {};
-    allWeaknesses.forEach(weakness => {
-      weaknessCounts[weakness] = (weaknessCounts[weakness] || 0) + 1;
-    });
-    
-    // Sort by frequency
-    const sortedWeaknesses = Object.entries(weaknessCounts)
-      .sort((a, b) => b[1] - a[1])
-      .map(([weakness]) => weakness);
-    
-    // Return top weaknesses (up to 4)
-    return sortedWeaknesses.slice(0, 4);
-  }
-
-  generateFeedbackSummary(interview, overallScore) {
-    // This would be generated by Gemini in a real implementation
-    // Here we'll provide templated feedback based on score
-    
-    let summary = '';
-    
-    if (overallScore >= 8) {
-      summary = `Excellent interview performance! You demonstrated strong communication skills and provided comprehensive answers using the STAR method effectively. Your responses were well-structured, specific, and showcased your experience convincingly.`;
-    } else if (overallScore >= 6) {
-      summary = `Good interview performance. You provided solid answers to most questions and generally followed the STAR method. There are some opportunities to enhance your responses with more specific examples and quantifiable results.`;
-    } else {
-      summary = `You've shown potential in this interview, but there are several areas for improvement. Focus on structuring your answers using the STAR method, providing more specific examples, and clearly articulating the results of your actions.`;
+      
+      // Fallback to manual calculation if parsing fails
+      return this.calculateFallbackResults(interview);
+      
+    } catch (error) {
+      console.error("Error generating interview results:", error);
+      return this.calculateFallbackResults(interview);
     }
+  }
+
+  /**
+   * Prepare a summary of the interview for analysis
+   */
+  prepareInterviewSummary(interview) {
+    let summary = `Interview Type: ${interview.type}\n`;
+    summary += `Difficulty Level: ${interview.settings.difficulty}\n`;
+    summary += `Focus Areas: ${interview.settings.focus ? interview.settings.focus.join(", ") : "None specified"}\n\n`;
     
-    // Add interview type specific feedback
-    switch (interview.type) {
-      case 'technical':
-        summary += ` Your technical knowledge came across ${overallScore >= 7 ? 'well' : 'adequately'}, but continue to practice explaining complex concepts clearly and relating them to real-world applications.`;
-        break;
-      case 'behavioral':
-        summary += ` Your behavioral examples were ${overallScore >= 7 ? 'compelling' : 'somewhat general'}. ${overallScore < 7 ? 'Consider preparing more specific stories that highlight your skills and achievements.' : ''}`;
-        break;
-      case 'hr':
-        summary += ` Your career narrative was ${overallScore >= 7 ? 'clear and purposeful' : 'present but could be more focused'}. ${overallScore < 7 ? 'Work on aligning your background and goals more explicitly with potential roles.' : ''}`;
-        break;
-    }
+    // Add Q&A pairs
+    interview.questions.forEach((q, index) => {
+      summary += `Question ${index + 1}: ${q.text}\n`;
+      summary += `Answer: ${q.answer}\n`;
+      
+      // Add feedback if available
+      if (q.feedback) {
+        summary += `Rating: ${q.feedback.rating}/10\n`;
+        summary += `Strengths: ${q.feedback.strengths ? q.feedback.strengths.join(", ") : "None provided"}\n`;
+        summary += `Improvements: ${q.feedback.improvements ? q.feedback.improvements.join(", ") : "None provided"}\n`;
+      }
+      summary += '\n';
+    });
     
     return summary;
   }
 
-  generateImprovementTips(interview, weaknesses) {
-    // Generate specific improvement tips based on identified weaknesses
-    // In a real implementation, Gemini would provide tailored advice
-    
-    const generalTips = [
-      "Practice the STAR method to structure your answers: Situation, Task, Action, Result",
-      "Quantify your achievements whenever possible (e.g., 'increased sales by 20%')",
-      "Prepare 5-7 strong examples that can be adapted to different questions",
-      "Record yourself in mock interviews to improve your delivery and identify verbal tics"
-    ];
-    
-    const specificTips = weaknesses.map(weakness => {
-      // Convert weakness to specific actionable tip
-      if (weakness.includes("context")) {
-        return "Start answers by clearly establishing the situation and its importance";
-      } else if (weakness.includes("specific")) {
-        return "Include precise details, numbers, and timeframes in your examples";
-      } else if (weakness.includes("responsibilities")) {
-        return "Clearly define your role and objectives in each scenario you describe";
-      } else if (weakness.includes("actions")) {
-        return "Focus more on what YOU specifically did rather than what the team accomplished";
-      } else if (weakness.includes("results")) {
-        return "Always end your answers by explaining the positive outcomes and impact of your actions";
-      } else {
-        return weakness; // Use the weakness itself if no specific mapping
-      }
-    });
-    
-    // Combine general and specific tips, avoiding duplicates
-    const allTips = [...specificTips];
-    
-    // Add general tips if we need more
-    for (const tip of generalTips) {
-      if (allTips.length >= 5) break;
-      if (!allTips.includes(tip)) {
-        allTips.push(tip);
-      }
+  /**
+   * Clear interview context when interview is completed
+   */
+  clearInterviewContext(interviewId) {
+    if (this.interviewContexts.has(interviewId)) {
+      this.interviewContexts.delete(interviewId);
+      console.log(`Cleared interview context for interview ID: ${interviewId}`);
+      return true;
     }
-    
-    return allTips;
+    return false;
   }
 }
 
-// Add this at the bottom of the file
+// Initialize and export the service
 const aiService = new GeminiAIServices();
 export default aiService;

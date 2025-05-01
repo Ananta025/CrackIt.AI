@@ -1,13 +1,35 @@
+.containerWrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  align-items: center;
+  min-height: 50vh;
+}
+
 .container {
-  background-color: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  background-color: #1E1E1E;
+  border-radius: 0.75rem;
+  width: 100%;
+  max-width: 900px;
+  padding: 3rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .container {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.mainPanel {
+  background-color: #1E1E1E;
   border-radius: 0.75rem;
   padding: 1.5rem;
-  border: 1px solid #1e3a8a;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-  width: 100%;
+  border: 1px solid #333333;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 .iconContainer {
@@ -18,47 +40,89 @@
   margin-bottom: 1rem;
 }
 
+.stepIndicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.stepDot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #333333;
+  color: #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.activeStep {
+  background-color: #1DB954;
+  color: white;
+}
+
+.stepLine {
+  height: 2px;
+  width: 60px;
+  background-color: #333333;
+  margin: 0 0.5rem;
+}
+
 .title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   text-align: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   color: #1DB954; /* Spotify green */
 }
 
 .subtitle {
   color: #d1d5db;
   text-align: center;
-  margin-bottom: 2rem;
-  max-width: 28rem;
-  margin-left: auto;
-  margin-right: auto;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
 }
 
 .formGroup {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #93c5fd;
+  color: #1DB954; /* Spotify green */
   font-weight: 500;
   margin-bottom: 0.5rem;
+  font-size: 0.875rem;
 }
 
 .select {
   width: 100%;
-  background-color: rgba(15, 23, 42, 0.8);
+  background-color: #121212;
   color: white;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
-  border: 1px solid #1e293b;
+  border: 1px solid #333333;
   appearance: none;
+  font-size: 0.875rem;
 }
 
-.select:focus {
+.input {
+  width: 100%;
+  background-color: #121212;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #333333;
+  font-size: 0.875rem;
+}
+
+.select:focus, .input:focus {
   border-color: #1DB954; /* Spotify green */
   outline: none;
 }
@@ -91,45 +155,90 @@
 }
 
 .difficultyButton:hover {
-  background-color: rgba(66, 133, 244, 0.1); /* Gemini blue */
-  border-color: #4285F4; /* Gemini blue */
+  background-color: rgba(66, 133, 244, 0.1); /* Google blue */
+  border-color: #4285F4; /* Google blue */
   transform: translateY(-2px);
 }
 
-.submitButton {
+.buttonGroup {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.backButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background-color: #333333;
+  color: white;
+  font-size: 0.875rem;
+  transition: background-color 200ms;
+}
+
+.backButton:hover {
+  background-color: #4c4c4c;
+}
+
+.activeStepButton {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem;
   border-radius: 0.5rem;
+  background-color: #1DB954; /* Spotify green */
+  color: white;
   font-weight: 500;
-  font-size: 1rem;
-  margin-top: 1.5rem;
-  transition-property: all;
-  transition-duration: 200ms;
+  font-size: 0.875rem;
+  margin: 2rem 0;
+  transition: background-color 200ms;
 }
 
-.submitButton:hover {
-  background-color: #4285F4; /* Gemini blue */
-  transform: scale(1.02);
+.activeStepButton:hover {
+  background-color: #4285F4; /* Google blue */
+}
+
+.inactiveStepButton {
+  composes: activeStepButton;
+  background-color: #333333;
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .activeSubmitButton {
-  composes: submitButton;
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
   background-color: #1DB954; /* Spotify green */
   color: white;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: background-color 200ms;
 }
 
 .activeSubmitButton:hover {
-  background-color: #4285F4; /* Gemini blue */
+  background-color: #4285F4; /* Google blue */
 }
 
 .inactiveSubmitButton {
-  composes: submitButton;
-  background-color: #1e293b;
-  color: white;
+  composes: activeSubmitButton;
+  background-color: #333333;
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.loadingButton {
+  composes: activeSubmitButton;
+  background-color: #333333;
+  cursor: wait;
 }

@@ -32,10 +32,10 @@ const upload = multer({
 // Public routes
 router.post('/analyze', upload.single('resume'), analyzeResume);
 router.get('/templates', getResumeTemplates);
+router.post('/generate-section', generateSection);
 
 // Protected routes
 router.use(authMiddleware.authenticateUser);
-router.post('/generate-section', generateSection);
 router.post('/save', saveResume);
 router.get('/download/:resumeId', generatePDF);
 router.get('/user', getUserResumes);

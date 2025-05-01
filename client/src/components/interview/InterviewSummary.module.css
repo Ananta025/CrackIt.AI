@@ -3,17 +3,16 @@
 }
 
 .card {
-  background-color: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
+  background-color: #1E1E1E;
   border-radius: 0.75rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   padding: 2rem;
-  border: 1px solid #1e3a8a;
+  border: 1px solid #333333;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card:hover {
-  box-shadow: 0 25px 30px -5px rgba(14, 165, 233, 0.1);
+  box-shadow: 0 6px 8px rgba(29, 185, 84, 0.15);
   transform: translateY(-2px);
 }
 
@@ -25,7 +24,7 @@
   font-size: 1.875rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: #0ea5e9;
+  color: #1DB954; /* Spotify green */
 }
 
 .subtitle {
@@ -49,23 +48,23 @@
 }
 
 .scoreGreen {
-  background-color: rgba(22, 101, 52, 0.2);
-  border-color: #22c55e;
+  background-color: rgba(29, 185, 84, 0.2);
+  border-color: #1DB954; /* Spotify green */
 }
 
 .scoreBlue {
-  background-color: rgba(14, 165, 233, 0.2);
-  border-color: #0ea5e9;
+  background-color: rgba(66, 133, 244, 0.2);
+  border-color: #4285F4; /* Google blue */
 }
 
 .scoreYellow {
-  background-color: rgba(161, 98, 7, 0.3);
-  border-color: #eab308;
+  background-color: rgba(250, 204, 21, 0.2);
+  border-color: #FACC15;
 }
 
 .scoreRed {
-  background-color: rgba(153, 27, 27, 0.3);
-  border-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: #EF4444;
 }
 
 .questionsReviewCard {
@@ -79,18 +78,20 @@
   padding: 0.75rem;
   border-radius: 0.5rem;
   border-width: 1px;
+  background-color: #121212;
+  border: 1px solid #333333;
 }
 
 .questionButtonSelected {
   composes: questionButton;
-  background-color: rgba(14, 165, 233, 0.2);
-  border-color: #0ea5e9;
+  background-color: rgba(29, 185, 84, 0.2);
+  border-color: #1DB954; /* Spotify green */
 }
 
 .questionButtonAnswered {
   composes: questionButton;
-  background-color: #0f172a;
-  border-color: #1e293b;
+  background-color: #121212;
+  border-color: #333333;
 }
 
 .actionButtons {
@@ -98,7 +99,7 @@
   flex-wrap: wrap;
   gap: 1rem;
   justify-content: center;
-  margin-top: 1.5rem;
+  margin: 1.5rem 0;
 }
 
 .button {
@@ -113,44 +114,45 @@
 
 .button:hover {
   transform: translateY(-2px);
+  background-color: #4285F4; /* Google blue */
 }
 
 .primaryButton {
   composes: button;
-  background-color: #0ea5e9;
+  background-color: #1DB954; /* Spotify green */
   color: white;
 }
 
 .primaryButton:hover {
-  background-color: #22c55e;
+  background-color: #4285F4; /* Google blue */
 }
 
 .secondaryButton {
   composes: button;
-  background-color: #0f172a;
-  border: 1px solid #1e293b;
+  background-color: #121212;
+  border: 1px solid #333333;
   color: white;
 }
 
 .secondaryButton:hover {
-  background-color: #1e293b;
-  border-color: #0ea5e9;
+  background-color: #333333;
+  border-color: #1DB954; /* Spotify green */
 }
 
 .blueButton {
   composes: button;
-  background-color: #0284c7;
+  background-color: #4285F4; /* Google blue */
   color: white;
 }
 
 .blueButton:hover {
-  background-color: #0ea5e9;
+  background-color: #1DB954; /* Spotify green */
 }
 
 .feedbackSection {
   margin-top: 1.5rem;
   padding: 1rem;
-  background-color: rgba(14, 165, 233, 0.1);
-  border: 1px solid #0284c7;
+  background-color: rgba(29, 185, 84, 0.1);
+  border: 1px solid #1DB954; /* Spotify green */
   border-radius: 0.5rem;
 }

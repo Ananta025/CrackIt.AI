@@ -15,7 +15,7 @@
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  background: linear-gradient(to right bottom, #3b82f6, #8b5cf6);
+  background-color: #1DB954;
   border-radius: 9999px;
   color: white;
   font-size: 1rem;
@@ -28,13 +28,13 @@
 .stepTitle {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #e5e7eb;
+  color: rgba(255, 255, 255, 0.95);
   margin-bottom: 0.25rem;
 }
 
 .stepDescription {
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .fieldGroup {
@@ -44,7 +44,7 @@
 .fieldLabel {
   display: block;
   font-weight: 500;
-  color: #d1d5db;
+  color: rgba(255, 255, 255, 0.85);
   margin-bottom: 0.5rem;
 }
 
@@ -55,8 +55,8 @@
 
 .fieldInput {
   width: 100%;
-  background-color: rgba(17, 24, 39, 0.7);
-  border: 1px solid #374151;
+  background-color: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.375rem;
   color: white;
   padding: 0.75rem 1rem;
@@ -64,9 +64,9 @@
 }
 
 .fieldInput:focus {
-  border-color: #60a5fa;
+  border-color: #1DB954;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4);
+  box-shadow: 0 0 0 1px rgba(29, 185, 84, 0.2);
 }
 
 .textArea {
@@ -81,17 +81,19 @@
   gap: 0.375rem;
   padding: 0.5rem 0.75rem;
   margin-top: 0.5rem;
-  background: linear-gradient(to right, rgba(37, 99, 235, 0.2), rgba(124, 58, 237, 0.2));
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background-color: #1E1E1E;
+  border: 1px solid rgba(29, 185, 84, 0.3);
   border-radius: 0.375rem;
-  color: #60a5fa;
+  color: #1DB954;
   font-size: 0.813rem;
   font-weight: 500;
   transition: all 0.2s;
 }
 
 .aiSuggestionButton:hover:not(.generating) {
-  background: linear-gradient(to right, rgba(37, 99, 235, 0.3), rgba(124, 58, 237, 0.3));
+  background-color: #2A2A2A;
+  border-color: #4285F4;
+  color: #4285F4;
 }
 
 .generating {
@@ -104,8 +106,8 @@
 }
 
 .arrayFieldItem {
-  background-color: rgba(17, 24, 39, 0.5);
-  border: 1px solid #374151;
+  background-color: #1E1E1E;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   padding: 1.25rem;
   margin-bottom: 1rem;
@@ -121,7 +123,7 @@
 
 .arrayFieldTitle {
   font-weight: 600;
-  color: #e5e7eb;
+  color: rgba(255, 255, 255, 0.95);
   font-size: 1rem;
 }
 
@@ -149,16 +151,18 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background-color: rgba(37, 99, 235, 0.1);
-  border: 1px dashed #3b82f6;
+  background-color: #121212;
+  border: 1px dashed rgba(29, 185, 84, 0.5);
   border-radius: 0.5rem;
-  color: #60a5fa;
+  color: #1DB954;
   font-weight: 500;
   transition: all 0.2s;
 }
 
 .addButton:hover {
-  background-color: rgba(37, 99, 235, 0.2);
+  background-color: #2A2A2A;
+  border-color: #4285F4;
+  color: #4285F4;
 }
 
 .checkboxGroup {
@@ -175,15 +179,15 @@
 
 .checkboxLabel {
   font-size: 0.875rem;
-  color: #d1d5db;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .tagInput {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  background-color: rgba(17, 24, 39, 0.7);
-  border: 1px solid #374151;
+  background-color: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.375rem;
   padding: 0.5rem;
   min-height: 2.75rem;
@@ -191,20 +195,20 @@
 }
 
 .tagInput:focus-within {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4);
+  border-color: #1DB954;
+  box-shadow: 0 0 0 1px rgba(29, 185, 84, 0.2);
 }
 
 .tag {
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  background-color: rgba(37, 99, 235, 0.2);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background-color: #1E1E1E;
+  border: 1px solid rgba(29, 185, 84, 0.3);
   border-radius: 0.25rem;
   padding: 0.25rem 0.5rem;
   font-size: 0.75rem;
-  color: #60a5fa;
+  color: #1DB954;
 }
 
 .tagRemove {
@@ -215,13 +219,14 @@
   width: 1rem;
   height: 1rem;
   border-radius: 9999px;
-  background-color: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
+  background-color: #2A2A2A;
+  color: #1DB954;
   transition: all 0.2s;
 }
 
 .tagRemove:hover {
-  background-color: rgba(59, 130, 246, 0.4);
+  background-color: #333333;
+  color: #4285F4;
 }
 
 .tagInputField {
@@ -239,6 +244,6 @@
 
 .inputHelper {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: rgba(255, 255, 255, 0.6);
   margin-top: 0.375rem;
 }

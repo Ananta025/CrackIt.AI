@@ -1,7 +1,8 @@
 .resumePage {
-  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1rem;
+  background-color: #121212;
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .header {
@@ -12,14 +13,12 @@
 .header h1 {
   font-size: 2.5rem;
   font-weight: bold;
-  background: linear-gradient(to right, #60a5fa, #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #1DB954;
   margin-bottom: 0.5rem;
 }
 
 .header p {
-  color: #d1d5db;
+  color: rgba(255, 255, 255, 0.75);
   font-size: 1.1rem;
 }
 
@@ -35,10 +34,10 @@
   flex-direction: column;
   align-items: center;
   padding: 1rem 2rem;
-  background-color: rgba(31, 41, 55, 0.8);
-  border: 1px solid #374151;
+  background-color: #1E1E1E;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
-  color: #9ca3af;
+  color: rgba(255, 255, 255, 0.75);
   font-weight: 500;
   transition: all 0.2s;
 }
@@ -49,13 +48,13 @@
 }
 
 .tabButton:hover {
-  background-color: rgba(55, 65, 81, 0.8);
+  background-color: #2A2A2A;
+  border-color: #4285F4;
 }
 
 .activeTab {
-  background-color: rgba(37, 99, 235, 0.2);
-  border-color: #3b82f6;
-  color: #60a5fa;
+  background-color: #1E1E1E;
+  border-color: #1DB954;
 }
 
 .content {
