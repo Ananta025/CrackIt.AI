@@ -43,7 +43,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <main>
+    <main className={styles.mainContainer}>
       <div className={styles.settings}>
         <p className={styles["settings-heading"]}>Settings</p>
         <div className={styles.form}>

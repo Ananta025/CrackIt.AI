@@ -20,7 +20,9 @@ export default function DashboardLayout() {
   const handleLogout = () => {
     // Handle logout functionality here
     console.log('Logging out...');
-    // Add actual logout logic and redirect to login page
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    window.location.href = '/';
   };
 
   return (

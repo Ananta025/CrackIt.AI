@@ -277,9 +277,11 @@ export default function Dashboard() {
   };
 
   const handleLogout = () => {
-    // Remove auth data from localStorage
+    // Remove all auth data from localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('user');
     
     // Navigate to home page
     navigate('/');
@@ -323,7 +325,7 @@ export default function Dashboard() {
 
   return (
     <div className={styles.dashboard}>
-        {/* Use the new modular Sidebar component */}
+        {/* Use the new modular Sidebar component */}Changed from username to name to match Sidebar's prop name
         <Sidebar 
           username={userName} 
           onLogout={handleLogout}
