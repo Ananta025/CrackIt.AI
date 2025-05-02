@@ -13,6 +13,9 @@ import {
   Tooltip,
   Legend
 } from 'chart.js'
+// Import the services
+import learnQuizService from '../services/learnQuizService'
+import interviewService from '../services/interviewService'
 
 // Register Chart.js components
 ChartJS.register(
@@ -55,37 +58,186 @@ export default function HomePage() {
   const [showSkillInput, setShowSkillInput] = useState(false);
   const [newSkill, setNewSkill] = useState('');
   const [interviewData, setInterviewData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [interviewMonthlyData, setInterviewMonthlyData] = useState({ labels: [], data: [] });
   
-  // Chart data configuration for activity overview
-  const chartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  // Fetch quiz history and interview data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      setIsLoading(true);
+      
+      // Fetch quiz data
+      try {
+        const quizHistory = await learnQuizService.getQuizHistory();
+        if (Array.isArray(quizHistory) && quizHistory.length > 0) {
+          // Get the 5 most recent quiz scores
+          const recentScores = quizHistory
+            .slice(0, 5)
+            .map(quiz => ({
+              topic: quiz.topic,
+              score: quiz.score,
+              date: new Date(quiz.completedAt).toLocaleDateString()
+            }));
+          
+          setQuizScores(recentScores);
+        } else {
+          console.log('No quiz history found');
+          setQuizScores([]);
+        }
+      } catch (error) {
+        console.error('Error fetching quiz history:', error);
+        setQuizScores([]);
+      }
+      
+      // Fetch interview data
+      try {
+        const interviewHistory = await interviewService.getInterviewHistory();
+        
+        if (interviewHistory && interviewHistory.interviews && interviewHistory.interviews.length > 0) {
+          setHasInterviewData(true);
+          
+          // Get the 5 most recent interviews
+          const formattedData = interviewHistory.interviews
+            .slice(0, 5)
+            .map(interview => ({
+              role: interview.title || interview.type || 'Interview',
+              score: interview.score || 0,
+              date: new Date(interview.date || interview.createdAt).toLocaleDateString()
+            }));
+          
+          setInterviewData(formattedData);
+          
+          // Process monthly data for line chart
+          processInterviewData(interviewHistory.interviews);
+        } else {
+          console.log('No interview history found');
+          setHasInterviewData(false);
+          setInterviewData([]);
+        }
+      } catch (error) {
+        console.error('Error fetching interview history:', error);
+        setHasInterviewData(false);
+        setInterviewData([]);
+      }
+      
+      // Initialize with empty skills array instead of using sample data
+      setSkills([]);
+      
+      setIsLoading(false);
+    };
+    
+    fetchUserData();
+  }, []);
+  
+  // Process interview data to generate monthly stats
+  const processInterviewData = (interviews) => {
+    // Group interviews by month and calculate average scores
+    const monthlyData = {};
+    
+    interviews.forEach(interview => {
+      // Use date or createdAt field
+      const interviewDate = new Date(interview.date || interview.createdAt);
+      if (isNaN(interviewDate.getTime())) return;
+      
+      const score = interview.score || 0;
+      const monthYear = `${interviewDate.getMonth() + 1}/${interviewDate.getFullYear()}`;
+      
+      if (!monthlyData[monthYear]) {
+        monthlyData[monthYear] = { 
+          total: 0, 
+          count: 0, 
+          month: interviewDate.toLocaleString('default', { month: 'short' }),
+          year: interviewDate.getFullYear()
+        };
+      }
+      
+      monthlyData[monthYear].total += score;
+      monthlyData[monthYear].count += 1;
+    });
+    
+    // Calculate averages and prepare data for chart
+    const labels = [];
+    const data = [];
+    
+    // Sort by date
+    const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
+      const [aMonth, aYear] = a.split('/').map(Number);
+      const [bMonth, bYear] = b.split('/').map(Number);
+      
+      if (aYear !== bYear) return aYear - bYear;
+      return aMonth - bMonth;
+    });
+    
+    // Get the last 7 months or all if less
+    const recentMonths = sortedMonths.slice(-7);
+    
+    recentMonths.forEach(key => {
+      const entry = monthlyData[key];
+      labels.push(`${entry.month} ${entry.year}`);
+      data.push(Math.round(entry.total / entry.count));
+    });
+    
+    setInterviewMonthlyData({ labels, data });
+  };
+
+  // Chart options
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: { color: 'white' }
+      },
+      title: {
+        display: true,
+        text: 'Activity Overview',
+        color: 'white',
+        font: { size: 16 }
+      }
+    },
+    scales: {
+      y: {
+        ticks: { color: 'white' },
+        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+      },
+      x: {
+        ticks: { color: 'white' },
+        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+      }
+    }
+  };
+
+  // Update Line chart with real data
+  const interviewLineChartData = {
+    labels: interviewMonthlyData.labels.length > 0 
+      ? interviewMonthlyData.labels 
+      : [],
     datasets: [
       {
-        label: 'Interview Attempts',
-        data: [3, 5, 4, 7, 6, 8],
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: function(context) {
+        label: 'Interview Progress',
+        data: interviewMonthlyData.data.length > 0 
+          ? interviewMonthlyData.data 
+          : [],
+        borderColor: function(context) {
           const chart = context.chart;
           const {ctx, chartArea} = chart;
+          
           if (!chartArea) {
-            return;
+            return 'rgb(75, 192, 192)';
           }
-          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-          gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
-          gradient.addColorStop(1, 'rgba(75, 192, 192, 0.8)');
-          return gradient;
+          return getGradient(ctx, chartArea);
         },
-      },
-      {
-        label: 'Quiz Scores',
-        data: [65, 78, 80, 75, 85, 90],
-        borderColor: 'rgb(153, 102, 255)',
-        backgroundColor: 'rgba(153, 102, 255, 0.5)',
+        tension: 0.4,
+        borderWidth: 3,
+        pointRadius: 5,
+        pointBackgroundColor: 'white',
+        fill: false
       }
     ]
   };
-  
-  // Horizontal bar chart for quiz scores
+
+  // Update horizontal bar chart with real quiz data
   const quizBarChartData = {
     labels: quizScores.map(score => score.topic),
     datasets: [
@@ -141,201 +293,6 @@ export default function HomePage() {
     }
   };
 
-  // Interview data bar chart
-  const interviewBarChartData = {
-    labels: interviewData.map(data => data.role),
-    datasets: [
-      {
-        label: 'Interview Score',
-        data: interviewData.map(data => data.score),
-        backgroundColor: function(context) {
-          const chart = context.chart;
-          const {ctx, chartArea} = chart;
-          
-          if (!chartArea) {
-            // This case happens on initial chart load
-            return 'rgba(75, 192, 192, 0.6)';
-          }
-          return getGradient(ctx, chartArea);
-        },
-        borderColor: function(context) {
-          const chart = context.chart;
-          const {ctx, chartArea} = chart;
-          
-          if (!chartArea) {
-            return 'rgb(75, 192, 192)';
-          }
-          return getGradient(ctx, chartArea);
-        },
-        borderWidth: 1,
-        borderRadius: 5,
-      }
-    ]
-  };
-
-  // Interview bar chart options
-  const interviewBarChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: { color: 'white' }
-      },
-      title: {
-        display: true,
-        text: 'Interview Performance',
-        color: 'white',
-        font: { size: 16 }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: { color: 'white' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-        max: 100 // Max score is 100%
-      },
-      x: {
-        ticks: { color: 'white' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' }
-      }
-    }
-  };
-
-  // Line chart for monthly interview performance
-  const interviewLineChartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-    datasets: [
-      {
-        label: 'Interview Progress',
-        data: [65, 72, 68, 75, 82, 88, 91],
-        borderColor: function(context) {
-          const chart = context.chart;
-          const {ctx, chartArea} = chart;
-          
-          if (!chartArea) {
-            return 'rgb(75, 192, 192)';
-          }
-          return getGradient(ctx, chartArea);
-        },
-        tension: 0.4,
-        borderWidth: 3,
-        pointRadius: 5,
-        pointBackgroundColor: 'white',
-        fill: false
-      }
-    ]
-  };
-
-  // Interview line chart options
-  const interviewLineChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: { color: 'white' }
-      },
-      title: {
-        display: true,
-        text: 'Interview Progress Over Time',
-        color: 'white',
-        font: { size: 16 }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: { color: 'white' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-        max: 100 // Max score is 100%
-      },
-      x: {
-        ticks: { color: 'white' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' }
-      }
-    }
-  };
-
-  // Chart options
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: { color: 'white' }
-      },
-      title: {
-        display: true,
-        text: 'Activity Overview',
-        color: 'white',
-        font: { size: 16 }
-      }
-    },
-    scales: {
-      y: {
-        ticks: { color: 'white' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' }
-      },
-      x: {
-        ticks: { color: 'white' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' }
-      }
-    }
-  };
-  
-  // For demonstration purposes - in real app, would fetch from API
-  useEffect(() => {
-    // Set has interview data to true since we're now providing sample data
-    setHasInterviewData(true);
-    setQuizScores([]);
-    setInterviewData([]);
-
-    // Sample interview data
-    setInterviewData([
-      { role: 'Frontend Developer', score: 85, date: '2023-06-10' },
-      { role: 'Backend Engineer', score: 72, date: '2023-06-18' },
-      { role: 'Full Stack Developer', score: 91, date: '2023-07-05' },
-    ]);
-    
-    // Uncomment to show example quiz scores
-    setQuizScores([
-      { topic: 'Python Basics', score: 85, date: '2023-05-15' },
-      { topic: 'JavaScript', score: 92, date: '2023-05-20' },
-      { topic: 'Data Structures', score: 78, date: '2023-05-25' },
-    ]);
-    // Uncomment to show example skills
-    setSkills(['Python', 'JAVA', 'C++', 'HTML', 'CSS', 'Javascript']);
-  }, []);
-  
-  const handleEditSkills = () => {
-    console.log('Edit skills clicked');
-    setShowSkillInput(true);
-  };
-  
-  const handleAddSkill = () => {
-    if (newSkill.trim() !== '') {
-      setSkills([...skills, newSkill.trim()]);
-      setNewSkill('');
-      setShowSkillInput(false);
-    }
-  };
-
-  const handleCancelSkill = () => {
-    setNewSkill('');
-    setShowSkillInput(false);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleAddSkill();
-    } else if (e.key === 'Escape') {
-      handleCancelSkill();
-    }
-  };
-
   return (
     <div className={styles.main}>
       <div className={styles.upper}>
@@ -346,7 +303,7 @@ export default function HomePage() {
               <p className={styles["skill-heading"]}>Professional Skills</p>
               {!showSkillInput && (
                 <button 
-                  onClick={handleEditSkills} 
+                  onClick={() => setShowSkillInput(true)} 
                   className={styles.editButton} 
                   aria-label="Edit skills"
                 >
@@ -377,21 +334,41 @@ export default function HomePage() {
                   type="text"
                   value={newSkill}
                   onChange={(e) => setNewSkill(e.target.value)}
-                  onKeyDown={handleKeyDown}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (newSkill.trim() !== '') {
+                        setSkills([...skills, newSkill.trim()]);
+                        setNewSkill('');
+                        setShowSkillInput(false);
+                      }
+                    } else if (e.key === 'Escape') {
+                      setNewSkill('');
+                      setShowSkillInput(false);
+                    }
+                  }}
                   placeholder="Enter a skill (e.g., Python)"
                   className={styles.skillInput}
                   autoFocus
                 />
                 <div className={styles.skillButtonGroup}>
                   <button 
-                    onClick={handleAddSkill}
+                    onClick={() => {
+                      if (newSkill.trim() !== '') {
+                        setSkills([...skills, newSkill.trim()]);
+                        setNewSkill('');
+                        setShowSkillInput(false);
+                      }
+                    }}
                     className={styles.iconButton}
                     aria-label="Save skill"
                   >
                     <FaCheck className={styles.checkIcon} />
                   </button>
                   <button 
-                    onClick={handleCancelSkill}
+                    onClick={() => {
+                      setNewSkill('');
+                      setShowSkillInput(false);
+                    }}
                     className={styles.iconButton}
                     aria-label="Cancel"
                   >
@@ -403,9 +380,13 @@ export default function HomePage() {
           </div>
 
           <div className={styles.activity}>
-            {hasInterviewData ? (
+            {isLoading ? (
+              <div className={styles.loadingContainer}>
+                <p>Loading your progress data...</p>
+              </div>
+            ) : hasInterviewData ? (
               <div className={styles.chartContainer}>
-                <Line data={interviewLineChartData} options={interviewLineChartOptions} />
+                <Line data={interviewLineChartData} options={chartOptions} />
               </div>
             ) : (
               <div className={styles.noDataContainer}>
@@ -420,7 +401,11 @@ export default function HomePage() {
       </div>
       <div className={styles.lower}>
         <div className={styles.card}>
-          {quizScores.length > 0 ? (
+          {isLoading ? (
+            <div className={styles.loadingContainer}>
+              <p>Loading quiz scores...</p>
+            </div>
+          ) : quizScores.length > 0 ? (
             <div className={styles.chartContainer}>
               <Bar data={quizBarChartData} options={quizBarChartOptions} />
             </div>

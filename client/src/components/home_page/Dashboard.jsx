@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import styles from './Dashboard.module.css'
 import Sidebar from './Sidebar'
 import { Line, Bar } from 'react-chartjs-2'
+import { useNavigate } from 'react-router-dom'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,6 +15,9 @@ import {
   Legend
 } from 'chart.js'
 import { FaGithub, FaNewspaper, FaEdit, FaCheck, FaTimes } from 'react-icons/fa'
+// Import the services
+import learnQuizService from '../../services/learnQuizService'
+import interviewService from '../../services/interviewService'
 
 // Register Chart.js components
 ChartJS.register(
@@ -50,41 +54,168 @@ const getGradient = (ctx, chartArea) => {
 };
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [activeFeature, setActiveFeature] = useState('Home');
   const [quizScores, setQuizScores] = useState([]);
-  const [hasInterviewData, setHasInterviewData] = useState(true);
+  const [hasInterviewData, setHasInterviewData] = useState(false);
   const [skills, setSkills] = useState([]);
   const [showSkillInput, setShowSkillInput] = useState(false);
   const [newSkill, setNewSkill] = useState('');
   const [interviewData, setInterviewData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [interviewMonthlyData, setInterviewMonthlyData] = useState({ labels: [], data: [] });
+  const [userName, setUserName] = useState('User');
+
+  // Fetch user data, quiz history, and interview data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      setIsLoading(true);
+      
+      // Fetch quiz data
+      try {
+        const quizHistory = await learnQuizService.getQuizHistory();
+        if (Array.isArray(quizHistory) && quizHistory.length > 0) {
+          // Get the 5 most recent quiz scores
+          const recentScores = quizHistory
+            .slice(0, 5)
+            .map(quiz => ({
+              topic: quiz.topic,
+              score: quiz.score,
+              date: new Date(quiz.completedAt).toLocaleDateString()
+            }));
+          
+          setQuizScores(recentScores);
+        } else {
+          console.log('No quiz history found');
+          setQuizScores([]);
+        }
+      } catch (error) {
+        console.error('Error fetching quiz history:', error);
+        setQuizScores([]);
+      }
+      
+      // Fetch interview data
+      try {
+        const interviewHistory = await interviewService.getInterviewHistory();
+        
+        if (interviewHistory && interviewHistory.interviews && interviewHistory.interviews.length > 0) {
+          setHasInterviewData(true);
+          
+          // Get the 5 most recent interviews
+          const formattedData = interviewHistory.interviews
+            .slice(0, 5)
+            .map(interview => ({
+              role: interview.title || interview.type || 'Interview',
+              score: interview.score || 0,
+              date: new Date(interview.date || interview.createdAt).toLocaleDateString()
+            }));
+          
+          setInterviewData(formattedData);
+          
+          // Process monthly data for line chart
+          processInterviewData(interviewHistory.interviews);
+        } else {
+          console.log('No interview history found');
+          setHasInterviewData(false);
+          setInterviewData([]);
+        }
+      } catch (error) {
+        console.error('Error fetching interview history:', error);
+        setHasInterviewData(false);
+        setInterviewData([]);
+      }
+      
+      // Try to get user info from localStorage
+      const storedUserName = localStorage.getItem('userName');
+      if (storedUserName) {
+        setUserName(storedUserName);
+      }
+      
+      // Sample skills - in a real app you would fetch these from an API
+      setSkills(['React', 'JavaScript', 'Node.js', 'MongoDB', 'Express']);
+      
+      setIsLoading(false);
+    };
+    
+    fetchUserData();
+  }, []);
   
-  // Dummy data for the chart
-  const chartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  // Process interview data to generate monthly stats
+  const processInterviewData = (interviews) => {
+    // Group interviews by month and calculate average scores
+    const monthlyData = {};
+    
+    interviews.forEach(interview => {
+      // Use date or createdAt field
+      const interviewDate = new Date(interview.date || interview.createdAt);
+      if (isNaN(interviewDate.getTime())) return;
+      
+      const score = interview.score || 0;
+      const monthYear = `${interviewDate.getMonth() + 1}/${interviewDate.getFullYear()}`;
+      
+      if (!monthlyData[monthYear]) {
+        monthlyData[monthYear] = { 
+          total: 0, 
+          count: 0, 
+          month: interviewDate.toLocaleString('default', { month: 'short' }),
+          year: interviewDate.getFullYear()
+        };
+      }
+      
+      monthlyData[monthYear].total += score;
+      monthlyData[monthYear].count += 1;
+    });
+    
+    // Calculate averages and prepare data for chart
+    const labels = [];
+    const data = [];
+    
+    // Sort by date
+    const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
+      const [aMonth, aYear] = a.split('/').map(Number);
+      const [bMonth, bYear] = b.split('/').map(Number);
+      
+      if (aYear !== bYear) return aYear - bYear;
+      return aMonth - bMonth;
+    });
+    
+    // Get the last 7 months or all if less
+    const recentMonths = sortedMonths.slice(-7);
+    
+    recentMonths.forEach(key => {
+      const entry = monthlyData[key];
+      labels.push(`${entry.month} ${entry.year}`);
+      data.push(Math.round(entry.total / entry.count));
+    });
+    
+    setInterviewMonthlyData({ labels, data });
+  };
+
+  // Line chart for monthly interview performance with real data
+  const interviewLineChartData = {
+    labels: interviewMonthlyData.labels.length > 0 
+      ? interviewMonthlyData.labels 
+      : [],
     datasets: [
       {
-        label: 'Interview Attempts',
-        data: [3, 5, 4, 7, 6, 8],
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: function(context) {
+        label: 'Interview Progress',
+        data: interviewMonthlyData.data.length > 0 
+          ? interviewMonthlyData.data 
+          : [],
+        borderColor: function(context) {
           const chart = context.chart;
           const {ctx, chartArea} = chart;
+          
           if (!chartArea) {
-            return;
+            return 'rgb(75, 192, 192)';
           }
-          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-          gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
-          gradient.addColorStop(1, 'rgba(75, 192, 192, 0.8)');
-          return gradient;
+          return getGradient(ctx, chartArea);
         },
-        tension: 0.3
-      },
-      {
-        label: 'Quiz Scores',
-        data: [65, 78, 80, 75, 85, 90],
-        borderColor: 'rgb(153, 102, 255)',
-        backgroundColor: 'rgba(153, 102, 255, 0.5)',
-        tension: 0.3
+        tension: 0.4,
+        borderWidth: 3,
+        pointRadius: 5,
+        pointBackgroundColor: 'white',
+        fill: false
       }
     ]
   };
@@ -145,136 +276,15 @@ export default function Dashboard() {
     }
   };
 
-  // Interview data bar chart
-  const interviewBarChartData = {
-    labels: interviewData.map(data => data.role),
-    datasets: [
-      {
-        label: 'Interview Score',
-        data: interviewData.map(data => data.score),
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgb(75, 192, 192)',
-        borderWidth: 1,
-        borderRadius: 5,
-      }
-    ]
-  };
-
-  // Interview bar chart options
-  const interviewBarChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: { color: 'white' }
-      },
-      title: {
-        display: true,
-        text: 'Interview Performance',
-        color: 'white',
-        font: { size: 16 }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: { color: 'white' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-        max: 100 // Max score is 100%
-      },
-      x: {
-        ticks: { color: 'white' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' }
-      }
-    }
-  };
-
-  // Line chart for monthly interview performance
-  const interviewLineChartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-    datasets: [
-      {
-        label: 'Interview Progress',
-        data: [65, 72, 68, 75, 82, 88, 91],
-        borderColor: function(context) {
-          const chart = context.chart;
-          const {ctx, chartArea} = chart;
-          
-          if (!chartArea) {
-            return 'rgb(75, 192, 192)';
-          }
-          return getGradient(ctx, chartArea);
-        },
-        tension: 0.4,
-        borderWidth: 3,
-        pointRadius: 5,
-        pointBackgroundColor: 'white',
-        fill: false
-      }
-    ]
-  };
-
-  // Interview line chart options
-  const interviewLineChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: { color: 'white' }
-      },
-      title: {
-        display: true,
-        text: 'Interview Progress Over Time',
-        color: 'white',
-        font: { size: 16 }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: { color: 'white' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-        max: 100 // Max score is 100%
-      },
-      x: {
-        ticks: { color: 'white' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' }
-      }
-    }
-  };
-
-  // Sample quiz scores data - in a real app, this would come from an API
-  useEffect(() => {
-    // Simulate loading quiz scores from an API
-    // For now, we'll leave it empty to show the "No score" message
-    setQuizScores([]);
-    setInterviewData([]);
-    
-    // Uncomment this to see example scores
-    
-    setQuizScores([
-      { topic: 'Python Basics', score: 85, date: '2023-05-15' },
-      { topic: 'JavaScript', score: 92, date: '2023-05-20' },
-      { topic: 'Data Structures', score: 78, date: '2023-05-25' },
-    ]);
-
-    // Add sample interview data
-    setInterviewData([
-      { role: 'Frontend Developer', score: 85, date: '2023-06-10' },
-      { role: 'Backend Engineer', score: 72, date: '2023-06-18' },
-      { role: 'Full Stack Developer', score: 91, date: '2023-07-05' },
-    ]);
-
-    // Uncomment to show example skills
-    // setSkills(['Python', 'JAVA', 'C++', 'HTML', 'CSS', 'Javascript']);
-    
-  }, []);
-  
   const handleLogout = () => {
-    // Handle logout functionality here
-    console.log('Logging out...');
+    // Remove auth data from localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    
+    // Navigate to home page
+    navigate('/');
+    
+    console.log('Logged out successfully');
   };
 
   const openGithubLink = () => {
@@ -315,7 +325,7 @@ export default function Dashboard() {
     <div className={styles.dashboard}>
         {/* Use the new modular Sidebar component */}
         <Sidebar 
-          username="Username" 
+          username={userName} 
           onLogout={handleLogout}
           activeFeature={activeFeature}
         />
@@ -325,7 +335,7 @@ export default function Dashboard() {
             <div className={styles.upper}>
                 <div className={styles.welcomeContainer}>
                     <img className={styles.avatar} src="./images/avatar-male.svg" alt="avatar" />
-                    <h2 className={styles.welcomeText}>Hello, Username</h2>
+                    <h2 className={styles.welcomeText}>Hello, {userName}</h2>
                 </div>
                 <div className={styles["user-details"]}>
                     <div className={styles["top-skill"]}>
@@ -390,15 +400,19 @@ export default function Dashboard() {
                     </div>
                     
                     <div className={styles.activity}>
-                        {hasInterviewData ? (
+                        {isLoading ? (
+                            <div className={styles.loadingContainer}>
+                                <p>Loading your progress data...</p>
+                            </div>
+                        ) : hasInterviewData ? (
                             <div className={styles.chartContainer}>
                                 <Line data={interviewLineChartData} options={interviewLineChartOptions} />
                             </div>
                         ) : (
                             <div className={styles.noDataContainer}>
-                                <h3>No Activity Data Yet</h3>
+                                <h3>No Interview Data Yet</h3>
                                 <p className={styles.noDataMessage}>
-                                    Complete your first interview or quiz to see your progress here!
+                                    Complete your first interview to see your progress here!
                                 </p>
                             </div>
                         )}
@@ -407,13 +421,17 @@ export default function Dashboard() {
             </div>
             <div className={styles.lower}>
                 <div className={styles.card}>
-                    {quizScores.length > 0 ? (
+                    {isLoading ? (
+                        <div className={styles.loadingContainer}>
+                            <p>Loading quiz scores...</p>
+                        </div>
+                    ) : quizScores.length > 0 ? (
                         <div className={styles.chartContainer}>
                             <Bar data={quizBarChartData} options={quizBarChartOptions} />
                         </div>
                     ) : (
                         <div className={styles.noScoreContainer}>
-                            <p className={styles.quizHeading}>No Quiz Scores Yet !</p>
+                            <p className={styles.quizHeading}>No Quiz Scores Yet!</p>
                             <p className={styles.noScoreSubtext}>
                                 Complete your first quiz to see your results here.
                             </p>

@@ -4,18 +4,19 @@
   width: 100%;
   align-items: center;
   min-height: 50vh;
+  padding: 3rem 1.5rem;
 }
 
 .container {
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
-  background-color: #1E1E1E;
+  background-color: #1e1e1e;
   border-radius: 0.75rem;
   width: 100%;
   max-width: 900px;
-  padding: 3rem;
-  margin: 0 auto;
+  padding: 2.5rem;
+  margin: 1rem auto;
 }
 
 @media (min-width: 768px) {
@@ -27,9 +28,10 @@
 .mainPanel {
   background-color: #1E1E1E;
   border-radius: 0.75rem;
-  padding: 1.5rem;
+  padding: 2rem;
   border: 1px solid #333333;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1.5rem;
 }
 
 .iconContainer {

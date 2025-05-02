@@ -524,6 +524,20 @@
     color: #aaa;
 }
 
+/* Loading state */
+.loadingContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: white;
+    font-size: 1rem;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+}
+
 /* Responsive styles */
 @media screen and (max-width: 1200px) {
     .upper {

@@ -2,6 +2,11 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
+  background-color: #1e1e1e;
+  padding: 2rem;
+  border-radius: 0.75rem;
+  margin: 0 auto;
+  max-width: 950px;
 }
 
 @media (min-width: 768px) {
@@ -14,8 +19,9 @@
   background-color: #1E1E1E;
   border-radius: 0.75rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  padding: 1.5rem;
+  padding: 2rem;
   border: 1px solid #333333;
+  margin-bottom: 1.5rem;
 }
 
 .progressBar {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import styles from './InterviewSummary.module.css'
 
 export default function InterviewSummary({ 
@@ -7,9 +7,36 @@ export default function InterviewSummary({
   restartInterview, 
   retakeInterview 
 }) {
-  const { role, difficulty } = interviewSettings
-  const { questions, responses, feedback, overallScore, results } = interviewData
+  const { role = 'Candidate', difficulty = 'medium' } = interviewSettings || {}
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
+  
+  // Add debugging to help troubleshoot
+  useEffect(() => {
+    console.log("InterviewSummary: Data received:", { 
+      settings: interviewSettings, 
+      data: interviewData 
+    });
+    
+    // Check for common issues
+    if (!interviewData) {
+      setError("No interview data available");
+    } else if (!Array.isArray(interviewData.questions) || interviewData.questions.length === 0) {
+      setError("No questions found in the interview data");
+    } else if (!Array.isArray(interviewData.responses) || interviewData.responses.length === 0) {
+      console.warn("No responses found in interview data");
+    } else if (!Array.isArray(interviewData.feedback) || interviewData.feedback.length === 0) {
+      console.warn("No feedback found in interview data");
+    }
+  }, [interviewSettings, interviewData]);
+  
+  // Safely extract data with fallbacks
+  const questions = Array.isArray(interviewData?.questions) ? interviewData.questions : [];
+  const responses = Array.isArray(interviewData?.responses) ? interviewData.responses : [];
+  const feedback = Array.isArray(interviewData?.feedback) ? interviewData.feedback : [];
+  const results = interviewData?.results || {};
+  const overallScore = interviewData?.overallScore || 0;
   
   // Handle potential undefined feedback array
   const validFeedback = Array.isArray(feedback) ? feedback : []
@@ -64,11 +91,11 @@ export default function InterviewSummary({
   }
   
   // Make sure we have questions to render
-  if (!Array.isArray(questions) || questions.length === 0) {
+  if (error || !Array.isArray(questions) || questions.length === 0) {
     return (
       <div className="p-8 text-center">
         <h2 className="text-xl text-blue-400 mb-4">Interview Results</h2>
-        <p className="text-gray-300">No interview data available. Please restart the interview.</p>
+        <p className="text-red-400 mb-3">{error || "No interview data available. Please restart the interview."}</p>
         <button 
           onClick={restartInterview}
           className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
@@ -77,6 +104,18 @@ export default function InterviewSummary({
         </button>
       </div>
     )
+  }
+
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="animate-pulse flex flex-col items-center">
+          <i className="fa-solid fa-chart-bar text-blue-400 text-4xl mb-4"></i>
+          <p className="text-blue-300">Preparing your interview results...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

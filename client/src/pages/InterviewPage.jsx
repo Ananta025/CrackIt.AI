@@ -1,331 +1,412 @@
-import React, { useState } from 'react'
-import InterviewSetup from '../components/interview/InterviewSetup'
-import InterviewSession from '../components/interview/InterviewSession'
-import InterviewSummary from '../components/interview/InterviewSummary'
-import styles from '../styles/InterviewPage.module.css'
-import interviewService from '../services/interviewService'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react';
+import InterviewSession from '../components/interview/InterviewSession';
+import InterviewSetup from '../components/interview/InterviewSetup';
+import ThankYouScreen from '../components/interview/ThankYouScreen';
+import InterviewSummary from '../components/interview/InterviewSummary';
+import interviewService from '../services/interviewService';
+import '../styles/InterviewPage.module.css';
+
+// Interview flow stages
+const STAGES = {
+  SETUP: 'setup',
+  SESSION: 'session',
+  THANK_YOU: 'thank_you',
+  SUMMARY: 'summary'
+};
 
 export default function InterviewPage() {
-  // Interview states
-  const [stage, setStage] = useState('setup') // 'setup', 'session', 'summary'
+  const [stage, setStage] = useState(STAGES.SETUP);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Interview data
   const [interviewSettings, setInterviewSettings] = useState({
     role: '',
     difficulty: 'medium',
     duration: 'medium',
     focus: []
-  })
+  });
+  
   const [interviewData, setInterviewData] = useState({
+    interviewId: null,
     questions: [],
     responses: [],
     feedback: [],
     currentQuestionIndex: 0,
-    overallScore: 0,
-    interviewId: null,
-    expectedQuestionCount: 0
-  })
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const navigate = useNavigate()
+    results: null,
+    overallScore: 0
+  });
 
-  // Start the interview with the selected settings
+  // Start a new interview
   const startInterview = async (settings) => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      
-      // Convert role to interview type
-      const interviewType = getInterviewType(settings.role)
-      
-      console.log('Starting interview with type:', interviewType);
-      
-      // Prepare settings object for the API
-      const apiSettings = {
-        difficulty: settings.difficulty,
-        duration: settings.duration,
-        focus: settings.focus || []
-      }
-      
-      // Start interview on server
-      const result = await interviewService.startInterview(interviewType, apiSettings)
-      
-      if (!result || !result.interview || !result.interview._id) {
-        throw new Error('Invalid response from server when starting interview');
-      }
-      
-      console.log('Interview created with ID:', result.interview._id);
-      
-      // Set up the initial interview data with placeholder for first question
-      setInterviewData({
-        questions: [{ text: "Starting your interview... Please wait." }],
-        responses: [],
-        feedback: [],
-        currentQuestionIndex: 0,
-        overallScore: 0,
-        interviewId: result.interview._id,
-        expectedQuestionCount: getMaxQuestionsCount(settings.duration)
-      })
-      
-      setInterviewSettings(settings)
-      setStage('session')
-      
-      // Get the first question by sending a ready message to trigger the interview start
-      console.log('Requesting first question...');
-      const firstMessage = await interviewService.sendMessage(
-        result.interview._id,
-        "I'm ready to begin the interview."
-      )
-      
-      // Extract the message text with thorough error handling
-      let questionText = "Could not load the first question. Please try again.";
-      
-      if (firstMessage) {
-        if (typeof firstMessage.message === 'string') {
-          questionText = firstMessage.message;
-        } else if (firstMessage.message && typeof firstMessage.message.response === 'string') {
-          questionText = firstMessage.message.response;
-        } else if (firstMessage.response && typeof firstMessage.response === 'string') {
-          questionText = firstMessage.response;
-        }
-      }
-      
-      console.log('First question processed:', questionText);
-      
-      // Update with the first question
-      setInterviewData(prev => ({
-        ...prev,
-        questions: [{ 
-          text: questionText,
-          type: interviewType
-        }]
-      }))
-      
-    } catch (err) {
-      console.error('Error starting interview:', err)
-      setError(err.message || 'Failed to start interview')
-      
-      // Check if error is authentication related
-      if (err.requiresAuth) {
-        navigate('/signin', { 
-          state: { 
-            from: '/interview', 
-            message: 'Please sign in to use the mock interview feature'
-          } 
-        })
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Get maximum question count based on duration
-  const getMaxQuestionsCount = (duration) => {
-    switch (duration) {
-      case "short": return 5;
-      case "medium": return 10;
-      case "long": return 15;
-      default: return 10;
-    }
-  }
-
-  // Submit an answer to the current question
-  const submitAnswer = async (answer) => {
-    const { currentQuestionIndex, questions, interviewId, expectedQuestionCount } = interviewData
+    setIsLoading(true);
+    setError(null);
     
     try {
-      setIsLoading(true)
+      // Reset interview service tracking
+      interviewService.resetTracking();
       
-      console.log(`Submitting answer for question ${currentQuestionIndex + 1}`);
+      const { interview } = await interviewService.startInterview('technical', settings);
       
-      // Send the answer to the server
-      const result = await interviewService.sendMessage(interviewId, answer)
+      // Initialize interview data
+      setInterviewSettings(settings);
+      setInterviewData({
+        interviewId: interview._id,
+        questions: [{ text: "I'm ready to begin the interview." }],
+        responses: [],
+        feedback: [],
+        currentQuestionIndex: 0
+      });
       
-      console.log('Response received:', result);
+      // Start the session
+      setStage(STAGES.SESSION);
       
-      if (!result) {
-        throw new Error('Invalid response from server');
+      // Send initial message to get first question
+      const response = await interviewService.sendMessage(
+        interview._id,
+        "I'm ready to begin the interview."
+      );
+      
+      // Update with first question
+      setInterviewData(prev => ({
+        ...prev,
+        questions: [{ text: response.message }]
+      }));
+      
+    } catch (error) {
+      console.error("Failed to start interview:", error);
+      setError("Failed to start interview. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Submit answer to current question
+  const submitAnswer = async (answer) => {
+    setIsLoading(true);
+    
+    try {
+      const { interviewId, currentQuestionIndex, questions } = interviewData;
+      
+      // Determine if this is the last question
+      const isLastQuestion = currentQuestionIndex >= getMaxQuestions(interviewSettings.duration) - 2;
+      
+      const response = await interviewService.sendMessage(interviewId, answer, {
+        isLastQuestion
+      });
+      
+      // Check if interview ended during submission
+      if (response.interviewEnded) {
+        console.log("Final answer submitted, interview ended");
+        // Update responses and feedback first
+        setInterviewData(prev => {
+          const updatedResponses = [...prev.responses];
+          updatedResponses[currentQuestionIndex] = answer;
+          
+          const updatedFeedback = [...prev.feedback];
+          if (response.feedback) {
+            updatedFeedback[currentQuestionIndex] = response.feedback;
+          }
+          
+          return {
+            ...prev,
+            responses: updatedResponses,
+            feedback: updatedFeedback
+          };
+        });
+        
+        return;
       }
       
-      // Ensure message is a string
-      const nextQuestionText = typeof result.message === 'string' 
-        ? result.message 
-        : (result.message?.text || "Unable to load next question");
-      
-      // Update the interview data with the response and feedback
+      // Update responses and feedback
       setInterviewData(prev => {
-        const newResponses = [...prev.responses]
-        newResponses[currentQuestionIndex] = answer
+        const updatedResponses = [...prev.responses];
+        updatedResponses[currentQuestionIndex] = answer;
         
-        const newFeedback = [...prev.feedback]
-        newFeedback[currentQuestionIndex] = result.feedback || { 
-          score: 5, 
-          strengths: ['No specific feedback available'],
-          improvements: ['Continue practicing your responses']
-        }
-        
-        // Add the next question if the interview hasn't ended
-        const newQuestions = [...prev.questions]
-        
-        // Check if this should be the last question based on expected count
-        const shouldAddNextQuestion = !result.interviewEnded && 
-                                     newQuestions.length < expectedQuestionCount;
-                                     
-        if (shouldAddNextQuestion) {
-          newQuestions.push({ 
-            text: nextQuestionText,
-            type: getInterviewType(interviewSettings.role)
-          })
+        // Make sure feedback is provided even if there's an error
+        const updatedFeedback = [...prev.feedback];
+        if (response.feedback) {
+          updatedFeedback[currentQuestionIndex] = response.feedback;
+        } else {
+          // Create fallback feedback if none provided
+          updatedFeedback[currentQuestionIndex] = {
+            strengths: ["You provided a detailed answer"],
+            improvements: ["Consider adding more specific examples"],
+            score: 7,
+            suggestedTopics: ["Technical implementation details", "Real-world examples"]
+          };
         }
         
         return {
           ...prev,
-          responses: newResponses,
-          feedback: newFeedback,
-          questions: newQuestions,
-        }
-      })
+          responses: updatedResponses,
+          feedback: updatedFeedback
+        };
+      });
       
-      // If interview ended or we've reached the expected question count
-      if (result.interviewEnded || 
-          questions.length >= expectedQuestionCount) {
-        try {
-          const interview = await interviewService.getInterview(interviewId)
-          
-          setInterviewData(prev => ({
-            ...prev,
-            overallScore: interview.results?.overallScore || 0,
-            results: interview.results || {}
-          }))
-          
-          // Move to summary screen when interview ends
-          setStage('summary')
-        } catch (fetchError) {
-          console.error('Error fetching complete interview:', fetchError)
-          setError('Failed to load interview results')
-        }
+      // Check if interview ended
+      if (response.interviewEnded) {
+        console.log("Interview ended, will show thank you screen next");
       }
       
-    } catch (err) {
-      console.error('Error submitting answer:', err)
-      setError(err.message || 'Failed to submit your answer')
+    } catch (error) {
+      console.error("Failed to submit answer:", error);
+      setError("Failed to submit your answer. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  // Move to the next question
-  const nextQuestion = () => {
-    setInterviewData(prev => {
-      // Check if we have more questions to show
-      if (prev.currentQuestionIndex >= prev.questions.length - 2) {
-        // If we're at the last question and have expected count of questions,
-        // move to the summary
-        if (prev.questions.length >= prev.expectedQuestionCount) {
-          setStage('summary')
-          return prev
-        }
-        // Otherwise stay at current index
-        return prev
+  // Move to next question
+  const nextQuestion = async () => {
+    const { interviewId, currentQuestionIndex, questions, responses } = interviewData;
+    
+    // Determine if this was the last question
+    const maxQuestions = getMaxQuestions(interviewSettings.duration);
+    if (currentQuestionIndex >= maxQuestions - 1) {
+      // Move to thank you screen after last question
+      console.log("Last question reached, moving to thank you screen");
+      setStage(STAGES.THANK_YOU);
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // If we already have the next question, just move to it
+      if (questions.length > currentQuestionIndex + 1) {
+        setInterviewData(prev => ({
+          ...prev,
+          currentQuestionIndex: prev.currentQuestionIndex + 1
+        }));
+        setIsLoading(false);
+        return;
       }
       
-      // Otherwise, move to the next question
-      return {
-        ...prev,
-        currentQuestionIndex: prev.currentQuestionIndex + 1
+      // Otherwise get next question from service
+      const lastAnswer = responses[currentQuestionIndex];
+      const response = await interviewService.sendMessage(interviewId, lastAnswer || "Continue");
+      
+      // Check if interview ended during this request
+      if (response.interviewEnded) {
+        console.log("Interview ended notification received, moving to thank you screen");
+        setStage(STAGES.THANK_YOU);
+        return;
       }
-    })
-  }
+      
+      // Continue with normal question handling
+      if (response && response.message) {
+        // Add new question
+        setInterviewData(prev => ({
+          ...prev,
+          questions: [...prev.questions, { text: response.message }],
+          currentQuestionIndex: prev.currentQuestionIndex + 1
+        }));
+      } else {
+        // Handle missing response with generic fallback
+        const fallbackQuestion = `Based on your previous answer, could you elaborate more on your approach to ${interviewSettings.focus?.[0] || 'this topic'}?`;
+        setInterviewData(prev => ({
+          ...prev,
+          questions: [...prev.questions, { text: fallbackQuestion }],
+          currentQuestionIndex: prev.currentQuestionIndex + 1
+        }));
+        setError("There was an issue loading the next question. A generic question has been provided.");
+      }
+    } catch (error) {
+      console.error("Failed to get next question:", error);
+      
+      // Check for specific error about interview being completed
+      if (error?.message === 'Interview is not in progress') {
+        console.log("Interview is already completed, moving to thank you screen");
+        setStage(STAGES.THANK_YOU);
+        return;
+      }
+      
+      // Use fallback question when API fails
+      const fallbackQuestion = `Could you tell me about your experience with ${interviewSettings.focus?.[0] || 'this technology'}?`;
+      setInterviewData(prev => ({
+        ...prev,
+        questions: [...prev.questions, { text: fallbackQuestion }],
+        currentQuestionIndex: prev.currentQuestionIndex + 1
+      }));
+      setError("Failed to load the next question. A fallback question has been provided.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // Restart the interview process
+  // Go to summary screen from thank you screen
+  const goToSummary = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Check if we have a valid interview ID
+      if (!interviewData.interviewId) {
+        setError("Invalid interview ID. Please restart the interview.");
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log("Fetching interview results for ID:", interviewData.interviewId);
+      
+      // Get detailed interview data
+      let interview = await interviewService.getInterview(interviewData.interviewId);
+      
+      // If we fail to get interview data, maybe wait a bit and retry
+      if (!interview || !interview.results) {
+        console.log("Interview results not ready yet, waiting briefly...");
+        
+        // Small delay to allow backend processing to complete
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Try again
+        const retryInterview = await interviewService.getInterview(interviewData.interviewId);
+        if (retryInterview && retryInterview.results) {
+          interview = retryInterview;
+        }
+      }
+      
+      if (!interview) {
+        throw new Error("Failed to fetch interview data");
+      }
+      
+      console.log("Received interview data:", interview);
+      
+      // Update interview data with results and ensure proper structure
+      setInterviewData(prev => {
+        // Create a new object with all the existing data
+        const updatedData = {
+          ...prev,
+          results: interview.results || {},
+          overallScore: interview.results?.overallScore || 0
+        };
+        
+        // Ensure feedback array is properly initialized
+        if (!Array.isArray(updatedData.feedback)) {
+          updatedData.feedback = [];
+        }
+        
+        // Map questions and answers from the fetched interview
+        if (interview.questions && Array.isArray(interview.questions)) {
+          updatedData.questions = interview.questions.map(q => ({
+            text: q.text || "",
+            feedback: q.feedback || null
+          }));
+          
+          // Extract responses from the fetched interview
+          updatedData.responses = interview.questions.map(q => q.answer || "");
+          
+          // Extract feedback from the fetched interview
+          updatedData.feedback = interview.questions.map(q => q.feedback || null);
+        }
+        
+        return updatedData;
+      });
+      
+      // Move to summary stage
+      setStage(STAGES.SUMMARY);
+    } catch (error) {
+      console.error("Failed to load interview summary:", error);
+      setError(`Failed to load your results: ${error.message}. Please try again.`);
+      
+      // Allow user to retry
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 2000);
+      
+      return;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Restart interview (go back to setup)
   const restartInterview = () => {
-    setStage('setup')
-    setInterviewSettings({
-      role: '',
-      difficulty: 'medium',
-      duration: 'medium',
-      focus: []
-    })
+    setStage(STAGES.SETUP);
     setInterviewData({
+      interviewId: null,
       questions: [],
       responses: [],
       feedback: [],
       currentQuestionIndex: 0,
-      overallScore: 0,
-      interviewId: null,
-      expectedQuestionCount: 0
-    })
-  }
+      results: null,
+      overallScore: 0
+    });
+  };
 
   // Retake the same interview
-  const retakeInterview = async () => {
-    // Keep the same settings but start a new interview
-    try {
-      await startInterview(interviewSettings)
-    } catch (err) {
-      console.error('Error restarting interview:', err)
-      setError(err.message || 'Failed to restart interview')
+  const retakeInterview = () => {
+    startInterview(interviewSettings);
+  };
+
+  // Helper function to get max questions based on duration
+  const getMaxQuestions = (duration) => {
+    switch (duration) {
+      case 'short': return 5;
+      case 'medium': return 8;
+      case 'long': return 12;
+      default: return 8;
     }
-  }
+  };
 
-  // Helper function to convert role to interview type
-  const getInterviewType = (role) => {
-    const technicalRoles = ['Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'DevOps Engineer', 'Mobile Developer', 'QA Engineer', 'Machine Learning Engineer']
-    const behavioralRoles = ['Product Manager', 'UI/UX Designer']
-    
-    if (technicalRoles.includes(role)) return 'technical'
-    if (behavioralRoles.includes(role)) return 'behavioral'
-    return 'hr' // Default for other roles
-  }
+  // Render the current stage
+  const renderStage = () => {
+    switch (stage) {
+      case STAGES.SETUP:
+        return (
+          <InterviewSetup 
+            startInterview={startInterview} 
+            initialSettings={interviewSettings}
+            isLoading={isLoading} 
+          />
+        );
+      case STAGES.SESSION:
+        return (
+          <InterviewSession 
+            interviewSettings={interviewSettings}
+            interviewData={interviewData}
+            submitAnswer={submitAnswer}
+            nextQuestion={nextQuestion}
+            isLoading={isLoading}
+          />
+        );
+      case STAGES.THANK_YOU:
+        return (
+          <ThankYouScreen 
+            goToSummary={goToSummary}
+          />
+        );
+      case STAGES.SUMMARY:
+        return (
+          <InterviewSummary 
+            interviewSettings={interviewSettings}
+            interviewData={interviewData}
+            restartInterview={restartInterview}
+            retakeInterview={retakeInterview}
+          />
+        );
+      default:
+        return <div>Something went wrong. Please refresh the page.</div>;
+    }
+  };
 
-  // Render the appropriate stage
   return (
-    <div className={styles.pageContainer}>
-      <div className={styles.contentWrapper}>
-        {error && (
-          <div className="bg-red-600 text-white p-3 rounded-lg mb-4">
-            {error}
-            <button 
-              className="ml-2 underline" 
-              onClick={() => setError(null)}
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
-        
-        {stage === 'setup' && (
-          <div className={`${styles.setupContainer} ${styles.stageTransition}`}>
-            <InterviewSetup 
-              startInterview={startInterview} 
-              initialSettings={interviewSettings}
-              isLoading={isLoading}
-            />
-          </div>
-        )}
-        
-        {stage === 'session' && (
-          <div className={`${styles.sessionContainer} ${styles.stageTransition}`}>
-            <InterviewSession 
-              interviewSettings={interviewSettings}
-              interviewData={interviewData}
-              submitAnswer={submitAnswer}
-              nextQuestion={nextQuestion}
-              isLoading={isLoading}
-            />
-          </div>
-        )}
-        
-        {stage === 'summary' && (
-          <div className={`${styles.summaryContainer} ${styles.stageTransition}`}>
-            <InterviewSummary 
-              interviewSettings={interviewSettings}
-              interviewData={interviewData}
-              restartInterview={restartInterview}
-              retakeInterview={retakeInterview}
-            />
-          </div>
-        )}
+    <div className="container mx-auto px-6 py-8 max-w-7xl bg-[#121212]">
+      {error && (
+        <div className="bg-red-900 bg-opacity-30 border border-red-500 text-red-300 p-4 mb-6 rounded-lg">
+          <p>{error}</p>
+          <button 
+            onClick={() => setError(null)}
+            className="text-red-300 underline mt-2"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+      
+      <div className="my-4">
+        {renderStage()}
       </div>
     </div>
-  )
+  );
 }

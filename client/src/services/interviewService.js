@@ -32,15 +32,33 @@ api.interceptors.response.use((response) => {
 });
 
 const interviewService = {
+  // Keep track of asked questions to prevent repetition
+  askedQuestions: new Set(),
+  
+  // Reset tracking when starting a new interview
+  resetTracking: () => {
+    interviewService.askedQuestions.clear();
+  },
+
   // Start a new interview session
   startInterview: async (type, settings) => {
     try {
-      console.log(`Starting ${type} interview with settings:`, settings);
+      // Reset question tracking for new interview
+      interviewService.resetTracking();
+      
+      // Get user information for personalization
+      const userId = localStorage.getItem('userId');
+      const userName = localStorage.getItem('userName') || 'Candidate';
+      
+      console.log(`Starting ${type} interview for ${userName} with settings:`, settings);
+      
       const response = await api.post('/start', {
-        user: localStorage.getItem('userId'),
+        user: userId,
         type,
-        settings
+        settings,
+        userName, // Pass user name for personalization
       });
+      
       console.log('Interview started successfully:', response.data);
       return response.data;
     } catch (error) {
@@ -50,54 +68,60 @@ const interviewService = {
   },
 
   // Send a message/answer during an interview
-  sendMessage: async (interviewId, message) => {
+  sendMessage: async (interviewId, message, options = {}) => {
     try {
       console.log(`Sending message for interview ${interviewId}:`, message.substring(0, 50) + '...');
+      
+      // Get interview position (first question, middle, last)
+      const isFirstQuestion = interviewService.askedQuestions.size === 0;
+      const isLastQuestion = options.isLastQuestion || false;
+      
+      // Get current asked questions for repetition prevention
+      const askedQuestions = [...interviewService.askedQuestions];
+      
       const response = await api.post('/message', {
         interviewId,
-        message
+        message,
+        askedQuestions,
+        isFirstQuestion,
+        isLastQuestion,
+        userName: localStorage.getItem('userName') || 'Candidate'
       });
-      console.log('Received raw response:', response.data);
       
-      // Better handle the response data
-      const processedResponse = { ...response.data };
+      console.log('Received response:', response.data);
       
-      // Ensure message is a string
-      if (processedResponse.message) {
-        if (typeof processedResponse.message === 'object') {
-          console.log('Converting message object to string:', processedResponse.message);
-          
-          // If it's an empty object
-          if (Object.keys(processedResponse.message).length === 0) {
-            processedResponse.message = "No question available";
-          }
-          // If it has a response property (from backend service)
-          else if (processedResponse.message.response) {
-            processedResponse.message = processedResponse.message.response;
-          }
-          // Otherwise try to JSON stringify
-          else {
-            try {
-              processedResponse.message = JSON.stringify(processedResponse.message);
-            } catch (e) {
-              processedResponse.message = "Error processing question";
-            }
+      // Process the response
+      const processedResponse = processInterviewResponse(response.data);
+      
+      // Track this question to prevent repetition - only if it's not the first question with greeting
+      if (processedResponse.message && typeof processedResponse.message === 'string') {
+        // Extract actual question part (excluding greeting for first question)
+        let questionToTrack = processedResponse.message;
+        if (questionToTrack.includes("Hi ") && questionToTrack.includes("I'm Rahul")) {
+          // For first question with greeting, extract just the question part
+          const parts = questionToTrack.split("CrackIt.AI.");
+          if (parts.length > 1) {
+            questionToTrack = parts[1].trim();
           }
         }
-      } else {
-        // If message property is missing but response exists
-        if (processedResponse.response && typeof processedResponse.response === 'string') {
-          processedResponse.message = processedResponse.response;
-        } else {
-          processedResponse.message = "No question available";
-        }
+        
+        interviewService.askedQuestions.add(questionToTrack.trim());
       }
       
-      console.log('Processed response message:', processedResponse.message);
       return processedResponse;
     } catch (error) {
-      console.error('Failed to process response:', error.response?.data || error.message);
-      throw error.response?.data || { message: 'Failed to process response' };
+      console.error('Failed to process message:', error.response?.data || error.message);
+      
+      // Special handling for completed interviews to guide user to summary
+      if (error.response?.data?.message === 'Interview is not in progress') {
+        return {
+          message: "The interview has been completed. Please view your results.",
+          feedback: null,
+          interviewEnded: true
+        };
+      }
+      
+      throw error.response?.data || { message: 'Failed to process message' };
     }
   },
 
@@ -114,16 +138,97 @@ const interviewService = {
   // Get detailed information about a specific interview
   getInterview: async (interviewId) => {
     try {
-      const response = await api.get(`/${interviewId}`);
-      return response.data.interview || {};
+      console.log(`Fetching interview details for ID: ${interviewId}`);
+      
+      // Add a retry mechanism for better reliability
+      let attempts = 0;
+      const maxAttempts = 3;
+      let lastError = null;
+      
+      while (attempts < maxAttempts) {
+        try {
+          const response = await api.get(`/${interviewId}`);
+          
+          // Check if we have valid data
+          if (!response.data || !response.data.interview) {
+            console.error('Invalid interview data structure:', response.data);
+            throw new Error('Invalid response format from server');
+          }
+          
+          console.log('Interview data fetched successfully:', response.data.interview);
+          return response.data.interview;
+        } catch (error) {
+          lastError = error;
+          attempts++;
+          if (attempts < maxAttempts) {
+            // Wait before retrying (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+            console.log(`Retry attempt ${attempts} for interview data...`);
+          }
+        }
+      }
+      
+      // If we got here, all attempts failed
+      throw lastError || new Error("Failed to fetch interview data after multiple attempts");
     } catch (error) {
       console.error('Error fetching interview details:', error);
-      throw error.response?.data || { 
-        message: 'Failed to fetch interview details',
-        status: error.response?.status || 500
-      };
+      
+      // Provide more specific error information
+      const errorMessage = error.response?.data?.message || error.message;
+      const statusCode = error.response?.status || 500;
+      
+      throw new Error(`Failed to fetch interview details (${statusCode}): ${errorMessage}`);
     }
   }
 };
+
+/**
+ * Process and normalize interview response from different formats
+ */
+function processInterviewResponse(responseData) {
+  // Create a clean copy of the response
+  const processed = { ...responseData };
+  
+  // Process message field to ensure it's a string
+  if (processed.message) {
+    if (typeof processed.message === 'object') {
+      console.log('Converting message object to string:', processed.message);
+      
+      // Handle empty object
+      if (Object.keys(processed.message).length === 0) {
+        processed.message = "No question available";
+      }
+      // Handle object with response property
+      else if (processed.message.response) {
+        processed.message = processed.message.response;
+      }
+      // Handle object with question property (from AI service)
+      else if (processed.message.question) {
+        processed.message = processed.message.question;
+      }
+      // Otherwise stringify
+      else {
+        try {
+          processed.message = JSON.stringify(processed.message);
+        } catch (e) {
+          processed.message = "Error processing question";
+        }
+      }
+    }
+    
+    // Don't add any additional final question text - it should come from the server
+    // Pass through the server's response as is
+  } else {
+    // If message is missing but response exists
+    if (processed.response && typeof processed.response === 'string') {
+      processed.message = processed.response;
+    } else {
+      processed.message = "No question available";
+    }
+  }
+  
+  // Return the processed response
+  return processed;
+}
 
 export default interviewService;

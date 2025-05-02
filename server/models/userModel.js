@@ -4,7 +4,8 @@ import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
     name: {
-        type: String
+        type: String,
+        required: true
     },
     email: {
         type: String,
@@ -19,10 +20,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['student', 'teacher', 'admin'],
         default: 'student',
-    },
-    profilePicture: {
-        type: String,
-        default: "A"
     },
 }, { timestamps: true }
 );

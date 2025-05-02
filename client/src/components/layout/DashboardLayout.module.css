@@ -8,7 +8,7 @@
 .content {
   grid-area: 1/2/2/3;
   overflow-y: auto;
-  background-color: #0F1823;
+  /* background-color: #0F1823; */
 }
 
 @media screen and (max-width: 768px) {

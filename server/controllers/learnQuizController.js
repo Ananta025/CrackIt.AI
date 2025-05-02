@@ -91,7 +91,19 @@ export const generateQuiz = async (req, res) => {
     const quizData = await quizService.generateQuiz(topic, difficulty, questionCount);
     
     // Store quiz in session to verify answers later
-    req.session.currentQuiz = quizData;
+    // Add check for session existence
+    if (req.session) {
+      req.session.currentQuiz = quizData;
+    } else {
+      console.warn('Session not available, quiz validation may be compromised');
+      // Create a simple in-memory store as fallback (not ideal for production)
+      if (!req.app.locals.quizStore) {
+        req.app.locals.quizStore = {};
+      }
+      const quizId = Date.now().toString();
+      req.app.locals.quizStore[quizId] = quizData;
+      res.cookie('quizId', quizId, { httpOnly: true, maxAge: 3600000 }); // 1 hour
+    }
     
     // Remove correct answers from response to client
     const clientQuiz = {
@@ -123,7 +135,16 @@ export const submitQuiz = async (req, res) => {
     }
     
     // Get the quiz from the stored quiz or generate a verification quiz
-    let quizData = req.session.currentQuiz;
+    let quizData = req.session?.currentQuiz;
+    
+    // Check fallback quiz store if session not available
+    if (!quizData && req.cookies.quizId && req.app.locals.quizStore) {
+      const quizId = req.cookies.quizId;
+      quizData = req.app.locals.quizStore[quizId];
+      // Clean up after use
+      delete req.app.locals.quizStore[quizId];
+      res.clearCookie('quizId');
+    }
     
     // If quiz not in session, regenerate for validation (less secure but functional)
     if (!quizData) {

@@ -15,6 +15,7 @@ export default function InterviewSession({
   const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false)
   const [timeLeft, setTimeLeft] = useState(getTotalTimeInSeconds())
   const [showHint, setShowHint] = useState(false)
+  const [interviewEnded, setInterviewEnded] = useState(false)
 
   // Get time in seconds based on duration
   function getTotalTimeInSeconds() {
@@ -64,6 +65,12 @@ export default function InterviewSession({
     setAnswer('')
     setIsAnswerSubmitted(false)
     setShowHint(false)
+    
+    // Check if this was the last question - FIXED: Only set interviewEnded for the very last question
+    if (currentQuestionIndex >= questions.length - 2) {
+      setInterviewEnded(currentQuestionIndex >= questions.length - 1)
+    }
+    
     nextQuestion()
   }
 
@@ -81,6 +88,21 @@ export default function InterviewSession({
     
     return () => clearInterval(timer)
   }, [])
+
+  // Personalize question text
+  const personalizeQuestion = (questionText) => {
+    // Get user name from localStorage
+    const userName = localStorage.getItem('userName') || 'Candidate';
+    
+    // Don't add introduction if the message already contains a greeting
+    if (currentQuestionIndex === 0 && 
+        !questionText.includes("Hi ") && 
+        !questionText.includes("thanks for interviewing")) {
+      return `Hi ${userName}, thanks for interviewing with us today. I'm Rahul, and I'm a Software Engineer here at CrackIt.AI. This interview will focus on your ${role} skills and experience. ${questionText}`;
+    }
+    
+    return questionText;
+  }
 
   // Get current question
   const currentQuestion = questions[currentQuestionIndex]
@@ -106,25 +128,25 @@ export default function InterviewSession({
   // Get safe question text
   const getQuestionText = () => {
     if (typeof currentQuestion.text === 'string') {
-      return currentQuestion.text;
+      return personalizeQuestion(currentQuestion.text);
     }
     
     // Handle when text is an object (could be from API response)
     if (typeof currentQuestion.text === 'object' && currentQuestion.text !== null) {
       // Try to extract message property if available
       if (currentQuestion.text.message) {
-        return currentQuestion.text.message;
+        return personalizeQuestion(currentQuestion.text.message);
       }
       
       // Otherwise stringify the object
       try {
-        return JSON.stringify(currentQuestion.text);
+        return personalizeQuestion(JSON.stringify(currentQuestion.text));
       } catch (e) {
         console.error('Failed to stringify question text:', e);
       }
     }
     
-    return "No question available. Please try restarting the interview.";
+    return personalizeQuestion("No question available. Please try restarting the interview.");
   };
 
   // Add safe handling for missing ideaPoints

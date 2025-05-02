@@ -6,7 +6,9 @@ import userRoutes from './routes/userRoute.js';
 import resumeRoute from './routes/resumeRoute.js';
 import linkedinRoute from './routes/linkedinRoute.js';
 import interviewRoute from './routes/interviewRoute.js';
+import learnQuizRoute from './routes/learnQuizRoute.js';
 import cookieParser from 'cookie-parser';
+import session from 'express-session';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import { seedTemplates } from './utils/seedTemplates.js';
@@ -27,11 +29,23 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'crackit-fallback-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
 // API routes
 app.use('/api/user', userRoutes);
 app.use('/api/resume', resumeRoute);
 app.use('/api/linkedin', linkedinRoute);
 app.use('/api/interview', interviewRoute);
+app.use('/api/learn', learnQuizRoute);
 
 // Serve static files if in production
 if (process.env.NODE_ENV === 'production') {

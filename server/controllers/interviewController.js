@@ -2,7 +2,7 @@ import Interview from "../models/interviewModel.js";
 import aiService from "../services/interviewService.js";
 
 const startInterview = async (req, res) => {
-  const { user, type, settings } = req.body;
+  const { user, type, settings, userName } = req.body;
 
   if (!user) {
     return res.status(400).json({ message: "User ID is required" });
@@ -16,15 +16,14 @@ const startInterview = async (req, res) => {
     return res.status(400).json({ message: "Interview settings are required" });
   }
 
-  // Start a new interview
-  // Check if the user is valid
-
   try {
+    // Create new interview with user name for personalization
     const interview = await Interview.create({
       user,
       type,
       settings,
       status: "in-progress",
+      userName: userName || req.user?.name || "Candidate" // Store user name for personalization
     });
 
     return res.status(201).json({
@@ -40,7 +39,7 @@ const startInterview = async (req, res) => {
 
 const sendMessage = async (req, res) => {
   try {
-    const { message, interviewId } = req.body;
+    const { message, interviewId, askedQuestions, isLastQuestion } = req.body;
 
     if (!message) {
       return res.status(400).json({ message: "Message is required" });
@@ -58,20 +57,78 @@ const sendMessage = async (req, res) => {
     if (!interview) {
       return res.status(404).json({ message: "Interview not found" });
     }
+    
+    // Handle completed interviews by sending useful response
     if (interview.status !== "in-progress") {
-      return res.status(400).json({ message: "Interview is not in progress" });
+      const alreadyCompleted = interview.status === "completed";
+      
+      if (alreadyCompleted) {
+        // If interview already has results, tell client to go to summary
+        if (interview.results) {
+          return res.status(200).json({
+            message: "This interview has already been completed. Please view your results.",
+            interviewEnded: true,
+            hasResults: true
+          });
+        } else {
+          // Interview completed but results still processing
+          return res.status(200).json({
+            message: "Interview completed, results being processed. Please wait a moment to view your results.",
+            interviewEnded: true,
+            hasResults: false
+          });
+        }
+      }
+      
+      // Otherwise, normal error for other statuses
+      return res.status(400).json({ 
+        message: `Interview is ${interview.status}. Cannot add new messages.`,
+        interviewEnded: true
+      });
     }
 
-    // Check if this is the first message (special case for starting the interview)
+    // Check if this is the first message
     const isFirstMessage = interview.questions.length === 0 && 
                           message.toLowerCase().includes("ready to begin");
 
+    // Track asked questions from client to prevent repetition
+    if (!interview.askedQuestions) {
+      interview.askedQuestions = [];
+    }
+    
+    if (askedQuestions && Array.isArray(askedQuestions)) {
+      // Filter out duplicates before adding
+      askedQuestions.forEach(q => {
+        if (!interview.askedQuestions.includes(q)) {
+          interview.askedQuestions.push(q);
+        }
+      });
+    }
+
     // Process the user response with our AI service
-    const aiResponse = await aiService.processUserResponse(
-      message,
-      interview.type,
-      interview
-    );
+    let aiResponse;
+    try {
+      aiResponse = await aiService.processUserResponse(
+        message,
+        interview.type,
+        interview
+      );
+    } catch (serviceError) {
+      console.error("Error in AI service:", serviceError);
+      // Provide a fallback response when the AI service fails
+      aiResponse = {
+        response: `Thank you for your response. Let me ask you another question about ${interview.settings.focus?.[0] || interview.type}. Could you describe a challenging problem you've solved in this area?`,
+        feedback: {
+          strengths: ["You provided a detailed response", "You addressed the key points"],
+          improvements: ["Consider providing more specific examples", "Structure your answers using the STAR method"],
+          score: 6,
+          suggestedTopics: ["Specific technical challenges", "Problem-solving approach", "Results and impact"]
+        },
+        lastQuestion: interview.questions.length > 0 ? 
+          interview.questions[interview.questions.length - 1].text : 
+          "Tell me about your experience"
+      };
+    }
 
     if (!aiResponse) {
       return res.status(500).json({ message: "Error processing AI response" });
@@ -79,7 +136,9 @@ const sendMessage = async (req, res) => {
 
     // For the first message, we don't store it as an answer but just get the first question
     if (isFirstMessage) {
-      // Return first question as a string
+      // Save the interview with potentially updated askedQuestions
+      await interview.save();
+      
       return res.json({
         message: aiResponse.response,
         feedback: null,
@@ -96,9 +155,9 @@ const sendMessage = async (req, res) => {
       feedback: aiResponse.feedback,
     });
 
-    // Check if interview should end based on max questions
+    // Check if interview should end based on max questions or explicit request
     const maxQuestions = getMaxQuestions(interview.settings.duration);
-    const shouldInterviewEnd = interview.questions.length >= maxQuestions;
+    const shouldInterviewEnd = isLastQuestion || interview.questions.length >= maxQuestions;
     
     console.log(`Question count: ${interview.questions.length}, Max: ${maxQuestions}, Should end: ${shouldInterviewEnd}`);
 
@@ -112,6 +171,9 @@ const sendMessage = async (req, res) => {
       // Generate results and clean up context
       interview.results = await aiService.generateInterviewResults(interview);
       aiService.clearInterviewContext(interviewId);
+      
+      // Signal to client that interview has ended
+      aiResponse.interviewEnded = true;
     }
 
     await interview.save();
@@ -119,7 +181,7 @@ const sendMessage = async (req, res) => {
     res.json({
       message: aiResponse.response,
       feedback: aiResponse.feedback,
-      interviewEnded: shouldInterviewEnd,
+      interviewEnded: shouldInterviewEnd || aiResponse.interviewEnded,
     });
   } catch (error) {
     console.error("Interview error:", error);
@@ -147,7 +209,6 @@ const getInterviewHistory = async (req, res) => {
     }));
 
     // Calculate user stats
-
     const stats = calculateUserStats(interviews);
     res.json({
       interviews: transformedInterviews,
@@ -159,7 +220,6 @@ const getInterviewHistory = async (req, res) => {
 };
 
 // Get interview details by ID
-
 const getInterviewById = async (req, res) => {
   try {
     const interview = await Interview.findOne({

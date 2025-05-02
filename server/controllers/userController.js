@@ -10,8 +10,8 @@ const registerUser = async (req, res) => {
     if(!errors.isEmpty()){
         return res.status(httpStatus.BAD_REQUEST).json({ errors: errors.array() });
     }
-    const {email, password} = req.body;
-    if(!email || !password){
+    const {email, password, name} = req.body;
+    if(!email || !password || !name){
         return res.status(httpStatus.BAD_REQUEST).json({message: "Please provide email and password"});
     }
     try{
@@ -21,6 +21,7 @@ const registerUser = async (req, res) => {
         }
         const hashedpassword = await bcrypt.hash(password, 10);
         const newUser = await User.create({
+            name,
             email,
             password: hashedpassword,
         });
