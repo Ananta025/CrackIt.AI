@@ -14,7 +14,7 @@
     flex-direction: column;
 }
 .main-heading{
-    font-size: 3.5rem;
+    font-size: 3.25rem;
     font-weight: 700;
     font-family: "Red Rose", serif;
     background: linear-gradient(90deg, #999 1.6%, #FFF 50.23%, #999 95.59%);
@@ -23,7 +23,7 @@
     -webkit-text-fill-color: transparent;
 }
 .sub-heading{
-    font-size: 20px;
+    font-size: 18px;
     font-family: "Roboto", sans-serif;
     font-weight: 200;
     text-align: center;
