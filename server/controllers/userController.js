@@ -99,10 +99,7 @@ const getUserDetails = async (req, res) => {
     }
 }
 
-const logoutUser = async (req, res) => {
-    // Todo: Implement logout functionality
-    
-}   
+   
 
 
-export { registerUser, loginUser, getUserDetails, logoutUser };
+export { registerUser, loginUser, getUserDetails };

@@ -2,10 +2,7 @@ import * as userController from '../controllers/userController.js';
 import { Router } from 'express';
 import { body } from 'express-validator';
 
-
-
 const router = Router();
-
 
 router.post(
     "/register",
@@ -20,16 +17,5 @@ router.post(
     userController.loginUser
 );
 router.get("/get-user-details/:id", userController.getUserDetails);
-
-
-
-
-
-
-
-
-
-
-
 
 export default router;
