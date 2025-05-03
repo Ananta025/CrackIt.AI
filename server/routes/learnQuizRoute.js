@@ -14,7 +14,7 @@ router.use(authMiddleware.authenticateUser);
 
 // These routes will require authentication
 router.get('/topic/:topicId', learnQuizController.getTopicContent);
-router.post('/topic', learnQuizController.addTopic);
+// router.post('/topic', learnQuizController.addTopic);
 router.post('/quiz/generate', learnQuizController.generateQuiz);
 router.post('/quiz/submit', learnQuizController.submitQuiz);
 router.get('/quiz/history', learnQuizController.getQuizHistory);
