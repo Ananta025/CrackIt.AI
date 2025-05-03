@@ -325,7 +325,7 @@ export default function Dashboard() {
 
   return (
     <div className={styles.dashboard}>
-        {/* Use the new modular Sidebar component */}Changed from username to name to match Sidebar's prop name
+        {/* Use the new modular Sidebar component-Changed from username to name to match Sidebar's prop name */}
         <Sidebar 
           username={userName} 
           onLogout={handleLogout}

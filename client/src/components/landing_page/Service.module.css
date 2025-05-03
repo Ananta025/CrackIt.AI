@@ -51,7 +51,7 @@
     flex-wrap: wrap;
 }
 .card{
-    padding: 2rem 2.5rem 2rem 2rem;
+    padding: 1.75rem 2rem 1.75rem 1.75rem;
     display: flex;
     flex-direction: column;
     align-items: start;
@@ -72,8 +72,8 @@
 }
 
 .upper>.card{
-    height: 330px;
-    max-width: 570px;
+    height: 300px;
+    max-width: 520px;
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
@@ -94,8 +94,8 @@
     padding-bottom: 2rem;
 }
 .lower>.card{
-    height: 340px;
-    max-width: 380px;
+    height: 310px;
+    max-width: 350px;
 }
 #card-3{
     background-image: url("./images/card-3.svg");
@@ -107,17 +107,20 @@
     background-image: url("./images/card-5.svg");
 }
 .icon{
-    margin-bottom: 2.2rem;
+    margin-bottom: 1.8rem;
+    width: 40px;
+    height: auto;
 }
 .title{
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 600;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
 }
 .details{
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 400;
     color: rgb(183, 183, 183);
+    line-height: 1.4;
 }
 
 /* Media Queries for Responsive Design */
