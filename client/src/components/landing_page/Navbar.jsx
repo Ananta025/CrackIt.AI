@@ -56,23 +56,33 @@ export default function Navbar() {
   
   // Handle smooth scrolling for anchor links
   const handleLinkClick = useCallback((e, url) => {
-    // Only handle anchor links (starting with #)
-    if (url.startsWith('#')) {
+    // Handle both home URL and anchor links
+    if (url === '/' || url.startsWith('#')) {
       e.preventDefault();
-      const targetId = url.substring(1);
-      const targetElement = document.getElementById(targetId);
       
-      if (targetElement) {
-        // Close mobile menu if it's open
-        if (isMenuOpen) {
-          setIsMenuOpen(false);
-        }
-        
-        // Smooth scroll to the target element
-        targetElement.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
+      // Close mobile menu if it's open
+      if (isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+      
+      if (url === '/') {
+        // For home link, scroll to top of page smoothly
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
         });
+      } else {
+        // For anchor links, scroll to the target element
+        const targetId = url.substring(1);
+        const targetElement = document.getElementById(targetId);
+        
+        if (targetElement) {
+          // Smooth scroll to the target element
+          targetElement.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
       }
     }
   }, [isMenuOpen]);
@@ -109,7 +119,7 @@ export default function Navbar() {
       <div className={styles.navbarContainer}>
         {/* Brand Logo */}
         <div className={styles.logo}>
-          <a href="/">CrackIT.Ai</a>
+          <a href="/" className={styles.logoText}>CrackIt.AI</a>
         </div>
         
         {/* Desktop Navigation */}

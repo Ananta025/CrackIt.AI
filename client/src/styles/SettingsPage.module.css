@@ -48,11 +48,11 @@
     width: 100%;
 }
 
-input{
+.inputField{
     border:2px solid #5e666c;
     border-radius: 5px;
     height:40px;
-    padding-left: 10px;
+    padding-left: 0.5rem;
     background-color:#0F1823;
     color: white;
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import styles from '../components/home_page/Dashboard.module.css'
-import { FaEdit, FaCheck, FaTimes } from 'react-icons/fa'
+import { FaEdit, FaCheck, FaTimes, FaTrash } from 'react-icons/fa'
 import { Line, Bar } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
@@ -16,6 +16,7 @@ import {
 // Import the services
 import learnQuizService from '../services/learnQuizService'
 import interviewService from '../services/interviewService'
+import userService from '../services/userService' // Add this import for user service
 
 // Register Chart.js components
 ChartJS.register(
@@ -60,11 +61,31 @@ export default function HomePage() {
   const [interviewData, setInterviewData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [interviewMonthlyData, setInterviewMonthlyData] = useState({ labels: [], data: [] });
+  const [userId, setUserId] = useState('');
+  const [isEditMode, setIsEditMode] = useState(false);
   
   // Fetch quiz history and interview data
   useEffect(() => {
     const fetchUserData = async () => {
       setIsLoading(true);
+      
+      // Get userId from localStorage
+      const storedUserId = localStorage.getItem('userId');
+      if (storedUserId) {
+        setUserId(storedUserId);
+        
+        // Fetch user details including skills
+        try {
+          const userData = await userService.getUserDetails(storedUserId);
+          if (userData && userData.user && userData.user.skills) {
+            setSkills(userData.user.skills);
+          }
+        } catch (error) {
+          console.error('Error fetching user details:', error);
+          // Don't let API errors break the UI - initialize with empty skills if fetch fails
+          setSkills([]);
+        }
+      }
       
       // Fetch quiz data
       try {
@@ -119,9 +140,6 @@ export default function HomePage() {
         setHasInterviewData(false);
         setInterviewData([]);
       }
-      
-      // Initialize with empty skills array instead of using sample data
-      setSkills([]);
       
       setIsLoading(false);
     };
@@ -178,6 +196,50 @@ export default function HomePage() {
     });
     
     setInterviewMonthlyData({ labels, data });
+  };
+
+  // Handle adding a new skill
+  const handleAddSkill = async () => {
+    if (newSkill.trim() !== '' && userId) {
+      const updatedSkills = [...skills, newSkill.trim()];
+      
+      try {
+        // Save skills to database
+        await userService.updateUserSkills(userId, updatedSkills);
+        
+        // Update local state
+        setSkills(updatedSkills);
+        setNewSkill('');
+        setShowSkillInput(false);
+        setIsEditMode(false); // Exit edit mode after adding
+      } catch (error) {
+        console.error('Error updating skills:', error);
+      }
+    }
+  };
+
+  // Handle deleting a skill
+  const handleDeleteSkill = async (skillToDelete) => {
+    if (userId) {
+      try {
+        // Filter out the skill to delete
+        const updatedSkills = skills.filter(skill => skill !== skillToDelete);
+        
+        // Save updated skills to database
+        await userService.updateUserSkills(userId, updatedSkills);
+        
+        // Update local state
+        setSkills(updatedSkills);
+      } catch (error) {
+        console.error('Error deleting skill:', error);
+      }
+    }
+  };
+
+  // Toggle edit mode
+  const toggleEditMode = () => {
+    setIsEditMode(!isEditMode);
+    setShowSkillInput(false); // Close input when toggling edit mode
   };
 
   // Chart options
@@ -303,7 +365,7 @@ export default function HomePage() {
               <p className={styles["skill-heading"]}>Professional Skills</p>
               {!showSkillInput && (
                 <button 
-                  onClick={() => setShowSkillInput(true)} 
+                  onClick={toggleEditMode} 
                   className={styles.editButton} 
                   aria-label="Edit skills"
                 >
@@ -313,9 +375,52 @@ export default function HomePage() {
             </div>
 
             {skills.length > 0 ? (
-              <div className={styles["skill-list"]}>
+              <div 
+                className={styles["skill-list"]}
+                style={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: '10px' 
+                }}
+              >
                 {skills.map((skill, index) => (
-                  <p key={index} className={styles.skill}>{skill}</p>
+                  <div 
+                    key={index} 
+                    className={styles.skillItem}
+                    style={{ 
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      backgroundColor: 'rgba(0, 250, 200, 0.3)',
+                      borderRadius: '15px',
+                      padding: '5px 10px',
+                      marginBottom: '0'
+                    }}
+                  >
+                    <span style={{ marginRight: isEditMode ? '5px' : '0' }}>
+                      {skill}
+                    </span>
+                    {isEditMode && (
+                      <button 
+                        onClick={() => handleDeleteSkill(skill)}
+                        className={styles.deleteButton}
+                        aria-label={`Delete ${skill}`}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#ff6b6b',
+                          cursor: 'pointer',
+                          padding: '0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '16px',
+                          height: '16px'
+                        }}
+                      >
+                        <FaTrash size={12} />
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             ) : (
@@ -337,9 +442,7 @@ export default function HomePage() {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       if (newSkill.trim() !== '') {
-                        setSkills([...skills, newSkill.trim()]);
-                        setNewSkill('');
-                        setShowSkillInput(false);
+                        handleAddSkill();
                       }
                     } else if (e.key === 'Escape') {
                       setNewSkill('');
@@ -352,13 +455,7 @@ export default function HomePage() {
                 />
                 <div className={styles.skillButtonGroup}>
                   <button 
-                    onClick={() => {
-                      if (newSkill.trim() !== '') {
-                        setSkills([...skills, newSkill.trim()]);
-                        setNewSkill('');
-                        setShowSkillInput(false);
-                      }
-                    }}
+                    onClick={handleAddSkill}
                     className={styles.iconButton}
                     aria-label="Save skill"
                   >
@@ -375,6 +472,26 @@ export default function HomePage() {
                     <FaTimes className={styles.cancelIcon} />
                   </button>
                 </div>
+              </div>
+            )}
+            
+            {isEditMode && !showSkillInput && (
+              <div className={styles.editActions}>
+                <button
+                  onClick={() => {
+                    setIsEditMode(false);
+                    setShowSkillInput(true);
+                  }}
+                  className={styles.addButton}
+                >
+                  Add New Skill
+                </button>
+                <button
+                  onClick={() => setIsEditMode(false)}
+                  className={styles.doneButton}
+                >
+                  Done
+                </button>
               </div>
             )}
           </div>

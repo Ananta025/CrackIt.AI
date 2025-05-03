@@ -88,11 +88,25 @@
   color: #00a000;
 }
 
+.map {
+  margin-top: 20px;
+  width: 100%;
+  height: 270px;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
 .map iframe {
   width: 100%;
   height: 270px;
   border: none;
   border-radius: 15px;
+}
+
+.mapContainer {
+  border: 1px solid #444;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Form Section */
@@ -256,6 +270,11 @@
     gap: 16px;
   }
   
+  .map, .map iframe, .mapContainer {
+    height: 200px;
+    border-radius: 10px; /* Slightly smaller radius on mobile */
+  }
+  
   .map iframe {
     height: 200px;
   }
@@ -264,4 +283,37 @@
     height: 45px;
     font-size: 16px;
   }
+}
+
+/* Add margin after email input */
+.emailInput {
+  margin-bottom: 8px !important;
+}
+
+/* Add these styles to your existing CSS file */
+.successMessage {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
+  padding: 12px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #4CAF50;
+}
+
+.errorMessage {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #F44336;
+  padding: 12px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #F44336;
+}
+
+/* Optional: Style disabled form elements */
+input:disabled,
+textarea:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }

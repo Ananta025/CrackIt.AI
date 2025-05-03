@@ -196,6 +196,69 @@
     font-weight: 500;
     
 }
+.skillItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.skill {
+    margin: 0;
+    padding: 5px 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    max-width: calc(100% - 30px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.deleteButton {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    cursor: pointer;
+    padding: 3px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.deleteButton:hover {
+    opacity: 1;
+}
+
+.trashIcon {
+    font-size: 12px;
+}
+
+.editActions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.addButton, .doneButton {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.addButton {
+    background-color: #4caf50;
+    color: white;
+}
+
+.doneButton {
+    background-color: #2196f3;
+    color: white;
+}
+
 .activity{
     flex: 1; /* Use flex to take remaining space instead of fixed width */
     min-width: 50%; /* Ensure minimum width */

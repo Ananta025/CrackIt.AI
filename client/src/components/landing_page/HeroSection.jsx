@@ -31,7 +31,7 @@ export default function HeroSection() {
             />
         </div>
         <div className={styles.get_started_btn}>
-            <a href="/signup" className={styles.get_started}>Get Started</a>
+            <a href="/signin" className={styles.get_started}>Get Started</a>
         </div>
       </div>
     </div>

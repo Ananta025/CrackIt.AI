@@ -239,6 +239,26 @@ const getInterviewById = async (req, res) => {
 
 // Helper Functions
 
+const calculateDuration = (interview) => {
+  // If the interview has a stored duration, use it
+  if (interview.duration) {
+    return interview.duration;
+  }
+  
+  // If interview has both start and end time, calculate duration in minutes
+  if (interview.startTime && interview.endTime) {
+    return Math.round((new Date(interview.endTime) - new Date(interview.startTime)) / (1000 * 60));
+  }
+  
+  // For in-progress interviews, calculate time elapsed so far
+  if (interview.startTime) {
+    return Math.round((new Date() - new Date(interview.startTime)) / (1000 * 60));
+  }
+  
+  // Default duration if no timing information is available
+  return 0;
+};
+
 const getMaxQuestions = (duration) => {
   switch (duration) {
     case "short":

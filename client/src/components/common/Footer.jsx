@@ -10,7 +10,7 @@ export default function Footer() {
             <div className={styles.companySection}>
               <div className={styles.logo}>
                 <div className={styles.logoIcon}>
-                  <i className="fa-brands fa-airbnb text-md text-white"></i>
+                  <img src="\freepik.png" alt="" />
                 </div>
                 <h2 className={styles.logoText}>CrackIt.AI</h2>
               </div>

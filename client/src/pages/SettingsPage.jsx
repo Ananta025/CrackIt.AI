@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import styles from '../styles/SettingsPage.module.css'
+import userService from '../services/userService'
 
 export default function SettingsPage() {
   const [formData, setFormData] = useState({
@@ -18,6 +19,64 @@ export default function SettingsPage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [skill, setSkill] = useState('');
   const [skillsList, setSkillsList] = useState([]);
+  const [userId, setUserId] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch user data including skills when component mounts
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const storedUserId = localStorage.getItem('userId');
+      
+      if (storedUserId) {
+        setUserId(storedUserId);
+        setIsLoading(true);
+        
+        try {
+          const userData = await userService.getUserDetails(storedUserId);
+          if (userData && userData.user) {
+            // Populate form data with user details
+            const user = userData.user;
+            
+            // Handle single name field by splitting it
+            let firstName = '', middleName = '', lastName = '';
+            if (user.name) {
+              const nameParts = user.name.trim().split(' ');
+              if (nameParts.length === 1) {
+                firstName = nameParts[0];
+              } else if (nameParts.length === 2) {
+                firstName = nameParts[0];
+                lastName = nameParts[1];
+              } else {
+                firstName = nameParts[0];
+                lastName = nameParts[nameParts.length - 1];
+                middleName = nameParts.slice(1, nameParts.length - 1).join(' ');
+              }
+            }
+            
+            setFormData(prev => ({
+              ...prev,
+              firstName: firstName,
+              middleName: middleName,
+              lastName: lastName,
+              email: user.email || '',
+              contactNumber: user.contactNumber || ''
+            }));
+            
+            // Set skills list if available
+            if (user.skills && Array.isArray(user.skills)) {
+              setSkillsList(user.skills);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    fetchUserData();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -31,15 +90,43 @@ export default function SettingsPage() {
     setIsChangingPassword(!isChangingPassword);
   };
 
-  const handleAddSkill = () => {
-    if (skill.trim()) {
-      setSkillsList(prev => [...prev, skill]);
-      setSkill('');
+  const handleAddSkill = async () => {
+    if (skill.trim() && userId) {
+      setIsLoading(true);
+      const updatedSkills = [...skillsList, skill.trim()];
+      
+      try {
+        // Save skills to database
+        await userService.updateUserSkills(userId, updatedSkills);
+        
+        // Update local state
+        setSkillsList(updatedSkills);
+        setSkill('');
+      } catch (error) {
+        console.error('Error adding skill:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-  const handleRemoveSkill = (indexToRemove) => {
-    setSkillsList(prev => prev.filter((_, index) => index !== indexToRemove));
+  const handleRemoveSkill = async (indexToRemove) => {
+    if (userId) {
+      setIsLoading(true);
+      const updatedSkills = skillsList.filter((_, index) => index !== indexToRemove);
+      
+      try {
+        // Update skills in database
+        await userService.updateUserSkills(userId, updatedSkills);
+        
+        // Update local state
+        setSkillsList(updatedSkills);
+      } catch (error) {
+        console.error('Error removing skill:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   return (
@@ -49,6 +136,7 @@ export default function SettingsPage() {
         <div className={styles.form}>
           <div className={styles.fullName}>
             <input 
+              className={styles.inputField}
               type="text" 
               placeholder="First name" 
               value={formData.firstName} 
@@ -56,6 +144,7 @@ export default function SettingsPage() {
               onChange={handleInputChange} 
             />
             <input 
+              className={styles.inputField}
               type="text" 
               placeholder="Middle name" 
               value={formData.middleName} 
@@ -63,6 +152,7 @@ export default function SettingsPage() {
               onChange={handleInputChange} 
             />
             <input 
+              className={styles.inputField}
               type="text" 
               placeholder="Last name" 
               value={formData.lastName} 
@@ -74,6 +164,7 @@ export default function SettingsPage() {
             <div className={styles.email}>
               <label htmlFor="email">Email</label>
               <input 
+                className={styles.inputField}
                 type="email" 
                 name="email" 
                 id="email" 
@@ -85,6 +176,7 @@ export default function SettingsPage() {
             <div className={styles["contact-no"]}>
               <label htmlFor="number">Contact Number</label>
               <input 
+                className={styles.inputField}
                 type="text" 
                 name="contactNumber" 
                 id="number" 
@@ -99,11 +191,11 @@ export default function SettingsPage() {
             <div className={styles["old-password"] + " " + styles.password}>
               <label htmlFor="oldPassword">Password</label>
               <input 
+                className={styles.inputField}
                 type={showOldPassword ? "text" : "password"} 
                 value={formData.oldPassword} 
                 placeholder="Password" 
                 name="oldPassword" 
-                className={styles.pass} 
                 id="oldPassword"
                 onChange={handleInputChange}
               />
@@ -126,11 +218,11 @@ export default function SettingsPage() {
             <div className={`${styles["new-password"]} ${styles.password} ${!isChangingPassword ? styles.visible : ''}`}>
               <p>Enter New Password</p>
               <input 
+                className={styles.inputField}
                 type={showNewPassword ? "text" : "password"} 
                 value={formData.newPassword} 
                 placeholder="New Password" 
                 name="newPassword" 
-                className={styles.pass} 
                 required
                 onChange={handleInputChange}
               />
@@ -146,6 +238,7 @@ export default function SettingsPage() {
               </div>
               
               <input 
+                className={styles.inputField}
                 type="password" 
                 value={formData.confirmPassword} 
                 placeholder="Confirm Password" 
@@ -164,7 +257,7 @@ export default function SettingsPage() {
             <div className={styles.skill_list}>
               <div className={styles.add}>
                 <input 
-                  className={styles.skillAdd} 
+                  className={`${styles.skillAdd} ${styles.inputField}`} 
                   type="text" 
                   placeholder="Write Your Skills"
                   value={skill}

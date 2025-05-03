@@ -32,7 +32,8 @@ export default function Service() {
 
   return (
     <>
-    <div className={styles["service-container"]} id="services">
+      {/* The font is already imported in the CSS file, no need for Helmet */}
+      <div className={styles["service-container"]} id="services">
         <motion.div 
           className={styles.heading}
           initial="hidden"
@@ -114,7 +115,7 @@ export default function Service() {
                 </motion.div>
             </motion.div>
         </div>
-    </div>
+      </div>
     </>
   )
 }

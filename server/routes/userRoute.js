@@ -17,5 +17,6 @@ router.post(
     userController.loginUser
 );
 router.get("/get-user-details/:id", userController.getUserDetails);
+router.put("/update-skills/:id", userController.updateUserSkills);
 
 export default router;

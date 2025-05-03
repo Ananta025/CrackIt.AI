@@ -4,7 +4,7 @@ const topicSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true,  // This already creates an index
+    unique: true,
     trim: true
   },
   category: {

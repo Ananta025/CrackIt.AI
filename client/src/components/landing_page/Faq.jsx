@@ -139,13 +139,6 @@ export default function Faq() {
             </details>
           </div>
         </div>
-
-        {/* Contact Section */}
-        <div className={styles["contact-section"]}>
-          <h2>Still Have Questions?</h2>
-          <p>Our interview coaches are here to help you prepare for your next big opportunity.</p>
-          <a href="#" className={styles["contact-button"]}>Contact an Expert</a>
-        </div>
       </div>
     </div>
   )

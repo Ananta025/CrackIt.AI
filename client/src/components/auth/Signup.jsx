@@ -10,6 +10,9 @@ export default function Signup() {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [nameError, setNameError] = useState('');
+    const [emailError, setEmailError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -17,10 +20,72 @@ export default function Signup() {
         localStorage.removeItem('token');
     }, []);
 
+    const validateName = (name) => {
+        if (!name.trim()) {
+            setNameError('Name is required');
+            return false;
+        }
+        setNameError('');
+        return true;
+    };
+
+    const validateEmail = (email) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email.trim()) {
+            setEmailError('Email is required');
+            return false;
+        } else if (!emailRegex.test(email)) {
+            setEmailError('Please provide a valid email');
+            return false;
+        }
+        setEmailError('');
+        return true;
+    };
+
+    const validatePassword = (password) => {
+        if (!password) {
+            setPasswordError('Password is required');
+            return false;
+        } else if (password.length < 6) {
+            setPasswordError('Password must be at least 6 characters long');
+            return false;
+        }
+        setPasswordError('');
+        return true;
+    };
+
+    const handleNameChange = (e) => {
+        const newName = e.target.value;
+        setName(newName);
+        validateName(newName);
+    };
+
+    const handleEmailChange = (e) => {
+        const newEmail = e.target.value;
+        setEmail(newEmail);
+        validateEmail(newEmail);
+    };
+
+    const handlePasswordChange = (e) => {
+        const newPassword = e.target.value;
+        setPassword(newPassword);
+        validatePassword(newPassword);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsLoading(true);
         setError(null);
+        
+        // Validate all fields before submission
+        const isNameValid = validateName(name);
+        const isEmailValid = validateEmail(email);
+        const isPasswordValid = validatePassword(password);
+        
+        if (!isNameValid || !isEmailValid || !isPasswordValid) {
+            return; // Stop submission if validation fails
+        }
+        
+        setIsLoading(true);
         
         try {
             const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/user/register`, {
@@ -58,35 +123,44 @@ export default function Signup() {
 
                 <form onSubmit={handleSubmit}>
                     {error && <p className={styles.error}>{error}</p>}
-                    <input 
-                        type="text" 
-                        className={`${styles.name} ${styles.formInput}`}
-                        placeholder="Name" 
-                        name="name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required 
-                    />
-                    <input 
-                        type="email" 
-                        name="email" 
-                        id="email" 
-                        className={`${styles["signup-details"]} ${styles.formInput}`}
-                        placeholder="Email" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required 
-                    />
-                    <input 
-                        type="password" 
-                        name="password" 
-                        id="password" 
-                        className={`${styles["signup-details"]} ${styles.formInput}`}
-                        placeholder="Password" 
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required 
-                    />
+                    <div>
+                        <input 
+                            type="text" 
+                            className={`${styles.name} ${styles.formInput}`}
+                            placeholder="Name" 
+                            name="name"
+                            value={name}
+                            onChange={handleNameChange}
+                            required 
+                        />
+                        {nameError && <p className={styles.error}>{nameError}</p>}
+                    </div>
+                    <div>
+                        <input 
+                            type="email" 
+                            name="email" 
+                            id="email" 
+                            className={`${styles["signup-details"]} ${styles.formInput}`}
+                            placeholder="Email" 
+                            value={email}
+                            onChange={handleEmailChange}
+                            required 
+                        />
+                        {emailError && <p className={styles.error}>{emailError}</p>}
+                    </div>
+                    <div>
+                        <input 
+                            type="password" 
+                            name="password" 
+                            id="password" 
+                            className={`${styles["signup-details"]} ${styles.formInput}`}
+                            placeholder="Password" 
+                            value={password}
+                            onChange={handlePasswordChange}
+                            required 
+                        />
+                        {passwordError && <p className={styles.error}>{passwordError}</p>}
+                    </div>
                     <button type="submit" className={styles.submitButton} disabled={isLoading}>
                         {isLoading ? 'Creating Account...' : 'Create Account'}
                     </button>

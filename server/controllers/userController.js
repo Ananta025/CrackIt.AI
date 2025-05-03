@@ -99,7 +99,35 @@ const getUserDetails = async (req, res) => {
     }
 }
 
-   
+const updateUserSkills = async (req, res) => {
+    const userId = req.params.id;
+    const { skills } = req.body;
+    
+    if (!skills || !Array.isArray(skills)) {
+        return res.status(httpStatus.BAD_REQUEST).json({ message: "Skills must be provided as an array" });
+    }
+    
+    try {
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { skills },
+            { new: true }
+        ).select("-password -__v");
+        
+        if (!user) {
+            return res.status(httpStatus.BAD_REQUEST).json({ message: "User not found" });
+        }
+        
+        return res.status(httpStatus.OK).json({
+            message: "Skills updated successfully",
+            user
+        });
+    } catch (error) {
+        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ 
+            message: "Internal server error", 
+            error: error.message 
+        });
+    }
+}
 
-
-export { registerUser, loginUser, getUserDetails };
+export { registerUser, loginUser, getUserDetails, updateUserSkills };

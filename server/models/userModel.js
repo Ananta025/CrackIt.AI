@@ -1,7 +1,5 @@
 import mongoose from 'mongoose';
 
-
-
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -20,6 +18,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['student', 'teacher', 'admin'],
         default: 'student',
+    },
+    skills: {
+        type: [String],
+        default: [],
     },
 }, { timestamps: true }
 );
