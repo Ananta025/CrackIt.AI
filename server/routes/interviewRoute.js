@@ -16,6 +16,6 @@ router.use(authMiddleware.authenticateUser);
 router.post('/start', startInterview);
 router.post('/message', sendMessage);
 router.get('/history', getInterviewHistory);
-router.get('/:id', getInterviewById);
+router.get('/detail/:id', getInterviewById);
 
 export default router;

@@ -147,7 +147,7 @@ const interviewService = {
       
       while (attempts < maxAttempts) {
         try {
-          const response = await api.get(`/${interviewId}`);
+          const response = await api.get(`/detail/${interviewId}`);
           
           // Check if we have valid data
           if (!response.data || !response.data.interview) {
