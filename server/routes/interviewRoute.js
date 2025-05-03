@@ -5,7 +5,7 @@ import {
   getInterviewHistory,
   getInterviewById
 } from '../controllers/interviewController.js';
-import authMiddleware from '../middlewares/authMiddlwware.js';
+import authMiddleware from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 

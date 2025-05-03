@@ -7,7 +7,7 @@ import {
   generatePDF,
   getUserResumes
 } from '../controllers/resumeController.js';
-import authMiddleware from '../middlewares/authMiddlwware.js';
+import authMiddleware from '../middlewares/authMiddleware.js';
 import multer from 'multer';
 import config from '../config/config.js';
 

@@ -7,7 +7,7 @@ import {
   validateSectionRegeneration,
   validateOptimizationAccess
 } from '../middlewares/validator.js';
-import authMiddleware from '../middlewares/authMiddlwware.js';
+import authMiddleware from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
