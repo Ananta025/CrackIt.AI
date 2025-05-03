@@ -43,7 +43,7 @@ const startServer = async () => {
       resave: false,
       saveUninitialized: false,
       store: MongoStore.create({
-        mongoUrl: process.env.MONGODB_URI || mongoose.connection._connectionString,
+        mongoUrl: process.env.MONGO_URI || mongoose.connection._connectionString,
         collectionName: 'sessions',
         ttl: 24 * 60 * 60
       }),

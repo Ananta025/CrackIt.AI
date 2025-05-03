@@ -241,9 +241,12 @@ const templates = [
 export const seedTemplates = async () => {
   try {
     // Connect to MongoDB
-    const mongoURI = process.env.MONGODB_URI;
     if (!mongoose.connection.readyState) {
       console.log('Connecting to MongoDB for template seeding');
+      const mongoURI = process.env.MONGO_URI;
+      if (!mongoURI) {
+        throw new Error('MongoDB URI is undefined. Check your .env file.');
+      }
       await mongoose.connect(mongoURI);
     }
     
