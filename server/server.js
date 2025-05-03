@@ -55,38 +55,6 @@ const startServer = async () => {
     // Seed resume templates if needed
     await seedTemplates();
     
-    // BEFORE mounting routes, validate route paths
-    console.log('=== VALIDATING ROUTES ===');
-    // Helper function to validate route paths
-    function validateRoutes(router, name) {
-      if (!router.stack) {
-        console.log(`${name} has no routes`);
-        return;
-      }
-      
-      router.stack.forEach(r => {
-        if (r.route) {
-          const path = r.route.path;
-          console.log(`${name} route: ${path}`);
-          
-          // Check for malformed parameters
-          if ((path.includes('/:') && path.includes(':/')) || 
-              path.endsWith(':') || 
-              path.includes(':/')
-             ) {
-            console.error(`⚠️ INVALID ROUTE in ${name}: ${path}`);
-          }
-        }
-      });
-    }
-    
-    // Validate all routers before mounting
-    validateRoutes(userRoutes, 'User');
-    validateRoutes(resumeRoute, 'Resume');
-    validateRoutes(linkedinRoute, 'LinkedIn');
-    validateRoutes(interviewRoute, 'Interview');
-    validateRoutes(learnQuizRoute, 'Learn');
-    
     // API routes
     app.use('/api/user', userRoutes);
     app.use('/api/resume', resumeRoute);
@@ -117,39 +85,6 @@ const startServer = async () => {
     // Start listening
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
-      
-      // DEBUG: Print all registered routes AFTER server is fully initialized
-      console.log('=== REGISTERED ROUTES ===');
-      if (app._router && app._router.stack) {
-        app._router.stack.forEach(r => {
-          if (r.route) {
-            console.log(`Route: ${r.route.path}`);
-          } else if (r.name === 'router' && r.handle && r.handle.stack) {
-            try {
-              const basePath = r.regexp ? r.regexp.toString().match(/^\/\\\/([^\/\\]+)/)[1] : '';
-              console.log(`Router base path: /${basePath}`);
-              r.handle.stack.forEach(l => {
-                if (l.route) {
-                  console.log(`  - ${l.route.path}`);
-                  
-                  // Extra check for path parameters
-                  if (l.route.path.includes(':') && 
-                      (l.route.path.includes('/:') || l.route.path.endsWith(':')) || 
-                      l.route.path.includes(':/')
-                     ) {
-                    console.log(`    WARNING: Possible malformed parameter in route: ${l.route.path}`);
-                  }
-                }
-              });
-            } catch (error) {
-              console.log('Error printing route:', error.message);
-            }
-          }
-        });
-      } else {
-        console.log('Router not fully initialized yet');
-      }
-      console.log('========================');
     });
   } catch (error) {
     console.error('Failed to start server:', error);
