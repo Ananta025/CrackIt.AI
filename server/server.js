@@ -14,6 +14,7 @@ import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import { seedTemplates } from './utils/seedTemplates.js';
+import fs from 'fs';
 
 // Configure environment variables
 dotenv.config();
@@ -62,14 +63,35 @@ const startServer = async () => {
     app.use('/api/interview', interviewRoute);
     app.use('/api/learn', learnQuizRoute);
 
+    // Health check endpoint
+    app.get('/', (req, res) => {
+      res.status(200).json({
+        status: 'success',
+        message: 'CrackIt.AI API server is running',
+        environment: process.env.NODE_ENV || 'development',
+        timestamp: new Date().toISOString()
+      });
+    });
+
     // Serve static files if in production
     if (process.env.NODE_ENV === 'production') {
       const __dirname = path.dirname(fileURLToPath(import.meta.url));
-      app.use(express.static(path.join(__dirname, '../client/dist')));
+      const clientDistPath = path.join(__dirname, '../client/dist');
       
-      app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-      });
+      // Check if the client dist directory exists
+      try {
+        if (fs.existsSync(clientDistPath)) {
+          app.use(express.static(clientDistPath));
+          
+          app.get('*', (req, res) => {
+            res.sendFile(path.join(clientDistPath, 'index.html'));
+          });
+        } else {
+          console.log('Client build folder not found. API-only mode.');
+        }
+      } catch (err) {
+        console.error('Error checking client build folder:', err);
+      }
     }
     
     // Error handling middleware
