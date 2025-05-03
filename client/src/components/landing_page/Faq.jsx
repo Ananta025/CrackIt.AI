@@ -3,7 +3,7 @@ import styles from './Faq.module.css'
 
 export default function Faq() {
   return (
-    <div className={styles.faqWrapper}>
+    <div className={styles.faqWrapper} id="faq">
       <div className={styles.container}>
         <div className={styles.header}>
           <h1>Interview Preparation FAQ</h1>

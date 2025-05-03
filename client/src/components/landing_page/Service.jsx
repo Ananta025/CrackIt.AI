@@ -1,52 +1,118 @@
 import React from 'react'
 import styles from './Service.module.css'
+import { motion } from 'framer-motion'
 
 export default function Service() {
+  // Define animation variants
+  const headingVariants = {
+    hidden: { opacity: 0, y: -50 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 1.0, ease: "easeOut" } 
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.8, ease: "easeOut" } 
+    }
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.3 } // Increased from 0.2 to 0.3
+    }
+  };
+
   return (
     <>
-    <div className={styles["service-container"]}>
-        <div className={styles.heading}>
+    <div className={styles["service-container"]} id="services">
+        <motion.div 
+          className={styles.heading}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={headingVariants}
+        >
             <p className={styles["main-heading"]}>Powerful Features</p>
             <p className={styles["main-heading"]}>just for you</p>
             <p className={styles["sub-heading"]}>Our website offers a range of powerful features designed to<br/>elevate your Interview preparation journey</p>
-        </div>
+        </motion.div>
 
         {/* service card section */}
         <div className={styles.service}>
-            <div className={`${styles.upper} ${styles.row}`}>
-                <div className={styles.card} id={styles["card-1"]}>
-                    <img className={styles.icon} src="./images/interview.png" alt="new-job"/>
+            <motion.div 
+              className={`${styles.upper} ${styles.row}`}
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+            >
+                <motion.div 
+                  className={styles.card} 
+                  id={styles["card-1"]}
+                  variants={cardVariants}
+                >
+                    <img className={styles.icon} src="/images/interview.png" alt="new-job"/>
                     <p className={styles.title}>AI Powered Mock Interview</p>
                     <p className={styles.details}>It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum
                     </p>
-                </div>
-                <div className={styles.card} id={styles["card-2"]}>
-                    <img className={styles.icon} src="./images/resume.png" alt="new-job"/>
+                </motion.div>
+                <motion.div 
+                  className={styles.card} 
+                  id={styles["card-2"]}
+                  variants={cardVariants}
+                >
+                    <img className={styles.icon} src="/images/resume.png" alt="new-job"/>
                     <p className={styles.title}>Resume Build & Analyze</p>
                     <p className={styles.details}>It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. 
                     </p>
-                </div>
-            </div>
-            <div className={`${styles.lower} ${styles.row}`}>
-                <div className={styles.card} id={styles["card-3"]}>
+                </motion.div>
+            </motion.div>
+            <motion.div 
+              className={`${styles.lower} ${styles.row}`}
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+            >
+                <motion.div 
+                  className={styles.card} 
+                  id={styles["card-3"]}
+                  variants={cardVariants}
+                >
                     <img className={styles.icon} src="./images/linkedin.png" alt="new-job"/>
                     <p className={styles.title}>LinkedIn Optimizer</p>
                     <p className={styles.details}>It is a long established fact that a reader will be distracted by the readable content of a 
                     </p>
-                </div>
-                <div className={styles.card} id={styles["card-4"]}>
+                </motion.div>
+                <motion.div 
+                  className={styles.card} 
+                  id={styles["card-4"]}
+                  variants={cardVariants}
+                >
                     <img className={styles.icon} src="./images/quiz.png" alt="new-job"/>
                     <p className={styles.title}>Interview Quiz</p>
                     <p className={styles.details}>It is a long established fact that a reader will be distracted by the readable content of a 
                     </p>
-                </div>
-                <div className={styles.card} id={styles["card-5"]}>
+                </motion.div>
+                <motion.div 
+                  className={styles.card} 
+                  id={styles["card-5"]}
+                  variants={cardVariants}
+                >
                     <img className={styles.icon} src="./images/pdf.png" alt="new-job"/>
                     <p className={styles.title}>Preparation Resource</p>
                     <p className={styles.details}>It is a long established fact that a reader will be distracted by the readable content of a
                     </p>
-                </div>
-            </div>
+                </motion.div>
+            </motion.div>
         </div>
     </div>
     </>

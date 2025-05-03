@@ -1,20 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styles from './Navbar.module.css';
 
-const NavLinks = ({ mobile = false }) => {
+const NavLinks = ({ mobile = false, handleLinkClick }) => {
   // Shared navigation links for both desktop and mobile views
   const links = [
-    { name: 'Home', url: '/home' },
-    { name: 'About Us', url: '' },
-    { name: 'Services', url: '#' },
-    { name: 'Contact Us', url: '#' }
+    { name: 'Home', url: '/' },
+    { name: 'Services', url: '#services' },
+    { name: 'About Us', url: '#about' },
+    { name: 'Contact Us', url: '#contact' }
   ];
 
   if (mobile) {
     return (
       <>
         {links.map((link, index) => (
-          <a key={`mobile-${index}`} href={link.url} style={{ '--delay': index + 1 }}>
+          <a 
+            key={`mobile-${index}`} 
+            href={link.url} 
+            style={{ '--delay': index + 1 }}
+            onClick={(e) => handleLinkClick(e, link.url)}
+          >
             {link.name}
           </a>
         ))}
@@ -25,7 +30,11 @@ const NavLinks = ({ mobile = false }) => {
   return (
     <div className={styles.linkList}>
       {links.map((link, index) => (
-        <a key={`desktop-${index}`} href={link.url}>
+        <a 
+          key={`desktop-${index}`} 
+          href={link.url}
+          onClick={(e) => handleLinkClick(e, link.url)}
+        >
           {link.name}
         </a>
       ))}
@@ -44,6 +53,29 @@ export default function Navbar() {
   
   // Toggle mobile menu
   const toggleMenu = () => setIsMenuOpen(prevState => !prevState);
+  
+  // Handle smooth scrolling for anchor links
+  const handleLinkClick = useCallback((e, url) => {
+    // Only handle anchor links (starting with #)
+    if (url.startsWith('#')) {
+      e.preventDefault();
+      const targetId = url.substring(1);
+      const targetElement = document.getElementById(targetId);
+      
+      if (targetElement) {
+        // Close mobile menu if it's open
+        if (isMenuOpen) {
+          setIsMenuOpen(false);
+        }
+        
+        // Smooth scroll to the target element
+        targetElement.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }
+  }, [isMenuOpen]);
   
   // Close mobile menu when clicking outside
   const handleClickOutside = useCallback((event) => {
@@ -77,11 +109,11 @@ export default function Navbar() {
       <div className={styles.navbarContainer}>
         {/* Brand Logo */}
         <div className={styles.logo}>
-          <a href="#">CrackIT.Ai</a>
+          <a href="/">CrackIT.Ai</a>
         </div>
         
         {/* Desktop Navigation */}
-        <NavLinks />
+        <NavLinks handleLinkClick={handleLinkClick} />
         
         {/* Desktop Team Logo */}
         <div className={styles.desktopTeamLogo}>
@@ -110,7 +142,7 @@ export default function Navbar() {
           
           {/* Mobile Menu Dropdown */}
           <div className={`${styles.mobileMenu} ${isMenuOpen ? styles.mobileMenuOpen : ''}`}>
-            <NavLinks mobile={true} />
+            <NavLinks mobile={true} handleLinkClick={handleLinkClick} />
           </div>
         </div>
       </div>

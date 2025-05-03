@@ -12,7 +12,7 @@ export default function HeroSection() {
             </p>
             <p className={styles.hero_sub_txt}> Powered by<span className={styles.ai_txt}>AI</span>
               <img 
-                src="./images/AI star.png" 
+                src="/images/AI star.png" 
                 alt="AI logo" 
                 loading="lazy"
                 width="20"
@@ -23,7 +23,7 @@ export default function HeroSection() {
 
         <div className={styles.hero_img}>
             <img 
-              src="./images/Group 36.png" 
+              src="/images/Group 36.png" 
               alt="Interview preparation illustration" 
               loading="lazy"
               width="460"

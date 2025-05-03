@@ -26,7 +26,7 @@ export default function ContactUs() {
   };
 
   return (
-    <div className={styles.pageContainer}>
+    <div className={styles.pageContainer} id="contact">
       <div className={styles.content}>
         <motion.div 
           className={styles.leftSection}

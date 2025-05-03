@@ -71,11 +71,11 @@
     margin-bottom: 2rem;
 }
 #card-1{
-    background-image: url("./images/card-1.svg");
+    background-image: url("/images/card-1.svg");
     
 }
 #card-2{
-    background-image: url("./images/card-2.svg");
+    background-image: url("/images/card-2.svg");
 }
 
 .lower{
@@ -87,14 +87,14 @@
     width: 330px;
 }
 #card-3{
-    background-image: url("./images/card-3.svg");
+    background-image: url("/images/card-3.svg");
    
 }
 #card-4{
-    background-image: url("./images/card-4.svg");
+    background-image: url("/images/card-4.svg");
 }
 #card-5{
-    background-image: url("./images/card-5.svg");
+    background-image: url("/images/card-5.svg");
 }
 .icon{
     margin-bottom: 1.5rem;
