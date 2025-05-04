@@ -9,6 +9,7 @@
   align-items: center;
   margin-bottom: 1.5rem;
   position: relative;
+  width: 100%;
 }
 
 .back-button {
@@ -36,6 +37,8 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
+  text-align: center;
+  padding: 0 2.5rem;
 }
 
 .improvement-score {
@@ -55,6 +58,7 @@
   gap: 0.5rem;
   flex-wrap: wrap;
   margin-bottom: 1.5rem;
+  justify-content: center;
 }
 
 .tab {
@@ -68,6 +72,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .tab.active {
@@ -183,12 +188,16 @@
   display: flex;
   gap: 1rem;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .save-btn, .download-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex: 1 1 auto;
+  justify-content: center;
 }
 
 .save-btn {
@@ -213,6 +222,7 @@
   justify-content: center;
   height: 400px;
   text-align: center;
+  padding: 0 1rem;
 }
 
 .loading-spinner {
@@ -231,8 +241,120 @@
   }
 }
 
-@media (max-width: 768px) {
+/* Small phones */
+@media (max-width: 480px) {
+  .results-container {
+    padding: 1rem 0.5rem;
+  }
+
+  .results-title {
+    font-size: 1.2rem;
+    padding: 0 2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .back-button {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .improvement-score {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+  }
+  
+  .section-tabs {
+    gap: 0.3rem;
+  }
+  
+  .tab {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8rem;
+  }
+  
+  .improvement-badge {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.3rem;
+  }
+  
   .comparison-container {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .content-box {
+    height: 200px;
+    padding: 0.7rem;
+    font-size: 0.9rem;
+  }
+  
+  .column-title {
+    font-size: 0.9rem;
+  }
+  
+  .regenerate-btn {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.7rem;
+  }
+  
+  .explanation-section {
+    padding: 0.7rem;
+  }
+  
+  .explanation-section h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .explanation-section p {
+    font-size: 0.9rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+}
+
+/* Mobile devices */
+@media (min-width: 481px) and (max-width: 768px) {
+  .results-container {
+    padding: 1.2rem 0.8rem;
+  }
+
+  .comparison-container {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+  
+  .content-box {
+    height: 250px;
+  }
+  
+  .section-tabs {
+    justify-content: center;
+  }
+  
+  .tab {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .content-box {
+    height: 300px;
+  }
+}
+
+/* Large screens */
+@media (min-width: 1441px) {
+  .results-title {
+    font-size: 1.8rem;
+  }
+  
+  .content-box {
+    height: 400px;
   }
 }

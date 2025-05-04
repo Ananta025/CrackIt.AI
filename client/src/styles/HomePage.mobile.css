@@ -1,0 +1,252 @@
+/* Mobile-specific styles for HomePage */
+
+@media screen and (max-width: 768px) {
+  /* Adjust top skills section to be smaller */
+  .top-skill {
+    flex: 0 0 auto !important;
+    max-height: 150px !important;
+    overflow-y: auto !important; 
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Make skill items more compact */
+  .skill-list {
+    gap: 0.5rem !important;
+    margin-top: 0.5rem !important;
+  }
+  
+  /* Skill items */
+  .skillItem {
+    padding: 3px 8px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  /* Increase activity/chart section size */
+  .activity {
+    flex: 1 0 auto !important; 
+    min-height: 250px !important; 
+    margin-top: 0.5rem !important;
+  }
+  
+  /* Adjust chart container height */
+  .chartContainer {
+    height: 100% !important;
+    min-height: 220px !important;
+  }
+  
+  /* Add top padding to main content area */
+  .main {
+    padding-top: 1rem !important;
+  }
+  
+  /* Reduce upper section padding */
+  .upper {
+    padding: 0.5rem !important;
+  }
+  
+  /* Make greeting section more compact */
+  .greeting-heading {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .greeting-text, .lesson-prompt {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  /* Prevent scaling on hover for github and news cards */
+  .github:hover,
+  .news:hover,
+  .infoCard:hover {
+    transform: none !important;
+    transition: background-color 0.3s ease !important;
+    scale: 1 !important;
+    box-shadow: 0 0 10px rgba(97, 192, 221, 0.2) !important; /* Add subtle glow instead */
+  }
+  
+  /* Ensure proper styling for info cards on mobile */
+  .infoCard {
+    padding: 1rem !important;
+    transition: background-color 0.3s ease, border-color 0.3s ease !important;
+    height: auto !important;
+    min-height: 180px !important;
+    width: 100% !important;
+  }
+
+  /* Add subtle background change on hover instead of scaling */
+  .infoCard:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgb(97, 192, 221) !important;
+  }
+
+  /* Make lower section use flexbox with wrap */
+  .lower {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    justify-content: center !important;
+  }
+  
+  /* The quiz/chart card takes full width */
+  .card {
+    width: 100% !important;
+    margin-bottom: 10px !important;
+    height: auto !important;
+    min-height: 250px !important;
+    max-height: 350px !important;
+  }
+  
+  /* GitHub and news cards responsive sizing */
+  .github,
+  .news {
+    width: calc(50% - 5px) !important; /* Half width minus half the gap */
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    height: auto !important;
+    min-height: 160px !important;
+    max-height: 200px !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+  
+  /* Apply same side-by-side styling to infoCard elements */
+  .lower .infoCard {
+    width: calc(50% - 5px) !important;
+    flex: 0 0 calc(50% - 5px) !important;
+    margin: 0 !important;
+    min-height: 160px !important;
+    max-height: 200px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    padding: 10px !important;
+  }
+  
+  /* Make images responsive within cards */
+  .updates {
+    height: auto !important;
+    width: 100% !important;
+    min-height: 160px !important;
+    max-height: 200px !important;
+    object-fit: cover !important;
+  }
+  
+  /* Style card content for better fit */
+  .cardIcon {
+    height: 30px !important;
+    width: auto !important;
+    margin-bottom: 5px !important;
+    font-size: 2rem !important;
+  }
+  
+  .cardTitle {
+    font-size: 14px !important;
+    margin: 5px 0 !important;
+  }
+  
+  .cardSubtitle {
+    font-size: 12px !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Extra small screens - stack the cards vertically */
+  @media screen and (max-width: 480px) {
+    .github,
+    .news,
+    .infoCard,
+    .lower > div:nth-child(n) {
+      width: 100% !important;
+      flex: 0 0 100% !important;
+      max-width: 100% !important;
+      min-height: 140px !important;
+      margin-bottom: 10px !important;
+    }
+    
+    .updates {
+      max-height: 180px !important;
+    }
+    
+    .lower {
+      flex-direction: column !important;
+    }
+  }
+
+  /* Media query for small landscape devices */
+  @media screen and (max-height: 500px) and (orientation: landscape) {
+    .github,
+    .news,
+    .infoCard {
+      min-height: 120px !important;
+      max-height: 160px !important;
+    }
+    
+    .updates {
+      min-height: 120px !important;
+      max-height: 160px !important;
+    }
+    
+    .card {
+      min-height: 200px !important;
+      max-height: 280px !important;
+    }
+    
+    .cardIcon {
+      margin-bottom: 2px !important;
+      font-size: 1.5rem !important;
+    }
+  }
+
+  /* Enhanced mobile layout fixes */
+  @media screen and (max-width: 768px) {
+    /* Force lower section to be flexbox layout */
+    .lower, 
+    [class*="lower"],
+    div[class*="lower"] {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+      gap: 10px !important;
+      grid-template-columns: none !important;
+      grid-template-rows: none !important;
+      grid-template-areas: none !important;
+    }
+    
+    /* Force card to take full width */
+    .card, 
+    .lower > div:first-child,
+    [class*="card"] {
+      width: 100% !important;
+      flex: 0 0 100% !important;
+    }
+    
+    /* Force GitHub and news to be side by side with explicit order */
+    .github,
+    .news,
+    .lower > div:nth-child(2),
+    .lower > div:nth-child(3),
+    .infoCard,
+    div[class*="github"],
+    div[class*="news"] {
+      width: calc(50% - 5px) !important;
+      flex: 0 0 calc(50% - 5px) !important;
+      max-width: calc(50% - 5px) !important;
+      margin: 0 !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      height: auto !important;
+    }
+    
+    /* Ensure images are contained within cards */
+    .github img,
+    .news img,
+    .infoCard img,
+    .updates {
+      max-height: 40px !important;
+      object-fit: contain !important;
+      margin: 0 auto 5px auto !important;
+    }
+  }
+}

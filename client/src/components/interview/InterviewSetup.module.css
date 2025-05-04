@@ -4,24 +4,53 @@
   width: 100%;
   align-items: center;
   min-height: 50vh;
-  padding: 3rem 1.5rem;
+  padding: 1rem;
 }
 
 .container {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2rem;
+  gap: 1.5rem;
   background-color: #1e1e1e;
   border-radius: 0.75rem;
   width: 100%;
   max-width: 900px;
-  padding: 2.5rem;
+  padding: 1.25rem;
   margin: 1rem auto;
+}
+
+@media (min-width: 640px) {
+  .containerWrapper {
+    padding: 1.5rem;
+    min-height: 50vh;
+  }
+  
+  .container {
+    padding: 1.75rem;
+    gap: 1.75rem;
+  }
 }
 
 @media (min-width: 768px) {
   .container {
     grid-template-columns: 2fr 1fr;
+    padding: 2rem;
+    gap: 2rem;
+  }
+  
+  .containerWrapper {
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .containerWrapper {
+    min-height: 50vh;
+    padding: 3rem 1.5rem;
+  }
+  
+  .container {
+    padding: 2.5rem;
   }
 }
 
@@ -140,8 +169,14 @@
 
 .difficultyGroup {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .difficultyGroup {
+    gap: 0.75rem;
+  }
 }
 
 .difficultyButton {
@@ -164,8 +199,15 @@
 
 .buttonGroup {
   display: flex;
+  flex-direction: column;
   gap: 0.75rem;
   margin-top: 1rem;
+}
+
+@media (min-width: 640px) {
+  .buttonGroup {
+    flex-direction: row;
+  }
 }
 
 .backButton {

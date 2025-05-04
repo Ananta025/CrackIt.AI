@@ -1,11 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../home_page/Sidebar';
 import styles from './DashboardLayout.module.css';
+import { FaBars, FaChevronLeft } from 'react-icons/fa';
 
 export default function DashboardLayout() {
   const location = useLocation();
   const path = location.pathname.substring(1) || 'home';
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default to closed
+  
+  // Check screen size on mount and when window resizes
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const isMobile = window.innerWidth <= 768;
+      setIsSidebarOpen(!isMobile); // Open on desktop, closed on mobile
+    };
+    
+    // Initial check
+    checkScreenSize();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkScreenSize);
+    
+    // Clean up event listener
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   
   // Map route paths to sidebar feature IDs
   const pathToFeatureMap = {
@@ -25,14 +44,36 @@ export default function DashboardLayout() {
     window.location.href = '/';
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
-    <div className={styles.layout}>
-      <Sidebar 
-        username="Username" 
-        onLogout={handleLogout}
-        activeFeature={pathToFeatureMap[path] || 'Home'}
-      />
+    <div className={`${styles.layout} ${isSidebarOpen ? '' : styles.sidebarClosed}`}>
+      <div className={`${styles.sidebarContainer} ${isSidebarOpen ? '' : styles.hidden}`}>
+        <Sidebar 
+          username="Username" 
+          onLogout={handleLogout}
+          activeFeature={pathToFeatureMap[path] || 'Home'}
+        />
+        <button 
+          className={`${styles.sidebarToggle} ${styles.closeIcon}`}
+          onClick={toggleSidebar}
+          aria-label="Close sidebar"
+        >
+          <FaChevronLeft />
+        </button>
+      </div>
       <main className={styles.content}>
+        {!isSidebarOpen && (
+          <button 
+            className={styles.sidebarToggle} 
+            onClick={toggleSidebar}
+            aria-label="Open sidebar"
+          >
+            <FaBars />
+          </button>
+        )}
         <Outlet />
       </main>
     </div>

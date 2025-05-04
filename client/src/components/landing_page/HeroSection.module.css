@@ -1,3 +1,15 @@
+/* Root level fixes to prevent any horizontal scrolling */
+* {
+  box-sizing: border-box;
+}
+
+body, html {
+  overflow-x: hidden;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 @keyframes heroFloat {
   0% {
     transform: translateY(0px);
@@ -13,6 +25,9 @@
 /* Root wrapper class to improve scoping */
 .heroWrapper {
   width: 100%;
+  overflow-x: hidden; /* Add this to prevent horizontal scrolling */
+  position: relative; /* Ensure proper positioning context */
+  max-width: 100%; /* Ensure it doesn't exceed viewport width */
 }
 
 .hero {
@@ -22,12 +37,13 @@
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr auto auto;
     position: relative;
-    background-image: url("../images/design\ 5\ \(1\).svg");
+    background-image: url("/images/design 5 (1).svg");  
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
     overflow-x: hidden;
     padding-top: 0;
+    max-width: 100%;
 }
 
 .hero_txt {
@@ -62,6 +78,9 @@
     gap: 8px;
     align-items: center;
     justify-content: center;
+    max-width: 100%;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 .hero_sub_txt img {
@@ -80,15 +99,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 98%;
+    width: 100%;
     margin-top: clamp(0.5rem, 5vw, 4rem);
+    max-width: 100%; /* Ensure it doesn't exceed parent width */
+    overflow-x: hidden;
 }
 
 .hero_img img {
     height: auto;
     max-height: clamp(230px, 55vw, 270px);
     width: auto;
-    max-width: 98%;
+    max-width: 100%; /* Change from 98% to 100% */
     object-fit: contain;
     animation: heroFloat 2s ease-in-out infinite;
 }
@@ -99,6 +120,9 @@
     align-items: center;
     justify-content: center;
     padding: clamp(1rem, 3vw, 1.5rem) 1rem;
+    max-width: 100%;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 .get_started {
@@ -122,6 +146,9 @@
 @media screen and (max-width: 479px) {
     .hero_txt {
         padding: 1rem 0.75rem;
+        width: 100%;
+        max-width: 100%;
+        text-align: center;
     }
     
     .hero_main_txt {
@@ -132,11 +159,14 @@
     
     .hero_img {
         margin-top: 0rem;
+        max-width: 100%;
+        padding: 0;
     }
     
     .hero_img img {
         max-height: 450px;
-        padding: 0rem 0rem 3rem 2rem;
+        padding: 0;
+        max-width: 90%; /* Reduce to ensure it fits */
     }
     
     .get_started_btn {

@@ -188,7 +188,7 @@ export default function ContactUs() {
             </div>
             <div className={styles.infoItem}>
               <i className="fas fa-envelope" aria-hidden="true"></i>
-              <p><a href="mailto:crackit.ai@gmail.com" style={{color: 'white', textDecoration: 'none'}}>crackit.ai@gmail.com</a></p>
+              <p><a href="mailto:crackit.ai@gmail.com" style={{color: 'white', textDecoration: 'none'}}>crackit.connect@gmail.com</a></p>
             </div>
           </div>
           <div className={styles.map}>
@@ -292,8 +292,8 @@ export default function ContactUs() {
             ></textarea>
             <motion.button 
               type="submit"
-              whileHover={{ scale: isSubmitting ? 1.0 : 1.03 }}
-              whileTap={{ scale: isSubmitting ? 1.0 : 0.97 }}
+              whileHover={{ scale: isSubmitting ? 1.0 : 1.0 }}
+              whileTap={{ scale: isSubmitting ? 1.0 : 1.0 }}
               disabled={isSubmitting}
               style={{ opacity: isSubmitting ? 0.7 : 1 }}
             >

@@ -117,7 +117,7 @@ export default function Footer() {
                   </li>
                   <li className={styles.contactItem}>
                     <i className={`fas fa-envelope ${styles.contactIcon}`}></i>
-                    <span>crackit.ai@gmail.com</span>
+                    <span>crackit.connect@gmail.com</span>
                   </li>
                   <li className={styles.contactItem}>
                     <i className={`fas fa-globe ${styles.contactIcon}`}></i>

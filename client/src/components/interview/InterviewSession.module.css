@@ -1,17 +1,31 @@
 .container {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
+  gap: 1.25rem;
   background-color: #1e1e1e;
-  padding: 2rem;
+  padding: 1rem;
   border-radius: 0.75rem;
   margin: 0 auto;
   max-width: 950px;
 }
 
+@media (min-width: 640px) {
+  .container {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+}
+
 @media (min-width: 768px) {
   .container {
     grid-template-columns: 2fr 1fr;
+    padding: 1.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 2rem;
   }
 }
 
@@ -19,9 +33,23 @@
   background-color: #1E1E1E;
   border-radius: 0.75rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  padding: 2rem;
+  padding: 1rem;
   border: 1px solid #333333;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .mainPanel {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mainPanel {
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
 }
 
 .progressBar {
@@ -72,10 +100,24 @@
 }
 
 .question {
-  font-size: 1.25rem;
+  font-size: 1rem;
   color: white;
   font-weight: 500;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+
+@media (min-width: 640px) {
+  .question {
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .question {
+    font-size: 1.25rem;
+  }
 }
 
 .textareaLabel {
@@ -90,11 +132,25 @@
   width: 100%;
   background-color: #121212;
   color: white;
-  padding: 1rem;
-  border-radius: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
   border: 1px solid #333333;
-  min-height: 200px;
+  min-height: 150px;
   resize: none;
+}
+
+@media (min-width: 640px) {
+  .textarea {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    min-height: 180px;
+  }
+}
+
+@media (min-width: 768px) {
+  .textarea {
+    min-height: 200px;
+  }
 }
 
 .textarea:focus {
@@ -141,4 +197,27 @@
   composes: submitButton;
   background-color: #333333;
   cursor: wait;
+}
+
+.hintContainer {
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+}
+
+.hintContent {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.hintHidden {
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.hintVisible {
+  max-height: 500px;
+  opacity: 1;
+  margin-top: 0.5rem;
 }

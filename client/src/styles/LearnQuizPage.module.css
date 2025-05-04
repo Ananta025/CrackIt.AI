@@ -21,12 +21,12 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;  /* Increased from 1.5rem to 2rem */
 }
 
 .searchInput {
   flex: 1;
-  padding: 1rem 1.5rem;
+  padding: 0.8rem 1.2rem;
   font-size: 1.1rem;
   border: none;
   background-color: #1e1e1e;
@@ -43,7 +43,7 @@
 }
 
 .searchButton {
-  padding: 0 1.5rem;
+  padding: 0 1.2rem;
   background-color: #1a73e8;
   color: white;
   border: none;
@@ -346,5 +346,218 @@
 
   .question {
     font-size: 1.1rem;
+  }
+}
+
+/* Extra small devices (phones, below 480px) */
+@media (max-width: 480px) {
+  .container {
+    padding: 0.5rem;
+  }
+  
+  .searchSection {
+    margin: 1rem auto;
+  }
+  
+  .searchInput {
+    font-size: 0.85rem;
+    padding: 0.7rem 0.8rem;
+  }
+  
+  .searchButton {
+    padding: 0 1rem;
+  }
+  
+  .contentArea {
+    padding: 0.8rem;
+    margin: 0.5rem;
+    width: calc(100% - 1rem);
+    max-width: unset;
+  }
+  
+  .toggleButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .question {
+    font-size: 1rem;
+  }
+  
+  .option {
+    padding: 0.8rem;
+  }
+  
+  .quizButton {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+  
+  .learningContent h2 {
+    font-size: 1.5rem;
+  }
+  
+  .learningContent h3 {
+    font-size: 1.2rem;
+  }
+  
+  .codeBlock {
+    padding: 0.7rem;
+    font-size: 0.8rem;
+  }
+  
+  .resultScore {
+    font-size: 3rem;
+  }
+  
+  .resultMessage {
+    font-size: 1.2rem;
+  }
+}
+
+/* Small devices (large phones, 480px to 767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+  .container {
+    padding: 0.8rem;
+  }
+  
+  .searchSection {
+    margin: 1.2rem auto;
+  }
+  
+  .contentArea {
+    padding: 1.2rem;
+    width: calc(100% - 1.6rem);
+    max-width: unset;
+  }
+  
+  .toggleButton {
+    padding: 0.6rem 1.2rem;
+  }
+  
+  .option {
+    padding: 0.9rem;
+  }
+}
+
+/* Medium devices (tablets, 768px to 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .container {
+    padding: 1.2rem;
+  }
+  
+  .searchSection {
+    max-width: 650px;
+  }
+  
+  .contentArea {
+    max-width: 750px;
+    padding: 1.5rem;
+  }
+  
+  .searchInput {
+    font-size: 1rem;
+  }
+}
+
+/* Large devices (laptops/desktops, 1024px to 1439px) */
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .searchSection {
+    max-width: 750px;
+  }
+  
+  .contentArea {
+    max-width: 850px;
+  }
+}
+
+/* Extra large devices (large desktops, 1440px and up) */
+@media (min-width: 1440px) {
+  .container {
+    padding: 1.5rem 2rem;
+  }
+  
+  .searchSection {
+    margin: 2.5rem auto;
+  }
+  
+  .contentArea {
+    padding: 2.5rem;
+  }
+  
+  .searchInput {
+    font-size: 1.2rem;
+    padding: 0.75rem 1rem;
+  }
+  
+  .toggleButton {
+    padding: 0.8rem 2.5rem;
+    font-size: 1.1rem;
+  }
+  
+  .question {
+    font-size: 1.4rem;
+  }
+  
+  .option {
+    padding: 1.2rem;
+  }
+  
+  .learningContent h2 {
+    font-size: 2rem;
+  }
+  
+  .learningContent h3 {
+    font-size: 1.6rem;
+  }
+}
+
+/* Ensure scrollable content on small screens */
+.codeBlock {
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+/* Ensure buttons are large enough for touch targets on mobile */
+@media (max-width: 767px) {
+  .quizButton, .tryAgainButton, .searchButton {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .option {
+    min-height: 44px;
+  }
+  
+  /* Better spacing for mobile quiz navigation */
+  .quizNavigation {
+    margin-top: 1.5rem;
+  }
+  
+  /* Adjust quiz result display for mobile */
+  .resultContainer {
+    padding: 0.5rem;
+  }
+  
+  .resultDetails {
+    margin-top: 2rem;
+  }
+}
+
+/* Fix for ultra-small screens */
+@media (max-width: 320px) {
+  .searchInput {
+    padding: 0.6rem;
+    font-size: 0.8rem;
+  }
+  
+  .toggleButton {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+  }
+  
+  .contentArea {
+    padding: 0.6rem;
   }
 }

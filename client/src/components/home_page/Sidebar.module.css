@@ -29,7 +29,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    margin-top: 3rem;
+    margin-top: 5rem; /* Increased from 3rem to add more space before menu starts */
     margin-bottom: 1rem;
 }
 
@@ -40,7 +40,7 @@
     align-items: center;
     gap: 10px;
     font-size: 17px;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.75rem; 
     border-radius: 10px;
     border: none;
     cursor: pointer;
@@ -200,8 +200,7 @@
     }
     
     .logo {
-        font-size: 1.2rem;
-        text-align: center;
+        display: none; /* Hide the logo on mobile screens */
     }
     
     .logout {

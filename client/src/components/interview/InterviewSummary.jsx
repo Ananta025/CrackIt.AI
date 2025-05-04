@@ -123,17 +123,17 @@ export default function InterviewSummary({
       {/* Header Card */}
       <div className={styles.headerCard}>
         <div className="flex flex-col md:flex-row justify-between items-center">
-          <div className="md:mr-8 mb-6 md:mb-0 text-center md:text-left">
+          <div className="md:mr-8 mb-6 md:mb-0 text-center md:text-left w-full md:w-auto">
             <h1 className={styles.title}>
               Interview Complete!
             </h1>
             <p className={styles.subtitle}>
               You've completed your {difficulty} level interview for {role}
             </p>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 rounded-lg">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-900 rounded-lg text-sm sm:text-base">
               <span className="text-gray-300">Overall Performance:</span>
               <div className="flex items-center gap-2">
-                <span className={`text-xl font-bold ${getScoreColorClass(overallScore || 0)}`}>
+                <span className={`text-lg sm:text-xl font-bold ${getScoreColorClass(overallScore || 0)}`}>
                   {overallScore || 0}/10
                 </span>
                 {getPerformanceEmoji()}
@@ -142,8 +142,8 @@ export default function InterviewSummary({
           </div>
           
           <div className="flex-shrink-0">
-            <div className={`w-32 h-32 rounded-full flex items-center justify-center ${getScoreBgClass(overallScore || 0)} border-2`}>
-              <span className="text-4xl font-bold">
+            <div className={`w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center ${getScoreBgClass(overallScore || 0)} border-2`}>
+              <span className="text-2xl sm:text-3xl md:text-4xl font-bold">
                 {overallScore || 0}
               </span>
             </div>
@@ -155,13 +155,13 @@ export default function InterviewSummary({
       <div className={styles.statisticsCard}>
         <div className="flex items-center gap-2 mb-4">
           <i className="fa-solid fa-chart-bar text-blue-400"></i>
-          <h2 className="text-xl font-semibold text-white">Performance Breakdown</h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-white">Performance Breakdown</h2>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-            <div className="text-gray-400 text-sm mb-1">Questions</div>
-            <div className="text-2xl font-bold text-white">{answeredQuestions}/{questions.length}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-gray-900 rounded-lg p-3 sm:p-4 border border-gray-700">
+            <div className="text-gray-400 text-xs sm:text-sm mb-1">Questions</div>
+            <div className="text-xl sm:text-2xl font-bold text-white">{answeredQuestions}/{questions.length}</div>
           </div>
           
           <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
@@ -295,16 +295,16 @@ export default function InterviewSummary({
           className={styles.secondaryButton}
         >
           <i className="fa-solid fa-home"></i>
-          <span>Return to Setup</span>
+          <span className="ml-1.5">Return to Setup</span>
         </button>
         
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-2 sm:gap-4">
           <button
             onClick={() => {}}
             className={styles.secondaryButton}
           >
             <i className="fa-solid fa-download"></i>
-            <span>Save Report</span>
+            <span className="ml-1.5">Save Report</span>
           </button>
           
           <button
@@ -312,7 +312,7 @@ export default function InterviewSummary({
             className={styles.blueButton}
           >
             <i className="fa-solid fa-redo"></i>
-            <span>Retake Interview</span>
+            <span className="ml-1.5">Retake Interview</span>
           </button>
           
           <button
@@ -320,7 +320,7 @@ export default function InterviewSummary({
             className={styles.primaryButton}
           >
             <span>Try Different Role</span>
-            <i className="fa-solid fa-arrow-right"></i>
+            <i className="fa-solid fa-arrow-right ml-1.5"></i>
           </button>
         </div>
       </div>

@@ -1,7 +1,7 @@
 .pageContainer {
   min-height: 100vh;
   background-color: #121212;
-  padding: 3rem 1.5rem;
+  padding: 1.5rem 1rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -11,17 +11,50 @@
   max-width: 64rem;
   margin: 0 auto;
   width: 100%;
-  padding: 0 1.5rem;
+  padding: 0 0.75rem;
 }
 
 .sessionContainer,
 .summaryContainer {
   background-color: #1E1E1E;
   border-radius: 0.75rem;
-  padding: 2.5rem;
+  padding: 1.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   transition: box-shadow 0.3s ease, transform 0.3s ease;
-  margin: 2rem 0;
+  margin: 1rem 0;
+}
+
+/* Add responsive padding adjustments */
+@media (min-width: 640px) {
+  .pageContainer {
+    padding: 2rem 1.5rem;
+  }
+  
+  .contentWrapper {
+    padding: 0 1rem;
+  }
+  
+  .sessionContainer,
+  .summaryContainer {
+    padding: 2rem;
+    margin: 1.5rem 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .pageContainer {
+    padding: 3rem 1.5rem;
+  }
+  
+  .contentWrapper {
+    padding: 0 1.5rem;
+  }
+  
+  .sessionContainer,
+  .summaryContainer {
+    padding: 2.5rem;
+    margin: 2rem 0;
+  }
 }
 
 /* Add animation for transitions between stages */

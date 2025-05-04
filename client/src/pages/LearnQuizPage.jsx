@@ -463,7 +463,7 @@ export default function LearnQuizPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           <button type="submit" className={styles.searchButton}>
-            <FaSearch />
+            <FaSearch size={20} />
           </button>
         </form>
 

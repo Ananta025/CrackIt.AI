@@ -114,7 +114,7 @@ export default function InterviewSetup({ startInterview, initialSettings, isLoad
                     ))}
                   </select>
                   <div className={styles.selectIcon}>
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </div>
@@ -127,12 +127,12 @@ export default function InterviewSetup({ startInterview, initialSettings, isLoad
                   <i className="fa-solid fa-rocket text-blue-400"></i>
                   Difficulty Level
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-1 sm:gap-2">
                   {['easy', 'medium', 'hard'].map(level => (
                     <button
                       key={level}
                       type="button"
-                      className={`flex flex-col items-center justify-center p-1.5 rounded-lg border text-xs ${
+                      className={`flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-lg border text-2xs sm:text-xs ${
                         settings.difficulty === level 
                           ? level === 'easy' 
                             ? 'bg-green-900 bg-opacity-30 border-green-500 text-green-400' 
@@ -144,7 +144,7 @@ export default function InterviewSetup({ startInterview, initialSettings, isLoad
                       onClick={() => setSettings(prev => ({ ...prev, difficulty: level }))}
                     >
                       <span className="capitalize font-medium">{level}</span>
-                      <span className="text-xs opacity-80">
+                      <span className="text-2xs sm:text-xs opacity-80">
                         {level === 'easy' ? 'Entry' : level === 'medium' ? 'Mid' : 'Senior'}
                       </span>
                     </button>
@@ -164,7 +164,7 @@ export default function InterviewSetup({ startInterview, initialSettings, isLoad
               </button>
               
               {!settings.role && (
-                <p className="text-red-400 text-center text-xs mt-1">
+                <p className="text-red-400 text-center text-2xs sm:text-xs mt-1">
                   Please select a role to continue
                 </p>
               )}

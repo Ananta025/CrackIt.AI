@@ -89,13 +89,20 @@
   margin-top: 1.5rem;
 }
 
+.featureLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  height: 100%; /* Ensure the link takes full height */
+}
+
 .feature {
   display: flex;
   align-items: center;
   background: rgba(255, 255, 255, 0.1);
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
-  /* Removed transition as it's now handled by Framer Motion */
+  height: 100%; /* Ensure each feature has full height */
 }
 
 /* Removed hover transform from CSS since we're using Framer Motion's whileHover */
@@ -175,6 +182,15 @@
   .textContent p {
     font-size: 1rem;
   }
+  
+  .features {
+    grid-template-rows: repeat(2, 1fr); /* Force two rows of equal height */
+  }
+  
+  .feature {
+    min-height: 60px; /* Set minimum height for consistency */
+    justify-content: flex-start; /* Align content to start */
+  }
 }
 
 @media (max-width: 480px) {
@@ -196,5 +212,9 @@
   
   .tagline p {
     font-size: 0.9rem;
+  }
+  
+  .feature {
+    min-height: 50px; /* Slightly smaller minimum height for very small screens */
   }
 }

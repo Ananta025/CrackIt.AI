@@ -391,9 +391,9 @@ export default function InterviewPage() {
   };
 
   return (
-    <div className="container mx-auto px-6 py-8 max-w-7xl bg-[#121212]">
+    <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 max-w-7xl bg-[#121212]">
       {error && (
-        <div className="bg-red-900 bg-opacity-30 border border-red-500 text-red-300 p-4 mb-6 rounded-lg">
+        <div className="bg-red-900 bg-opacity-30 border border-red-500 text-red-300 p-3 sm:p-4 mb-4 sm:mb-6 rounded-lg text-sm sm:text-base">
           <p>{error}</p>
           <button 
             onClick={() => setError(null)}
@@ -404,7 +404,7 @@ export default function InterviewPage() {
         </div>
       )}
       
-      <div className="my-4">
+      <div className="my-2 sm:my-4">
         {renderStage()}
       </div>
     </div>

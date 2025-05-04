@@ -2,6 +2,7 @@ import React from 'react';
 import styles from './AboutUs.module.css';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 export default function AboutUs() {
   // Animation variants for staggered animations
@@ -67,22 +68,32 @@ export default function AboutUs() {
               whileInView="visible"
               viewport={{ once: true, margin: "-50px" }}
             >
-              <motion.div className={styles.feature} variants={featureVariants} whileHover={{ scale: 1.05 }}>
-                <i className="fas fa-file-alt"></i>
-                <span>Resume Builder</span>
-              </motion.div>
-              <motion.div className={styles.feature} variants={featureVariants} whileHover={{ scale: 1.05 }}>
-                <i className="fab fa-linkedin"></i>
-                <span>LinkedIn Optimizer</span>
-              </motion.div>
-              <motion.div className={styles.feature} variants={featureVariants} whileHover={{ scale: 1.05 }}>
-                <i className="fas fa-user-tie"></i>
-                <span>Mock Interviews</span>
-              </motion.div>
-              <motion.div className={styles.feature} variants={featureVariants} whileHover={{ scale: 1.05 }}>
-                <i className="fas fa-book"></i>
-                <span>Learning Resources</span>
-              </motion.div>
+              <Link to="/resume-builder" className={styles.featureLink}>
+                <motion.div className={styles.feature} variants={featureVariants} whileHover={{ scale: 1.05 }}>
+                  <i className="fas fa-file-alt"></i>
+                  <span>Resume Builder</span>
+                </motion.div>
+              </Link>
+              
+              <Link to="/linkedin-optimizer" className={styles.featureLink}>
+                <motion.div className={styles.feature} variants={featureVariants} whileHover={{ scale: 1.05 }}>
+                  <i className="fab fa-linkedin"></i>
+                  <span>LinkedIn Optimizer</span>
+                </motion.div>
+              </Link>
+              <Link to="/mock-interviews" className={styles.featureLink}>
+                <motion.div className={styles.feature} variants={featureVariants} whileHover={{ scale: 1.05 }}>
+                  <i className="fas fa-user-tie"></i>
+                  <span>Mock Interviews</span>
+                </motion.div>
+              </Link>
+              
+              <Link to="/learning-resources" className={styles.featureLink}>
+                <motion.div className={styles.feature} variants={featureVariants} whileHover={{ scale: 1.05 }}>
+                  <i className="fas fa-book"></i>
+                  <span>Learning Resources</span>
+                </motion.div>
+              </Link>
             </motion.div>
           </div>
         </motion.div>

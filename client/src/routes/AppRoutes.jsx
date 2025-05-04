@@ -11,9 +11,10 @@ import SignupPage from '../pages/SignupPage';
 import SigninPage from '../pages/SigninPage';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import SettingsPage from '../pages/SettingsPage';
+import FeedBackPage from '../pages/FeedBackPage';
 
 // Protected Route component
-const ProtectedRoute = ({ children, redirectTo = "/" }) => {
+const ProtectedRoute = ({ children, redirectTo = "/signin" }) => {
   const isAuthenticated = localStorage.getItem('token') !== null;
   
   if (!isAuthenticated) {
@@ -67,6 +68,7 @@ export default function AppRoutes() {
           <Route path="/linkedin" element={<LinkedinPage />} />
           <Route path="/learning" element={<LearnQuizPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/feedback" element={<FeedBackPage />} />
           {/* Add more routes here for other features */}
           
           {/* Handle 404 for authenticated users (inside dashboard) */}

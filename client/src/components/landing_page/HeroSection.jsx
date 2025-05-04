@@ -1,8 +1,25 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import styles from './HeroSection.module.css'
 import Navbar from './Navbar'
 
 export default function HeroSection() {
+  // Add effect to ensure mobile viewport is properly set
+  useEffect(() => {
+    // Fix for mobile viewport issues
+    const metaViewport = document.querySelector('meta[name=viewport]');
+    if (!metaViewport) {
+      const meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      document.head.appendChild(meta);
+    } else {
+      metaViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    }
+
+    // Return cleanup function to restore viewport if needed
+    return () => {};
+  }, []);
+
   return (
     <div className={styles.heroWrapper}>
       <div className={styles.hero}>

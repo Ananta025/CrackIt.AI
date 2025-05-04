@@ -3,16 +3,141 @@
   grid-template-columns: 300px auto;
   height: 100vh;
   width: 100%;
+  position: relative;
+  transition: grid-template-columns 0.3s ease;
+}
+
+.sidebarClosed {
+  grid-template-columns: 0 auto;
+}
+
+.sidebarContainer {
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.hidden {
+  width: 0;
+  overflow: hidden;
 }
 
 .content {
   grid-area: 1/2/2/3;
   overflow-y: auto;
   background-color: #121212;
+  position: relative;
+  transition: all 0.3s ease;
+  padding: 0; /* Default padding */
 }
 
+.sidebarClosed .content {
+  padding-left: 1.5rem; 
+  padding-right: 1.5rem;
+}
+
+.sidebarToggle {
+  position: fixed;
+  top: 15px;
+  z-index: 100;
+  background-color: #1e1e1e;
+  border: none;
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* Default for the toggle button in content (when sidebar is closed) */
+.sidebarToggle {
+  left: 15px;
+}
+
+.sidebarToggle:hover {
+  background-color: #2c2c2c;
+}
+
+/* Close icon positioning (inside sidebar) */
+.closeIcon {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  left: auto;
+  background-color: #2c2c2c;
+}
+
+.closeIcon:hover {
+  background-color: #3c3c3c;
+}
+
+/* Responsive styles */
 @media screen and (max-width: 768px) {
   .layout {
-    grid-template-columns: 80px auto;
+    grid-template-columns: 0 auto;
+  }
+  
+  .layout:not(.sidebarClosed) {
+    grid-template-columns: 100% auto;
+    position: relative;
+  }
+  
+  /* Remove this rule that completely hides the content */
+  .layout:not(.sidebarClosed) .content {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 10; 
+    opacity: 0.3; 
+    pointer-events: none; 
+  }
+  
+  .sidebarContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    width: 300px;
+  }
+  
+  /* Add overlay effect for content when sidebar is open */
+  .layout:not(.sidebarClosed)::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9;
+    pointer-events: none; 
+  }
+  
+  .hidden {
+    transform: translateX(-100%);
+  }
+  
+  .closeIcon {
+    right: 15px;
+  }
+  
+  .sidebarClosed .content {
+    padding-left: 1.5rem; /* Increased padding on mobile when sidebar is closed */
+    padding-right: 1.5rem; /* Equal padding on right */
+    padding-top: 3rem; /* Increased top padding for better spacing */
+    grid-column: 1 / -1; /* Span all columns on mobile */
+  }
+  
+  .sidebarToggle {
+    left: 15px;
+    z-index: 1001; /* Ensure it's always on top */
   }
 }

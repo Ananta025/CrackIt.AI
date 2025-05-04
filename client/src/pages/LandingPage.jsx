@@ -15,13 +15,13 @@ export default function LandingPage() {
   }, [])
 
   return (
-    <div>
+    <>
       <HeroSection />
       <Service />
       <AboutUs />
       <Faq />
       <ContactUs />
       <Footer />
-    </div>
+    </>
   )
 }

@@ -16,6 +16,7 @@ export default function InterviewSession({
   const [timeLeft, setTimeLeft] = useState(getTotalTimeInSeconds())
   const [showHint, setShowHint] = useState(false)
   const [interviewEnded, setInterviewEnded] = useState(false)
+  const [motivationalMessage, setMotivationalMessage] = useState('') // New state for storing the message
 
   // Get time in seconds based on duration
   function getTotalTimeInSeconds() {
@@ -49,6 +50,11 @@ export default function InterviewSession({
     ]
     return messages[Math.floor(Math.random() * messages.length)]
   }
+
+  // Initialize motivational message when currentQuestionIndex changes
+  useEffect(() => {
+    setMotivationalMessage(getMotivationalMessage())
+  }, [currentQuestionIndex])
 
   // Handle answer submission
   const handleSubmit = () => {
@@ -177,7 +183,7 @@ export default function InterviewSession({
         
         {/* Question number and type */}
         <div className={styles.questionHeader}>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
             <span className={styles.questionBadge}>
               Q{currentQuestionIndex + 1}/{questions.length}
             </span>
@@ -196,7 +202,7 @@ export default function InterviewSession({
         </h2>
         
         {/* Answer area */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <label className={styles.textareaLabel}>Your Answer:</label>
           <textarea
             value={answer}
@@ -207,12 +213,12 @@ export default function InterviewSession({
           />
           
           {!isAnswerSubmitted && (
-            <div className="flex justify-between items-center mt-2">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-2 gap-2 sm:gap-0">
               <div className={styles.characterCount}>
                 <span className={answer.length < 50 ? 'text-red-400' : 'text-green-400'}>
                   {answer.length} characters
                 </span>
-                <span> (aim for 100-300 for a complete answer)</span>
+                <span className="hidden sm:inline"> (aim for 100-300 for a complete answer)</span>
               </div>
               <button
                 onClick={handleSubmit}
@@ -234,7 +240,7 @@ export default function InterviewSession({
         
         {/* Feedback section */}
         {isAnswerSubmitted && currentFeedback && (
-          <div className="bg-gray-900 border border-blue-900 rounded-lg p-5 mb-6 animate-fadeIn">
+          <div className="bg-gray-900 border border-blue-900 rounded-lg p-3 sm:p-4 md:p-5 mb-4 sm:mb-6 animate-fadeIn">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-blue-400 font-medium">AI Feedback</h3>
               <div className="flex items-center">
@@ -285,7 +291,7 @@ export default function InterviewSession({
             
             <button
               onClick={handleNext}
-              className="w-full mt-5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-4 py-3 rounded-lg text-white font-medium flex items-center justify-center gap-2"
+              className="w-full mt-4 sm:mt-5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-white font-medium flex items-center justify-center gap-2"
             >
               <span>
                 {currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'See Results'}
@@ -305,10 +311,10 @@ export default function InterviewSession({
         )}
       </div>
       
-      {/* Side panel - Info */}
-      <div className="space-y-6">
+      {/* Side panel - Info (now stacks on mobile) */}
+      <div className="space-y-4 sm:space-y-6">
         {/* Interview info card */}
-        <div className="bg-gray-800 bg-opacity-80 backdrop-blur-md rounded-xl shadow-lg p-5 border border-blue-900">
+        <div className="bg-gray-800 bg-opacity-80 backdrop-blur-md rounded-xl shadow-lg p-4 sm:p-5 border border-blue-900">
           <h3 className="text-blue-400 font-medium mb-3">Interview Details</h3>
           
           <div className="space-y-3">
@@ -347,7 +353,7 @@ export default function InterviewSession({
         </div>
         
         {/* Hint card */}
-        <div className="bg-gray-800 bg-opacity-80 backdrop-blur-md rounded-xl shadow-lg p-5 border border-yellow-900">
+        <div className="bg-gray-800 bg-opacity-80 backdrop-blur-md rounded-xl shadow-lg p-4 sm:p-5 border border-yellow-900">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-yellow-400 font-medium flex items-center gap-1.5">
               <i className="fa-solid fa-lightbulb"></i>
@@ -364,8 +370,8 @@ export default function InterviewSession({
           </div>
           
           {!isAnswerSubmitted ? (
-            showHint ? (
-              <div className="animate-fadeIn">
+            <div className={`${styles.hintContainer} ${showHint ? styles.hintVisible : styles.hintHidden}`}>
+              <div className={styles.hintContent}>
                 <p className="text-gray-300 text-sm mb-2">Consider these points:</p>
                 <ul className="list-disc list-inside space-y-1">
                   {getHints().map((point, idx) => (
@@ -376,17 +382,17 @@ export default function InterviewSession({
                   Remember to provide specific examples to support your answer.
                 </p>
               </div>
-            ) : (
-              <p className="text-gray-300 text-sm">
-                {getMotivationalMessage()}
-              </p>
-            )
-          ) : (
-            <div>
-              <p className="text-gray-300 text-sm">
-                Review your answer and the feedback before proceeding to the next question.
-              </p>
             </div>
+          ) : (
+            <p className="text-gray-300 text-sm">
+              Review your answer and the feedback before proceeding to the next question.
+            </p>
+          )}
+          
+          {!isAnswerSubmitted && !showHint && (
+            <p className="text-gray-300 text-sm">
+              {motivationalMessage} {/* Use stored message instead of generating a new one */}
+            </p>
           )}
         </div>
       </div>

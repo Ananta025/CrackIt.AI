@@ -217,36 +217,41 @@ export default function SettingsPage() {
 
             <div className={`${styles["new-password"]} ${styles.password} ${!isChangingPassword ? styles.visible : ''}`}>
               <p>Enter New Password</p>
-              <input 
-                className={styles.inputField}
-                type={showNewPassword ? "text" : "password"} 
-                value={formData.newPassword} 
-                placeholder="New Password" 
-                name="newPassword" 
-                required
-                onChange={handleInputChange}
-              />
               
-              {/* An element to toggle between password visibility */}
-              <div className={styles["show-password"]}>
+              <div className={styles["password-row"]}>
                 <input 
-                  type="checkbox" 
-                  className={styles["check-box"]}
-                  onChange={() => setShowNewPassword(!showNewPassword)}
+                  className={styles.inputField}
+                  type={showNewPassword ? "text" : "password"} 
+                  value={formData.newPassword} 
+                  placeholder="New Password" 
+                  name="newPassword" 
+                  required
+                  onChange={handleInputChange}
                 />
-                <p>Show Password</p>
+                
+                {/* An element to toggle between password visibility */}
+                <div className={styles["show-password"]}>
+                  <input 
+                    type="checkbox" 
+                    className={styles["check-box"]}
+                    onChange={() => setShowNewPassword(!showNewPassword)}
+                  />
+                  <p>Show Password</p>
+                </div>
               </div>
               
-              <input 
-                className={styles.inputField}
-                type="password" 
-                value={formData.confirmPassword} 
-                placeholder="Confirm Password" 
-                name="confirmPassword" 
-                required
-                onChange={handleInputChange}
-              />
-              <button className={styles.btn}>Confirm</button>
+              <div className={styles["password-row"]}>
+                <input 
+                  className={styles.inputField}
+                  type="password" 
+                  value={formData.confirmPassword} 
+                  placeholder="Confirm Password" 
+                  name="confirmPassword" 
+                  required
+                  onChange={handleInputChange}
+                />
+                <button className={styles.btn}>Confirm</button>
+              </div>
             </div>
           </div>
           

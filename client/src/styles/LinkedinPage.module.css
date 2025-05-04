@@ -18,6 +18,14 @@
   --text-disabled: rgba(255, 255, 255, 0.5);
   --border-color: rgba(255, 255, 255, 0.12);
   
+  /* Responsive spacing variables */
+  --container-padding-mobile: 12px;
+  --container-padding-tablet: 24px;
+  --container-padding-desktop: 32px;
+  --element-spacing-small: 8px;
+  --element-spacing-medium: 16px;
+  --element-spacing-large: 24px;
+  
   /* Reset and base styles scoped to LinkedIn page */
   font-family: 'Inter', sans-serif;
   margin: 0;
@@ -27,6 +35,13 @@
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+/* Apply box-sizing to all elements */
+.linkedinPageWrapper *,
+.linkedinPageWrapper *:before,
+.linkedinPageWrapper *:after {
+  box-sizing: border-box;
 }
 
 .app {
@@ -50,7 +65,7 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 var(--container-padding-mobile);
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -61,7 +76,7 @@
   background: #1E1E1E;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-  padding: 24px;
+  padding: 20px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
 }
@@ -139,7 +154,7 @@
 }
 
 .btnAccent {
-  composes: btn; /* Fixed from 'button' to 'btn' */
+  composes: btn;
   background: #4285F4; /* Google blue */
 }
 
@@ -152,13 +167,96 @@
   text-shadow: 0 0 10px rgba(0, 170, 255, 0.5), 0 0 20px rgba(0, 170, 255, 0.3);
 }
 
-@media (max-width: 768px) {
+/* Responsive styles */
+/* Small phones (up to 480px) */
+@media (max-width: 480px) {
+  .content {
+    padding: 0 10px;
+  }
+  
   .glassCard {
     padding: 16px;
+    border-radius: 12px;
+  }
+  
+  .btn {
+    padding: 10px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+  }
+  
+  .inputField {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+}
+
+/* Mobile devices (480px to 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .content {
+    padding: 0 var(--container-padding-mobile);
+  }
+  
+  .glassCard {
+    padding: 18px;
+    border-radius: 14px;
   }
   
   .btn {
     padding: 10px 20px;
     font-size: 15px;
+  }
+}
+
+/* Tablets (768px to 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .content {
+    padding: 0 var(--container-padding-tablet);
+  }
+  
+  .glassCard {
+    padding: 22px;
+  }
+}
+
+/* Laptops/Desktops (1025px to 1440px) */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .content {
+    padding: 0 var(--container-padding-desktop);
+  }
+}
+
+/* Large screens (above 1440px) */
+@media (min-width: 1441px) {
+  .content {
+    max-width: 1400px;
+    padding: 0 var(--container-padding-desktop);
+  }
+  
+  .glassCard {
+    padding: 28px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+  .glassCard:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .btn:hover {
+    transform: none;
+    background-color: #1DB954;
+    box-shadow: none;
+  }
+  
+  .btn:active {
+    transform: translateY(1px);
+    background-color: #4285F4;
+  }
+  
+  .btnAccent:active {
+    background-color: #1DB954;
   }
 }

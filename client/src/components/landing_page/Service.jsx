@@ -26,13 +26,12 @@ export default function Service() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.3 } // Increased from 0.2 to 0.3
+      transition: { staggerChildren: 0.3 } 
     }
   };
 
   return (
     <>
-      {/* The font is already imported in the CSS file, no need for Helmet */}
       <div className={styles["service-container"]} id="services">
         <motion.div 
           className={styles.heading}
@@ -60,7 +59,7 @@ export default function Service() {
                   id={styles["card-1"]}
                   variants={cardVariants}
                 >
-                    <img className={styles.icon} src="/images/interview.png" alt="new-job"/>
+                    <img className={styles.icon} src="/images/interview.png" alt="AI Interview Feature" loading="lazy"/>
                     <p className={styles.title}>AI Powered Mock Interview</p>
                     <p className={styles.details}>It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum
                     </p>
@@ -70,7 +69,7 @@ export default function Service() {
                   id={styles["card-2"]}
                   variants={cardVariants}
                 >
-                    <img className={styles.icon} src="/images/resume.png" alt="new-job"/>
+                    <img className={styles.icon} src="/images/resume.png" alt="Resume Analysis Feature" loading="lazy"/>
                     <p className={styles.title}>Resume Build & Analyze</p>
                     <p className={styles.details}>It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. 
                     </p>
@@ -88,7 +87,7 @@ export default function Service() {
                   id={styles["card-3"]}
                   variants={cardVariants}
                 >
-                    <img className={styles.icon} src="./images/linkedin.png" alt="new-job"/>
+                    <img className={styles.icon} src="./images/linkedin.png" alt="LinkedIn Optimization Feature" loading="lazy"/>
                     <p className={styles.title}>LinkedIn Optimizer</p>
                     <p className={styles.details}>It is a long established fact that a reader will be distracted by the readable content of a 
                     </p>
@@ -98,7 +97,7 @@ export default function Service() {
                   id={styles["card-4"]}
                   variants={cardVariants}
                 >
-                    <img className={styles.icon} src="./images/quiz.png" alt="new-job"/>
+                    <img className={styles.icon} src="./images/quiz.png" alt="Interview Quiz Feature" loading="lazy"/>
                     <p className={styles.title}>Interview Quiz</p>
                     <p className={styles.details}>It is a long established fact that a reader will be distracted by the readable content of a 
                     </p>
@@ -108,7 +107,7 @@ export default function Service() {
                   id={styles["card-5"]}
                   variants={cardVariants}
                 >
-                    <img className={styles.icon} src="./images/pdf.png" alt="new-job"/>
+                    <img className={styles.icon} src="./images/pdf.png" alt="Preparation Resources" loading="lazy"/>
                     <p className={styles.title}>Preparation Resource</p>
                     <p className={styles.details}>It is a long established fact that a reader will be distracted by the readable content of a
                     </p>

@@ -1,12 +1,19 @@
 /* Import Red Rose font from Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Red+Rose:wght@300;400;500;600;700&display=swap');
 
+/* Root variables for responsive design */
+:root {
+  --padding-large: 6rem;
+  --padding-medium: 3rem;
+  --padding-small: 1.5rem;
+}
+
 .service-container{
     color: white;
     background-color: black;
     height: auto;
     width: 100%;
-    padding: 6rem 3rem;
+    padding: var(--padding-large) var(--padding-medium);
 }
 
 /* heading */
@@ -26,28 +33,33 @@
     -webkit-text-fill-color: transparent;
     margin-bottom: 0;
     line-height: 1.2;
+    text-align: center;
 }
 .sub-heading{
-    font-size: 18px;
+    font-size: clamp(16px, 2vw, 18px);
     font-family: "Roboto", sans-serif;
     font-weight: 200;
     text-align: center;
     margin-top: 2rem;
+    padding: 0 1rem;
 }
 
 /* service section card */
 .service{
-    margin-top: 100px;
+    margin-top: 5rem;
     font-family: "Roboto", sans-serif;
+    width: 100%;
 }
 .row{
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
 }
 .card{
-    padding: 1.6rem 2rem 1.6rem 1.6rem;
+    padding: 1.6rem;
     display: flex;
     flex-direction: column;
     align-items: start;
@@ -57,43 +69,46 @@
     background-position: center;
     background-size: cover;
     cursor: pointer;
+    margin: 1rem;
+    transition: transform 0.5s, border 0.5s;
+    flex: 1;
+    min-width: 280px;
 }
 .card:hover{
     border: 3px solid #13842D;
     transform: scale(1.01);
-    transition-duration: 0.5s;
-
 }
-.upper>.card{
-    height: 280px;
-    width: 490px;
+
+.upper > .card{
+    height: auto;
+    min-height: 280px;
+    max-width: 490px;
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
 }
 .upper{
-    gap: 55px;
+    gap: 2rem;
     margin-bottom: 2rem;
 }
 #card-1{
     background-image: url("/images/card-1.svg");
-    
 }
 #card-2{
     background-image: url("/images/card-2.svg");
 }
 
 .lower{
-    gap: 30px;
-    padding-bottom:2rem;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
 }
-.lower>.card{
-    height: 290px;
-    width: 330px;
+.lower > .card{
+    height: auto;
+    min-height: 280px;
+    max-width: 330px;
 }
 #card-3{
     background-image: url("/images/card-3.svg");
-   
 }
 #card-4{
     background-image: url("/images/card-4.svg");
@@ -105,14 +120,63 @@
     margin-bottom: 1.5rem;
     width: 40px;
     height: auto;
+    max-width: 100%;
 }
 .title{
-    font-size: 22px;
+    font-size: clamp(18px, 2vw, 22px);
     font-weight: 600;
     margin-bottom: 1rem;
 }
 .details{
-    font-size: 15px;
+    font-size: clamp(14px, 1.5vw, 15px);
     font-weight: 400;
     color: rgb(183, 183, 183);
+}
+
+/* Media Queries for Responsive Design */
+@media (max-width: 1200px) {
+    .upper, .lower {
+        gap: 1rem;
+    }
+    .card {
+        margin: 0.8rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .service-container {
+        padding: var(--padding-medium) var(--padding-small);
+    }
+    .main-heading {
+        font-size: 2.75rem;
+    }
+    .service {
+        margin-top: 3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .service-container {
+        padding: var(--padding-small);
+    }
+    .main-heading {
+        font-size: 2.25rem;
+    }
+    .upper > .card, .lower > .card {
+        min-width: 260px;
+        flex: 0 0 calc(100% - 2rem);
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .main-heading {
+        font-size: 1.8rem;
+    }
+    .card {
+        padding: 1.2rem;
+    }
+    .icon {
+        width: 32px;
+    }
 }

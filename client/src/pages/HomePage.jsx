@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import styles from '../components/home_page/Dashboard.module.css'
+import '../styles/HomePage.mobile.css'
 import { FaEdit, FaCheck, FaTimes, FaTrash } from 'react-icons/fa'
 import { Line, Bar } from 'react-chartjs-2'
 import {
@@ -63,6 +64,7 @@ export default function HomePage() {
   const [interviewMonthlyData, setInterviewMonthlyData] = useState({ labels: [], data: [] });
   const [userId, setUserId] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
+  const [userName, setUserName] = useState('');
   
   // Fetch quiz history and interview data
   useEffect(() => {
@@ -77,8 +79,15 @@ export default function HomePage() {
         // Fetch user details including skills
         try {
           const userData = await userService.getUserDetails(storedUserId);
-          if (userData && userData.user && userData.user.skills) {
-            setSkills(userData.user.skills);
+          if (userData && userData.user) {
+            // Extract first name from full name
+            const fullName = userData.user.name || 'User';
+            const firstName = fullName.split(' ')[0]; // Get just the first name
+            setUserName(firstName);
+            
+            if (userData.user.skills) {
+              setSkills(userData.user.skills);
+            }
           }
         } catch (error) {
           console.error('Error fetching user details:', error);
@@ -358,7 +367,15 @@ export default function HomePage() {
   return (
     <div className={styles.main}>
       <div className={styles.upper}>
-        <img className={styles.avatar} src="./images/avatar-male.svg" alt="avatar" />
+        {/* Replace avatar with greeting section */}
+        <div className={styles.greeting}>
+          <h1 className={styles["greeting-heading"]}>
+            Hello, {userName} <span className={styles.emoji}>👋</span>
+          </h1>
+          <p className={styles["greeting-text"]}>Nice to have you back. What an exciting day!</p>
+          <p className={styles["lesson-prompt"]}>Get ready and continue your lesson today.</p>
+        </div>
+        
         <div className={styles["user-details"]}>
           <div className={styles["top-skill"]}>
             <div className={styles.skillHeader}>
@@ -368,6 +385,7 @@ export default function HomePage() {
                   onClick={toggleEditMode} 
                   className={styles.editButton} 
                   aria-label="Edit skills"
+                  style={{ padding: '10px' }}
                 >
                   <FaEdit className={styles.editIcon} />
                 </button>
