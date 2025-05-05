@@ -62,9 +62,9 @@ const Sidebar = ({
 
   const features = [
     { id: 'Home', name: 'Home', icon: './images/home.png', path: '/home' },
-    { id: 'MockInterview', name: 'Mock Interview', icon: './images/interview.png', path: '/interview' },
-    { id: 'ResumeBuild', name: 'Resume Build', icon: './images/resume.png', path: '/resume' },
-    { id: 'LinkedIn', name: 'LinkedIn Optimizer', icon: './images/linkedin.png', path: '/linkedin' },
+    { id: 'MockInterview', name: 'Mock Interview', icon: './images/interview (1).png', path: '/interview' },
+    { id: 'ResumeBuild', name: 'Resume Build', icon: './images/resume (1).png', path: '/resume' },
+    { id: 'LinkedIn', name: 'LinkedIn Optimizer', icon: './images/linkedin (1).png', path: '/linkedin' },
     // { id: 'Quiz', name: 'Quiz', icon: './images/quiz.png', path: '/learning' },
     { id: 'LearnQuiz', name: 'Learn & Quiz', icon: './images/resource.png', path: '/learning' },
     { id: 'Feedback', name: 'Feedback', icon: './images/feedback.png', path: '/feedback' },

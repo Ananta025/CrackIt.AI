@@ -238,15 +238,51 @@ export const generatePDF = async (req, res) => {
       });
     }
     
-    // Generate PDF
-    const pdfBuffer = await generateResumePDF(template, resume.content);
+    console.log(`Generating PDF for resume: ${resumeId}, template: ${template.name}`);
     
-    // Set headers for download
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 
-      `attachment; filename=${resume.name.replace(/\s+/g, '_')}.pdf`);
+    // Generate PDF with improved error handling
+    let pdfBuffer;
+    try {
+      pdfBuffer = await generateResumePDF(template, resume.content);
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+      return res.status(500).json({
+        success: false,
+        message: `PDF generation failed: ${error.message}`
+      });
+    }
     
-    return res.send(pdfBuffer);
+    // Basic validation on the buffer
+    if (!pdfBuffer || pdfBuffer.length < 1000) { // Minimum size check
+      console.error('Generated PDF buffer is invalid or too small');
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to generate PDF: Invalid document size'
+      });
+    }
+    
+    console.log(`PDF generated successfully, size: ${pdfBuffer.length} bytes`);
+    
+    try {
+      // Set proper headers for PDF download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Length', pdfBuffer.length);
+      res.setHeader('Content-Disposition', 
+        `attachment; filename="${encodeURIComponent(resume.name.replace(/\s+/g, '_'))}.pdf"`);
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      // Send PDF data directly
+      return res.end(pdfBuffer);
+    } catch (error) {
+      console.error('Error sending PDF response:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error sending PDF response',
+        error: error.message
+      });
+    }
   } catch (error) {
     console.error('PDF generation error:', error);
     return res.status(500).json({

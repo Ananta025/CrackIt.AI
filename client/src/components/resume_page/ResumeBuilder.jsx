@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import styles from './ResumeBuilder.module.css';
 import ResumeFormStep from './ResumeFormStep';
 import ResumePreview from './ResumePreview';
-import TemplateSelector from './TemplateSelector';
 import resumeFormSteps from '../../data/resumeFormSteps';
 import resumeService from '../../services/resumeService';
 import { useNavigate } from 'react-router-dom';
+import TemplateSelector from './TemplateSelector';
 
 export default function ResumeBuilder() {
   const [activeStep, setActiveStep] = useState(0);
@@ -167,20 +167,33 @@ export default function ResumeBuilder() {
         throw new Error('Failed to prepare resume for download');
       }
       
+      const resumeId = saveResponse.data.resumeId;
+      console.log(`Downloading PDF for resume ID: ${resumeId}`);
+      
       // Then download the PDF using the ID
-      const pdfBlob = await resumeService.downloadResume(saveResponse.data.resumeId);
+      const pdfBlob = await resumeService.downloadResume(resumeId);
+      console.log(`PDF blob received, size: ${pdfBlob.size} bytes`);
       
       // Create download link
-      const url = window.URL.createObjectURL(new Blob([pdfBlob]));
+      const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${resumeData.personal?.name || 'Resume'}.pdf`);
+      
+      // Use the person's name for the filename, with fallback
+      const fileName = `${resumeData.personal?.name || 'Resume'}.pdf`;
+      link.setAttribute('download', fileName);
+      
+      // Trigger download
       document.body.appendChild(link);
       link.click();
-      link.remove();
       
       // Clean up
-      window.URL.revokeObjectURL(url);
+      setTimeout(() => {
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      }, 100);
+      
+      setSuccess('Resume downloaded successfully!');
     } catch (err) {
       console.error('Error downloading resume:', err);
       setError(err.message || 'Failed to download resume');

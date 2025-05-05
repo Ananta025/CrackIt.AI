@@ -3,7 +3,7 @@ import styles from '../styles/FeedBackPage.module.css'
 
 export default function FeedBackPage() {
   // Replace this URL with your actual Google Form link
-  const googleFormLink = "https://forms.gle/your-form-link-here";
+  const googleFormLink = "https://docs.google.com/forms/d/e/1FAIpQLSepiVtUYzdF90K46o4QgGXEj7rEL3NTvYOI4iLh8oihILJTpw/viewform?usp=sharing";
 
   return (
     <div style={{ 

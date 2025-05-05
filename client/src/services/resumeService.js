@@ -159,16 +159,71 @@ const resumeService = {
   // Download resume as PDF
   downloadResume: async (resumeId) => {
     try {
-      const response = await resumeApi.get(`/download/${resumeId}`, {
-        responseType: 'blob',
+      console.log(`Requesting PDF download for resume: ${resumeId}`);
+      
+      // Use axios directly without the interceptor to get binary data properly
+      const response = await axios.get(`${API_URL}/api/resume/download/${resumeId}`, {
+        responseType: 'arraybuffer', // Using arraybuffer for binary data
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Accept': 'application/pdf'
+        },
+        // Add timeout to prevent hanging requests
+        timeout: 30000
       });
-      return response.data;
+      
+      // Check if we received valid data
+      if (!response.data || response.data.byteLength === 0) {
+        console.error('Empty PDF data received');
+        throw new Error('Empty PDF data received from server');
+      }
+      
+      console.log(`Received PDF data: ${response.data.byteLength} bytes, type: ${response.headers['content-type']}`);
+      
+      // Check content type to make sure we're receiving PDF data
+      if (!response.headers['content-type']?.includes('application/pdf')) {
+        console.warn(`Warning: Expected PDF but got ${response.headers['content-type']}`);
+        // Try to see if there's an error message
+        try {
+          const decoder = new TextDecoder('utf-8');
+          const text = decoder.decode(response.data);
+          if (text.includes('"success":false')) {
+            const error = JSON.parse(text);
+            throw new Error(error.message || 'Error downloading PDF');
+          }
+        } catch (e) {
+          console.error('Error parsing response:', e);
+        }
+      }
+      
+      // Convert arraybuffer to blob with appropriate type
+      const blob = new Blob([response.data], { 
+        type: response.headers['content-type'] || 'application/pdf' 
+      });
+      
+      return blob;
     } catch (error) {
       console.error('Error downloading resume:', error);
-      throw error.response?.data || {
-        success: false,
-        message: 'Error downloading resume'
-      };
+      if (error.response?.data) {
+        // If server returned an error response in JSON format
+        try {
+          // Try to parse error as JSON
+          const decoder = new TextDecoder('utf-8');
+          const errorText = decoder.decode(error.response.data);
+          
+          try {
+            const errorJson = JSON.parse(errorText);
+            throw new Error(errorJson.message || 'Error downloading resume');
+          } catch (e) {
+            // If not valid JSON, throw error with the text
+            throw new Error(`Error downloading resume: ${errorText.substring(0, 100)}...`);
+          }
+        } catch (e) {
+          // If parsing fails, throw the original error
+          throw error;
+        }
+      }
+      throw error;
     }
   },
 };

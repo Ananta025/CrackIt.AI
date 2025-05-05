@@ -133,4 +133,79 @@ const updateUserSkills = async (req, res) => {
     }
 }
 
-export { registerUser, loginUser, getUserDetails, updateUserSkills };
+const updateUserName = async (req, res) => {
+    const userId = req.params.id;
+    const { name } = req.body;
+    
+    if (!name || !name.trim()) {
+        return res.status(httpStatus.BAD_REQUEST).json({ message: "Name must be provided" });
+    }
+    
+    try {
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { name: name.trim() },
+            { new: true }
+        ).select("-password -__v");
+        
+        if (!user) {
+            return res.status(httpStatus.BAD_REQUEST).json({ message: "User not found" });
+        }
+        
+        return res.status(httpStatus.OK).json({
+            message: "Name updated successfully",
+            user
+        });
+    } catch (error) {
+        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ 
+            message: "Internal server error", 
+            error: error.message 
+        });
+    }
+}
+
+const updateUserPassword = async (req, res) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(httpStatus.BAD_REQUEST).json({ errors: errors.array() });
+    }
+    
+    const userId = req.params.id;
+    const { oldPassword, newPassword } = req.body;
+    
+    if (!oldPassword || !newPassword) {
+        return res.status(httpStatus.BAD_REQUEST).json({ message: "Both old and new password must be provided" });
+    }
+    
+    try {
+        // Find user
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(httpStatus.BAD_REQUEST).json({ message: "User not found" });
+        }
+        
+        // Verify old password
+        const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isPasswordMatch) {
+            return res.status(httpStatus.BAD_REQUEST).json({ message: "Current password is incorrect" });
+        }
+        
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        
+        // Update password
+        user.password = hashedPassword;
+        await user.save();
+        
+        return res.status(httpStatus.OK).json({
+            message: "Password updated successfully"
+        });
+    } catch (error) {
+        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ 
+            message: "Internal server error", 
+            error: error.message 
+        });
+    }
+}
+
+export { registerUser, loginUser, getUserDetails, updateUserSkills, updateUserName, updateUserPassword };

@@ -212,8 +212,12 @@ export async function generateResumeSection(sectionType, userInput) {
         - Key skills: ${userInput.skills || 'Not specified'}
         - Career highlights: ${userInput.highlights || 'Not specified'}
         
-        Create a concise, impactful 3-4 sentence summary that highlights strengths and 
-        value proposition. Use active voice and powerful language.
+        Generate ONLY ONE concise, impactful 2-3 sentence professional summary paragraph. 
+        Use active voice and powerful language.
+        Do NOT provide multiple options or explanations.
+        Do NOT include placeholder text like [mention specific skill].
+        Do NOT include headings, bullet points, or formatting instructions.
+        Return ONLY the final, polished summary text that can be directly placed in a resume.
         `;
         break;
         
@@ -227,8 +231,19 @@ export async function generateResumeSection(sectionType, userInput) {
         - Achievements: ${userInput.achievements || 'Not specified'}
         
         Create 3-5 achievement-focused bullet points using strong action verbs.
-        Quantify results whenever possible (numbers, percentages, metrics).
+        Each bullet point must:
+        1. Start with a powerful action verb (e.g., Developed, Implemented, Reduced)
+        2. Include specific, concrete details - NO placeholder text
+        3. Contain precise metrics (percentages, numbers, dollar amounts)
+        4. Show clear impact and results for the organization/clients
+        
         Format as a JSON array of strings.
+        Here's an example of excellent bullet points:
+        [
+          "Developed and launched 15 responsive websites for small businesses, resulting in an average 30% increase in client lead generation within the first quarter.",
+          "Reduced website loading times by 45% through optimization techniques including image compression and code minification, improving user experience and SEO rankings.",
+          "Implemented secure e-commerce solutions for 5 clients, processing over $250,000 in transactions annually with a 99.9% uptime."
+        ]
         `;
         break;
         
@@ -240,10 +255,16 @@ export async function generateResumeSection(sectionType, userInput) {
         - Company: ${userInput.company || 'Not specified'}
         - Duration: ${userInput.duration || 'Not specified'}
         
-        Create 3-5 achievement-focused bullet points using strong action verbs.
-        Quantify results whenever possible (numbers, percentages, metrics).
-        Start each bullet point with an action verb.
-        Return the response as plain text with each bullet point on a new line.
+        Create EXACTLY 2-3 achievement-focused bullet points using strong action verbs.
+        Keep each bullet point concise and under 15 words when possible.
+        Each bullet point should:
+        1. Start with a strong action verb
+        2. Include a specific achievement with metrics
+        3. Be direct and to the point
+        
+        Do NOT include any explanatory text, introductions, or comments.
+        Do NOT use placeholders like [Project or Task].
+        Return ONLY the bullet points, one per line, with no additional text.
         `;
         break;
         
@@ -255,9 +276,11 @@ export async function generateResumeSection(sectionType, userInput) {
         - Experience level: ${userInput.level || 'Not specified'}
         - Current skills: ${userInput.currentSkills || 'Not specified'}
         
-        Provide a comprehensive list of both technical and soft skills relevant to this role.
-        Include industry-specific keywords that would help with ATS systems.
+        Generate a focused list of the most relevant skills for this role - maximum 10 skills total.
+        Include 5-7 technical skills and 3-5 soft skills most important for this position.
+        Prioritize skills that would help with ATS systems.
         Format as a JSON array of strings.
+        Limit the response to ONLY the most important skills, no more than 10 total.
         `;
         break;
         

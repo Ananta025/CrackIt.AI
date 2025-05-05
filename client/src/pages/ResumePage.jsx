@@ -6,6 +6,7 @@ import ResumeUpload from '../components/resume_page/ResumeUpload';
 import ResumeReview from '../components/resume_page/ResumeReview';
 import ResumeBuilder from '../components/resume_page/ResumeBuilder';
 
+
 export default function ResumePage() {
   const [activeTab, setActiveTab] = useState('upload'); // 'upload' or 'build'
   const [uploadedResume, setUploadedResume] = useState(null);

@@ -42,6 +42,7 @@
     gap: 20px;
     justify-content: space-between;
     margin-bottom: 6px;
+    position: relative;
 }
 
 .fullName>input{
@@ -218,6 +219,97 @@ hr {
     width: 100%;
 }
 
+.messageContainer {
+    position: relative;
+    width: 80%;
+    max-width: 500px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    animation: slideDown 0.3s ease-out forwards;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.successMessage {
+    background-color: #1b5e20;
+    color: white;
+    padding: 12px 40px 12px 15px;
+    font-size: 14px;
+    border-left: 4px solid #4caf50;
+}
+
+.errorMessage {
+    background-color: #c62828; /* Less intense red */
+    color: white;
+    padding: 12px 40px 12px 15px;
+    font-size: 14px;
+    border-left: 4px solid #ef5350;
+}
+
+.messageDismiss {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    height: 100%;
+}
+
+.messageDismiss:hover {
+    color: white;
+}
+
+.messageHiding {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+@keyframes slideDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.nameUpdateIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #03a316;
+    background-color: #0F1823;
+    border: 2px solid #5e666c;
+    border-radius: 5px;
+    padding: 5px;
+    height: 40px;
+    width: 40px;
+    transition: all 0.2s ease-in-out;
+}
+
+.nameUpdateIcon:hover {
+    color: #a3e900;
+    background-color: #19232e;
+    transform: scale(1.05);
+}
+
+.nameUpdateIcon svg {
+    width: 20px;
+    height: 20px;
+}
+
 /* Responsive styles */
 @media screen and (max-width: 1024px) {
     .form {
@@ -353,6 +445,11 @@ hr {
     .add > button {
         margin-left: 0;
         align-self: flex-start;
+    }
+
+    .nameUpdateIcon {
+        align-self: flex-start;
+        margin-top: 10px;
     }
 }
 
