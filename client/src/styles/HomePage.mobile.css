@@ -1,50 +1,25 @@
 /* Mobile-specific styles for HomePage */
 
+/* Base mobile styles (applies to all screens <= 768px) */
 @media screen and (max-width: 768px) {
-  /* Adjust top skills section to be smaller */
-  .top-skill {
-    flex: 0 0 auto !important;
-    max-height: 150px !important;
-    overflow-y: auto !important; 
+  /* ======== Main layout adjustments ======== */
+  .main {
+    padding: 1rem 0.5rem !important; /* Reduced horizontal padding from 1rem to 0.5rem */
+    overflow-y: auto !important;
+  }
+  
+  .upper {
+    padding: 0.5rem !important;
+    flex-direction: column !important;
     margin-bottom: 1rem !important;
   }
   
-  /* Make skill items more compact */
-  .skill-list {
-    gap: 0.5rem !important;
-    margin-top: 0.5rem !important;
+  /* ======== Greeting section ======== */
+  .greeting {
+    width: 100% !important;
+    padding-bottom: 1rem !important;
   }
   
-  /* Skill items */
-  .skillItem {
-    padding: 3px 8px !important;
-    font-size: 0.9rem !important;
-  }
-  
-  /* Increase activity/chart section size */
-  .activity {
-    flex: 1 0 auto !important; 
-    min-height: 250px !important; 
-    margin-top: 0.5rem !important;
-  }
-  
-  /* Adjust chart container height */
-  .chartContainer {
-    height: 100% !important;
-    min-height: 220px !important;
-  }
-  
-  /* Add top padding to main content area */
-  .main {
-    padding-top: 1rem !important;
-  }
-  
-  /* Reduce upper section padding */
-  .upper {
-    padding: 0.5rem !important;
-  }
-  
-  /* Make greeting section more compact */
   .greeting-heading {
     font-size: 1.5rem !important;
     margin-bottom: 0.5rem !important;
@@ -53,200 +28,311 @@
   .greeting-text, .lesson-prompt {
     font-size: 0.9rem !important;
     margin-bottom: 0.25rem !important;
-  }
-
-  /* Prevent scaling on hover for github and news cards */
-  .github:hover,
-  .news:hover,
-  .infoCard:hover {
-    transform: none !important;
-    transition: background-color 0.3s ease !important;
-    scale: 1 !important;
-    box-shadow: 0 0 10px rgba(97, 192, 221, 0.2) !important; /* Add subtle glow instead */
+    margin-top: 0.5rem !important;
   }
   
-  /* Ensure proper styling for info cards on mobile */
-  .infoCard {
-    padding: 1rem !important;
-    transition: background-color 0.3s ease, border-color 0.3s ease !important;
-    height: auto !important;
-    min-height: 180px !important;
+  /* ======== Skills section ======== */
+  .user-details {
+    flex-direction: column !important;
+    padding-left: 0 !important;
+    gap: 1rem !important;
+  }
+  
+  .top-skill {
+    flex: 0 0 auto !important;
     width: 100% !important;
+    max-height: 150px !important;
+    overflow-y: auto !important;
+    margin-bottom: 1rem !important;
   }
-
-  /* Add subtle background change on hover instead of scaling */
-  .infoCard:hover {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-    border-color: rgb(97, 192, 221) !important;
-  }
-
-  /* Make lower section use flexbox with wrap */
-  .lower {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 10px !important;
+  
+  .skill-list {
+    gap: 0.5rem !important;
+    margin-top: 0.5rem !important;
     justify-content: center !important;
   }
   
-  /* The quiz/chart card takes full width */
+  .skillItem {
+    padding: 3px 8px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  /* ======== Activity/chart section ======== */
+  .activity {
+    flex: 1 0 auto !important;
+    width: 100% !important;
+    min-height: 250px !important;
+    margin-top: 0.5rem !important;
+  }
+  
+  .chartContainer {
+    height: 100% !important;
+    min-height: 220px !important;
+  }
+  
+  /* ======== Lower section with cards ======== */
+  .lower {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    gap: 15px !important;
+    margin-bottom: 20px !important;
+    padding-bottom: 20px !important;
+  }
+  
+  /* Quiz/chart card */
   .card {
     width: 100% !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 0 !important;
     height: auto !important;
     min-height: 250px !important;
     max-height: 350px !important;
   }
   
-  /* GitHub and news cards responsive sizing */
-  .github,
-  .news {
-    width: calc(50% - 5px) !important; /* Half width minus half the gap */
-    margin: 0 !important;
-    box-sizing: border-box !important;
-    height: auto !important;
-    min-height: 160px !important;
-    max-height: 200px !important;
-    display: flex !important;
-    justify-content: center !important;
-  }
-  
-  /* Apply same side-by-side styling to infoCard elements */
-  .lower .infoCard {
-    width: calc(50% - 5px) !important;
-    flex: 0 0 calc(50% - 5px) !important;
-    margin: 0 !important;
-    min-height: 160px !important;
-    max-height: 200px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    padding: 10px !important;
-  }
-  
-  /* Make images responsive within cards */
-  .updates {
-    height: auto !important;
+  /* Info cards styling */
+  .infoCard {
     width: 100% !important;
-    min-height: 160px !important;
-    max-height: 200px !important;
-    object-fit: cover !important;
+    height: auto !important;
+    min-height: 120px !important;
+    max-height: 160px !important;
+    padding: 0.75rem 0.75rem !important; /* Reduced from 1rem horizontal padding */
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    border-radius: 15px !important;
+    margin-bottom: 0 !important;
+    background-color: #1e1e1e !important;
+    cursor: pointer !important;
   }
   
-  /* Style card content for better fit */
+  /* Card hover effects */
+  .infoCard:hover {
+    transform: none !important;
+    scale: 1 !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgb(97, 192, 221) !important;
+    box-shadow: 0 0 10px rgba(97, 192, 221, 0.2) !important;
+  }
+  
+  /* Card content styling */
   .cardIcon {
-    height: 30px !important;
+    font-size: 1.8rem !important; /* Reduced from 2rem */
+    height: auto !important;
     width: auto !important;
-    margin-bottom: 5px !important;
-    font-size: 2rem !important;
+    margin-right: 15px !important;
+    margin-bottom: 0 !important;
+    min-width: 35px !important; /* Reduced from 40px */
+    display: flex !important;
+    justify-content: center !important;
   }
   
   .cardTitle {
-    font-size: 14px !important;
-    margin: 5px 0 !important;
+    font-size: 1rem !important; /* Consistent with reduced heading */
+    margin: 0 0 0.3rem 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    letter-spacing: 0.2px !important;
   }
   
   .cardSubtitle {
-    font-size: 12px !important;
+    font-size: 0.8rem !important;
+    line-height: 1.3 !important;
     margin: 0 !important;
-    line-height: 1.2 !important;
+    padding: 0 0.25rem !important; /* Reduced from 0.5rem or default */
+    display: -webkit-box !important;
+    -webkit-line-clamp: 3 !important; /* Keeping 3 lines of text */
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-align: left !important;
   }
-
-  /* Extra small screens - stack the cards vertically */
-  @media screen and (max-width: 480px) {
-    .github,
-    .news,
-    .infoCard,
-    .lower > div:nth-child(n) {
-      width: 100% !important;
-      flex: 0 0 100% !important;
-      max-width: 100% !important;
-      min-height: 140px !important;
-      margin-bottom: 10px !important;
-    }
-    
-    .updates {
-      max-height: 180px !important;
-    }
-    
+  
+  /* ======== Medium screens (tablets, small laptops) ======== */
+  @media screen and (min-width: 481px) {
     .lower {
-      flex-direction: column !important;
-    }
-  }
-
-  /* Media query for small landscape devices */
-  @media screen and (max-height: 500px) and (orientation: landscape) {
-    .github,
-    .news,
-    .infoCard {
-      min-height: 120px !important;
-      max-height: 160px !important;
-    }
-    
-    .updates {
-      min-height: 120px !important;
-      max-height: 160px !important;
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+      justify-content: space-between !important;
     }
     
     .card {
-      min-height: 200px !important;
-      max-height: 280px !important;
+      flex: 0 0 100% !important;
+      margin-bottom: 15px !important;
+    }
+    
+    /* Two cards side by side */
+    .infoCard {
+      width: calc(50% - 7.5px) !important;
+      flex: 0 0 calc(50% - 7.5px) !important;
+    }
+  }
+  
+  /* ======== Portrait phones (extra small) ======== */
+  @media screen and (max-width: 480px) {
+    .main {
+      padding: 0.75rem 0.25rem !important; /* Reduced horizontal padding from 0.75rem to 0.25rem */
+    }
+    
+    .upper {
+      padding: 0.25rem !important;
+    }
+    
+    .greeting-heading {
+      font-size: 1.3rem !important;
+    }
+    
+    .card {
+      min-height: 220px !important;
+    }
+    
+    /* Stack all cards vertically */
+    .infoCard {
+      min-height: 100px !important;
     }
     
     .cardIcon {
-      margin-bottom: 2px !important;
-      font-size: 1.5rem !important;
-    }
-  }
-
-  /* Enhanced mobile layout fixes */
-  @media screen and (max-width: 768px) {
-    /* Force lower section to be flexbox layout */
-    .lower, 
-    [class*="lower"],
-    div[class*="lower"] {
-      display: flex !important;
-      flex-direction: row !important;
-      flex-wrap: wrap !important;
-      gap: 10px !important;
-      grid-template-columns: none !important;
-      grid-template-rows: none !important;
-      grid-template-areas: none !important;
+      font-size: 1.6rem !important; /* Reduced from 1.75rem */
+      min-width: 30px !important; /* Reduced from 35px */
     }
     
-    /* Force card to take full width */
-    .card, 
-    .lower > div:first-child,
-    [class*="card"] {
-      width: 100% !important;
+    .cardTitle {
+      font-size: 0.9rem !important; /* Reduced from 1rem */
+    }
+    
+    .cardSubtitle {
+      font-size: 0.75rem !important; /* Reduced from 0.85rem */
+      -webkit-line-clamp: 3 !important; /* Keeping 3 lines of text */
+    }
+  }
+  
+  /* ======== Small landscape mode ======== */
+  @media screen and (max-height: 500px) and (orientation: landscape) {
+    .main {
+      padding: 0.75rem 0.25rem !important; /* Reduced horizontal padding from 0.75rem to 0.25rem */
+    }
+    
+    .upper {
+      margin-bottom: 0.5rem !important;
+    }
+    
+    .top-skill {
+      max-height: 120px !important;
+    }
+    
+    .activity {
+      min-height: 180px !important;
+    }
+    
+    .card {
+      min-height: 180px !important;
+      max-height: 220px !important;
+      margin-bottom: 10px !important;
+    }
+    
+    .infoCard {
+      min-height: 80px !important;
+      max-height: 100px !important;
+      padding: 0.5rem 0.75rem !important; /* Reduced from 0.5rem 1rem */
+    }
+    
+    .cardIcon {
+      font-size: 1.5rem !important;
+    }
+    
+    .cardTitle {
+      font-size: 0.9rem !important;
+      margin-bottom: 0.1rem !important;
+    }
+    
+    .cardSubtitle {
+      font-size: 0.7rem !important; /* Reduced from 0.75rem */
+      -webkit-line-clamp: 2 !important; /* Showing 2 lines in landscape */
+    }
+    
+    /* Layout adjustments for landscape */
+    .lower {
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+    }
+    
+    .card {
       flex: 0 0 100% !important;
     }
     
-    /* Force GitHub and news to be side by side with explicit order */
-    .github,
-    .news,
-    .lower > div:nth-child(2),
-    .lower > div:nth-child(3),
-    .infoCard,
-    div[class*="github"],
-    div[class*="news"] {
-      width: calc(50% - 5px) !important;
-      flex: 0 0 calc(50% - 5px) !important;
-      max-width: calc(50% - 5px) !important;
-      margin: 0 !important;
-      align-items: center !important;
-      justify-content: center !important;
-      text-align: center !important;
-      height: auto !important;
+    .infoCard {
+      width: calc(50% - 7.5px) !important;
+      flex: 0 0 calc(50% - 7.5px) !important;
+      flex-direction: row !important;
     }
-    
-    /* Ensure images are contained within cards */
-    .github img,
-    .news img,
-    .infoCard img,
-    .updates {
-      max-height: 40px !important;
-      object-fit: contain !important;
-      margin: 0 auto 5px auto !important;
-    }
+  }
+}
+
+/* ======== External padding adjustment for when sidebar is closed ======== */
+@media screen and (max-width: 768px) {
+  :global(.sidebarClosed) .main {
+    padding-left: 0.5rem !important; /* Reduced from 1rem */
+    padding-right: 0.5rem !important; /* Reduced from 1rem */
+    padding-top: 2.5rem !important; /* Make space for the sidebar toggle button */
+  }
+}
+
+/* ======== Large phones and small tablets ======== */
+@media screen and (min-width: 481px) and (max-width: 768px) {
+  :global(.sidebarClosed) .main {
+    padding-left: 0.75rem !important; /* Reduced from 1.5rem */
+    padding-right: 0.75rem !important; /* Reduced from 1.5rem */
+  }
+  
+  .card {
+    min-height: 280px !important;
+  }
+  
+  .infoCard {
+    min-height: 130px !important;
+  }
+}
+
+/* ======== Medium tablets ======== */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  .lower {
+    flex-wrap: wrap !important;
+  }
+  
+  .card {
+    width: 100% !important;
+    margin-bottom: 15px !important;
+  }
+  
+  .infoCard {
+    width: calc(50% - 7.5px) !important;
+    height: auto !important;
+    min-height: 150px !important;
+    padding: 0.75rem !important; /* Reduced from 1rem */
+  }
+  
+  /* Convert to row layout for larger tablets */
+  .infoCard {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+  }
+  
+  .cardIcon {
+    margin-right: 15px !important;
+    margin-bottom: 0 !important;
+    min-width: 40px !important;
+  }
+  
+  .cardTitle {
+    margin: 0 0 0.3rem 0 !important;
+  }
+  
+  .cardSubtitle {
+    text-align: left !important;
+    font-size: 0.8rem !important; /* Added explicit reduced font size */
+    padding: 0 0.25rem !important; /* Added reduced padding */
   }
 }

@@ -32,8 +32,8 @@
 }
 
 .sidebarClosed .content {
-  padding-left: 1.5rem; 
-  padding-right: 1.5rem;
+  padding-left: 0.25rem; 
+  padding-right: 0.25rem;
 }
 
 .sidebarToggle {
@@ -130,8 +130,6 @@
   }
   
   .sidebarClosed .content {
-    padding-left: 1.5rem; /* Increased padding on mobile when sidebar is closed */
-    padding-right: 1.5rem; /* Equal padding on right */
     padding-top: 3rem; /* Increased top padding for better spacing */
     grid-column: 1 / -1; /* Span all columns on mobile */
   }

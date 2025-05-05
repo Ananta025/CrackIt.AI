@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import styles from '../components/home_page/Dashboard.module.css'
 import '../styles/HomePage.mobile.css'
-import { FaEdit, FaCheck, FaTimes, FaTrash } from 'react-icons/fa'
+import { FaEdit, FaCheck, FaTimes, FaTrash, FaGithub, FaNewspaper } from 'react-icons/fa'
 import { Line, Bar } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
@@ -251,6 +251,15 @@ export default function HomePage() {
     setShowSkillInput(false); // Close input when toggling edit mode
   };
 
+  // Add these functions to handle opening links
+  const openGithubLink = () => {
+    window.open("https://github.com/trending", "_blank");
+  };
+
+  const openNewsLink = () => {
+    window.open("https://news.ycombinator.com/", "_blank");
+  };
+
   // Chart options
   const chartOptions = {
     responsive: true,
@@ -385,7 +394,6 @@ export default function HomePage() {
                   onClick={toggleEditMode} 
                   className={styles.editButton} 
                   aria-label="Edit skills"
-                  style={{ padding: '10px' }}
                 >
                   <FaEdit className={styles.editIcon} />
                 </button>
@@ -553,11 +561,22 @@ export default function HomePage() {
             </div>
           )}
         </div>
-        <div className={styles.github}>
-          <img className={styles.updates} src="./images/github.svg" alt="" />
+        
+        {/* Replace image elements with text-based cards */}
+        <div className={styles.infoCard} onClick={openGithubLink}>
+          <FaGithub className={styles.cardIcon} />
+          <h3 className={styles.cardTitle}>GITHUB</h3>
+          <p className={styles.cardSubtitle}>
+            Discover trending repos and connect with the developer community. Find coding inspiration and open-source projects.
+          </p>
         </div>
-        <div className={styles.news}>
-          <img className={styles.updates} src="./images/news.svg" alt="" />
+        
+        <div className={styles.infoCard} onClick={openNewsLink}>
+          <FaNewspaper className={styles.cardIcon} />
+          <h3 className={styles.cardTitle}>NEWSPAPER</h3>
+          <p className={styles.cardSubtitle}>
+            Stay informed about tech industry news, job opportunities, and emerging technologies for tech professionals.
+          </p>
         </div>
       </div>
     </div>

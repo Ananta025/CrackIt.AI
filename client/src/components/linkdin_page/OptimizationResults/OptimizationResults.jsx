@@ -121,7 +121,11 @@ const OptimizationResults = () => {
                 {(originalProfile.experience && originalProfile.experience.length > 0) ? 
                   originalProfile.experience.map((exp, idx) => (
                     <li key={idx}>
-                      {exp.title || exp.description || exp}
+                      {typeof exp === 'object' ? 
+                        (exp.title || '') + (exp.company ? ` at ${exp.company}` : '') + 
+                        (exp.description ? `: ${exp.description}` : '') :
+                        String(exp)
+                      }
                     </li>
                   )) : 
                   <li>No experience entries provided</li>
@@ -134,7 +138,11 @@ const OptimizationResults = () => {
                 {(originalProfile.education && originalProfile.education.length > 0) ? 
                   originalProfile.education.map((edu, idx) => (
                     <li key={idx}>
-                      {edu.school || edu.description || edu}
+                      {typeof edu === 'object' ?
+                        (edu.school || '') + (edu.degree ? `, ${edu.degree}` : '') + 
+                        (edu.field ? ` in ${edu.field}` : '') :
+                        String(edu)
+                      }
                     </li>
                   )) : 
                   <li>No education entries provided</li>
@@ -181,7 +189,11 @@ const OptimizationResults = () => {
                 {(optimizedProfile.experience && optimizedProfile.experience.length > 0) ? 
                   optimizedProfile.experience.map((exp, idx) => (
                     <li key={idx}>
-                      {exp.title || exp.description || exp}
+                      {typeof exp === 'object' ? 
+                        (exp.title || '') + (exp.company ? ` at ${exp.company}` : '') + 
+                        (exp.description ? `: ${exp.description}` : '') :
+                        String(exp)
+                      }
                     </li>
                   )) : 
                   <li>No optimized experience entries available</li>
@@ -194,7 +206,11 @@ const OptimizationResults = () => {
                 {(optimizedProfile.education && optimizedProfile.education.length > 0) ? 
                   optimizedProfile.education.map((edu, idx) => (
                     <li key={idx}>
-                      {edu.school || edu.description || edu}
+                      {typeof edu === 'object' ?
+                        (edu.school || '') + (edu.degree ? `, ${edu.degree}` : '') + 
+                        (edu.field ? ` in ${edu.field}` : '') :
+                        String(edu)
+                      }
                     </li>
                   )) : 
                   <li>No optimized education entries available</li>

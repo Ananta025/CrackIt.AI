@@ -8,12 +8,14 @@ export default function DashboardLayout() {
   const location = useLocation();
   const path = location.pathname.substring(1) || 'home';
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default to closed
+  const [isMobileView, setIsMobileView] = useState(false);
   
   // Check screen size on mount and when window resizes
   useEffect(() => {
     const checkScreenSize = () => {
-      const isMobile = window.innerWidth <= 768;
-      setIsSidebarOpen(!isMobile); // Open on desktop, closed on mobile
+      const mobile = window.innerWidth <= 768;
+      setIsMobileView(mobile);
+      setIsSidebarOpen(!mobile); // Open on desktop, closed on mobile
     };
     
     // Initial check
@@ -48,6 +50,12 @@ export default function DashboardLayout() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const closeSidebar = () => {
+    if (isMobileView) {
+      setIsSidebarOpen(false);
+    }
+  };
+
   return (
     <div className={`${styles.layout} ${isSidebarOpen ? '' : styles.sidebarClosed}`}>
       <div className={`${styles.sidebarContainer} ${isSidebarOpen ? '' : styles.hidden}`}>
@@ -55,6 +63,8 @@ export default function DashboardLayout() {
           username="Username" 
           onLogout={handleLogout}
           activeFeature={pathToFeatureMap[path] || 'Home'}
+          closeSidebar={closeSidebar}
+          isMobileView={isMobileView}
         />
         <button 
           className={`${styles.sidebarToggle} ${styles.closeIcon}`}

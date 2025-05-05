@@ -6,7 +6,9 @@ import PropTypes from 'prop-types';
 const Sidebar = ({
   name: propName, 
   onLogout,
-  activeFeature = "Home"
+  activeFeature = "Home",
+  closeSidebar,
+  isMobileView
 }) => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState(propName || "User");
@@ -64,7 +66,7 @@ const Sidebar = ({
     { id: 'ResumeBuild', name: 'Resume Build', icon: './images/resume.png', path: '/resume' },
     { id: 'LinkedIn', name: 'LinkedIn Optimizer', icon: './images/linkedin.png', path: '/linkedin' },
     // { id: 'Quiz', name: 'Quiz', icon: './images/quiz.png', path: '/learning' },
-    { id: 'Resources', name: 'Resources', icon: './images/resource.png', path: '/learning' },
+    { id: 'LearnQuiz', name: 'Learn & Quiz', icon: './images/resource.png', path: '/learning' },
     { id: 'Feedback', name: 'Feedback', icon: './images/feedback.png', path: '/feedback' },
     { id: 'Settings', name: 'Settings', icon: './images/settings.png', path: '/settings' }
   ];
@@ -72,11 +74,21 @@ const Sidebar = ({
   const handleFeatureClick = (featureId, path) => {
     // Navigate to the corresponding path
     navigate(path);
+    
+    // Close sidebar on mobile when menu item is clicked
+    if (isMobileView && closeSidebar) {
+      closeSidebar();
+    }
   };
 
   const handleLogout = () => {
     if (onLogout) {
       onLogout();
+    }
+    
+    // Also close sidebar when logging out on mobile
+    if (isMobileView && closeSidebar) {
+      closeSidebar();
     }
   };
 
@@ -132,7 +144,9 @@ const Sidebar = ({
 Sidebar.propTypes = {
   name: PropTypes.string,
   onLogout: PropTypes.func,
-  activeFeature: PropTypes.string
+  activeFeature: PropTypes.string,
+  closeSidebar: PropTypes.func,
+  isMobileView: PropTypes.bool
 };
 
 export default Sidebar;

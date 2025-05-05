@@ -3,14 +3,10 @@ import styles from './ThankYouScreen.module.css'
 
 export default function ThankYouScreen({ goToSummary }) {
   const [countdown, setCountdown] = useState(5);
+  const [error, setError] = useState(null);
 
   // Auto-proceed to summary after 5 seconds
   useEffect(() => {
-    const timer = setTimeout(() => {
-      goToSummary();
-    }, 5000); // Increased to 5 seconds to give backend more time
-    
-    // Countdown timer
     const countdownInterval = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
@@ -21,34 +17,70 @@ export default function ThankYouScreen({ goToSummary }) {
       });
     }, 1000);
     
+    const timer = setTimeout(() => {
+      try {
+        goToSummary().catch(err => {
+          console.error("Error going to summary:", err);
+          setError("There was an error loading your results. Please try again.");
+        });
+      } catch (err) {
+        console.error("Error going to summary:", err);
+        setError("There was an error loading your results. Please try again.");
+      }
+    }, 5000);
+    
     return () => {
       clearTimeout(timer);
       clearInterval(countdownInterval);
     };
   }, [goToSummary]);
   
+  const handleRetry = () => {
+    setError(null);
+    setCountdown(3);
+    
+    setTimeout(() => {
+      try {
+        goToSummary().catch(err => {
+          setError("Still having trouble accessing your results. Please try again later.");
+        });
+      } catch (err) {
+        setError("Still having trouble accessing your results. Please try again later.");
+      }
+    }, 500);
+  };
+  
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] md:min-h-[60vh] text-center p-4 sm:p-6 md:p-8">
-      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-900 bg-opacity-30 flex items-center justify-center mb-4 sm:mb-6">
-        <i className="fa-solid fa-check text-green-400 text-2xl sm:text-3xl"></i>
+    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-4">
+      <div className="w-16 h-16 rounded-full bg-green-900 bg-opacity-30 flex items-center justify-center mb-4">
+        <span className="text-2xl text-green-400">✓</span>
       </div>
       
       <h1 className={styles.title}>Interview Complete!</h1>
       
-      <p className="text-gray-300 text-base sm:text-lg mb-4 sm:mb-6 max-w-xs sm:max-w-sm md:max-w-2xl">
-        Thank you for completing your interview with CrackIt.AI. We appreciate your time and thoughtful responses.
-      </p>
+      <div className={styles.interviewMessage}>
+        <div className={styles.interviewText}>
+          Thanks for taking the mock interview! We're analyzing your responses now.
+        </div>
+      </div>
       
-      <p className="text-gray-400 mb-6 sm:mb-8 text-sm sm:text-base">
-        Your interview performance is being analyzed. You will see your results in {countdown} seconds.
-      </p>
+      {error ? (
+        <div className="bg-red-900 bg-opacity-20 rounded-lg border border-red-800 p-3 max-w-md mt-6">
+          <p className="text-red-300 text-sm">
+            {error}
+          </p>
+        </div>
+      ) : (
+        <p className="text-gray-400 my-6 text-sm">
+          Results ready in {countdown} seconds.
+        </p>
+      )}
       
       <button
-        onClick={goToSummary}
+        onClick={error ? handleRetry : goToSummary}
         className={styles.primaryButton}
       >
-        <i className="fa-solid fa-chart-bar mr-2"></i>
-        View My Results Now
+        {error ? "Retry Loading Results" : "View My Results Now"}
       </button>
     </div>
   )

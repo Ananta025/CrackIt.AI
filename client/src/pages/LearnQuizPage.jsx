@@ -8,6 +8,7 @@ export default function LearnQuizPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMode, setActiveMode] = useState('learn'); // 'learn' or 'quiz'
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // New state for submission loading
   const [hasSearched, setHasSearched] = useState(false);
   const [topic, setTopic] = useState('');
   const [error, setError] = useState(null);
@@ -161,11 +162,14 @@ export default function LearnQuizPage() {
   };
 
   const handleSubmitQuiz = async () => {
+    setIsSubmitting(true);
     setIsLoading(true);
     
     try {
       // Convert selectedAnswers object to array format expected by API
-      const answersArray = Object.values(selectedAnswers);
+      const answersArray = Object.entries(selectedAnswers)
+        .sort(([a], [b]) => parseInt(a) - parseInt(b))
+        .map(([_, value]) => value);
       
       // Submit answers to backend
       const results = await learnQuizService.submitQuiz(
@@ -174,12 +178,16 @@ export default function LearnQuizPage() {
         topicId
       );
       
+      // Ensure loading spinner shows for at least 1.5 seconds for better UX
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       setQuizResults(results);
       setShowResults(true);
     } catch (err) {
       console.error('Quiz submission error:', err);
       setError(err.error || 'Failed to submit quiz. Please try again.');
     } finally {
+      setIsSubmitting(false);
       setIsLoading(false);
     }
   };
@@ -307,11 +315,14 @@ export default function LearnQuizPage() {
 
   // Render Quiz Content
   const renderQuizContent = () => {
-    if (isLoading) {
+    // Show loading state either during initial loading or when submitting answers
+    if (isLoading || isSubmitting) {
       return (
         <div className={styles.loadingContainer}>
           <div className={styles.loadingSpinner}></div>
-          <p>Preparing quiz questions...</p>
+          <p className={styles.loadingText}>
+            {isSubmitting ? "Analyzing your results..." : "Preparing quiz questions..."}
+          </p>
         </div>
       );
     }
@@ -364,7 +375,7 @@ export default function LearnQuizPage() {
           </p>
 
           <button 
-            className={`${styles.quizButton} ${styles.primaryButton}`}
+            className={`${styles.quizButton} ${styles.smallButton}`}
             onClick={() => {
               setShowResults(false);
               setCurrentQuestionIndex(0);
@@ -377,16 +388,14 @@ export default function LearnQuizPage() {
           <div className={styles.resultDetails}>
             <h3>Review:</h3>
             {quizResults.questions && quizResults.questions.map((item, index) => (
-              <div key={index} style={{ marginBottom: '1rem' }}>
-                <p><strong>{index + 1}. {item.question}</strong></p>
-                <p style={{ 
-                  color: item.isCorrect ? '#00c851' : '#ff4444' 
-                }}>
+              <div key={index} className={styles.resultQuestionItem}>
+                <p className={styles.resultQuestionText}>{index + 1}. {item.question}</p>
+                <p className={item.isCorrect ? styles.resultAnswerCorrect : styles.resultAnswerIncorrect}>
                   Your answer: {item.userAnswer !== undefined ? quizData.questions[index].answers[item.userAnswer] : 'Not answered'}
                   {!item.isCorrect && 
                     ` (Correct: ${quizData.questions[index].answers[item.correctAnswer]})`}
                 </p>
-                <p><em>{item.explanation}</em></p>
+                <p className={styles.resultExplanation}>{item.explanation}</p>
               </div>
             ))}
           </div>
@@ -411,6 +420,9 @@ export default function LearnQuizPage() {
               className={`${styles.option} ${selectedAnswers[currentQuestionIndex] === index ? styles.optionSelected : ''}`}
               onClick={() => handleOptionSelect(index)}
             >
+              <span className={styles.optionIndicator}>
+                {selectedAnswers[currentQuestionIndex] === index ? '✓ ' : ''}
+              </span>
               {option}
             </div>
           ))}

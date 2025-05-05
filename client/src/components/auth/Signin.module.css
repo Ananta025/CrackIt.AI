@@ -3,47 +3,23 @@
     min-height: 100vh;
     color: white;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     font-family: "Roboto", sans-serif;
     background-image: url("../images/signin-2.svg");
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
+    overflow-x: hidden;
 }
 
 /* animated card div */
 .sign-in-card{
-    grid-area: 1/1/2/2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    width: 100%;
-}
-.card{
-    height: auto;
-    width: 90%;
-    max-width: 560px;
-    max-height: 630px;
-    border-radius: 75px;
-    background: rgba(255, 255, 255, 0.626);
-    border-top: 3px solid #f1b6fb;
-    border-bottom: 3px solid #f3b5fd;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.card img {
-    max-width: 100%;
-    height: auto;
-    object-fit: contain;
+    display: none; /* Hide by default on mobile */
 }
 
 /* sign in form div */
 .sign-in-form{
-    grid-area: 1/2/2/3;
+    grid-area: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -51,7 +27,7 @@
     width: 90%;
     max-width: 480px;
     margin: 0 auto;
-    padding: 2rem 1rem;
+    padding: 1.5rem 1rem;
 }
 
 .form-head-txt{
@@ -61,15 +37,16 @@
     justify-content: center;
     text-align: center;
     width: 100%;
+    margin-bottom: 1.5rem;
 }
 
 .main-txt{
-    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-size: clamp(1.75rem, 5vw, 3.2rem);
 }
 
 .sub-txt{
-    margin-top: 1rem;
-    font-size: clamp(0.9rem, 2vw, 1.125rem);
+    margin-top: 0.75rem;
+    font-size: clamp(0.85rem, 2vw, 1.125rem);
     color: rgb(150, 150, 150);
 }
 
@@ -152,38 +129,157 @@
 }
 
 /* Media queries for responsive design */
-@media screen and (max-width: 992px) {
-    .sign-in {
-        grid-template-columns: 1fr;
-    }
-    
-    .sign-in-card {
-        grid-area: auto;
-        height: auto;
-        padding: 2rem 0;
-    }
-    
+@media screen and (min-width: 576px) {
     .sign-in-form {
-        grid-area: auto;
-        margin: 1rem auto;
-    }
-    
-    .card {
-        max-height: 50vh;
-    }
-}
-
-@media screen and (max-width: 576px) {
-    .card {
-        border-radius: 40px;
-        max-height: 40vh;
+        padding: 2rem 1rem;
     }
     
     .form-head-txt {
-        margin-bottom: 1rem;
+        margin-bottom: 2rem;
     }
     
-    form {
-        gap: 1rem;
+    .main-txt {
+        font-size: clamp(2rem, 5vw, 3.2rem);
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .sign-in-card {
+        display: block;
+        height: auto;
+        width: 100%;
+        padding: 2rem;
+    }
+    
+    .card {
+        border-radius: 50px;
+        max-height: 400px;
+        margin: 0 auto;
+        text-align: center;
+    }
+    
+    .card img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Better spacing for this range */
+    .sign-in-form {
+        padding: 2.5rem 2rem;
+        margin-top: 1rem;
+    }
+}
+
+/* Specific fixes for 768px-992px range */
+@media screen and (min-width: 768px) and (max-width: 991px) {
+    .sign-in {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        gap: 1rem; /* Add space between card and form */
+    }
+    
+    .sign-in-card {
+        max-width: 450px; /* Slightly smaller to prevent overflow */
+        margin: 0 auto;
+        padding: 1rem;
+        height: auto;
+        overflow: hidden; /* Prevent image overflow */
+    }
+    
+    .card {
+        max-height: 250px; /* Make image smaller */
+        display: flex;
+        justify-content: center;
+    }
+    
+    .card img {
+        max-width: 100%;
+        max-height: 250px;
+        object-fit: contain; /* Maintain aspect ratio */
+    }
+    
+    .sign-in-form {
+        margin-top: 2rem; /* Increase separation from image */
+        padding: 1rem;
+        width: 85%;
+    }
+    
+    /* Adjust text sizes in this viewport */
+    .main-txt {
+        font-size: 2rem;
+    }
+    
+    .sub-txt {
+        font-size: 0.9rem;
+    }
+}
+
+@media screen and (min-width: 992px) {
+    .sign-in {
+        grid-template-columns: 1fr 1fr;
+        overflow: hidden;
+    }
+    
+    .sign-in-card {
+        grid-area: 1/1/2/2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        width: 100%;
+        padding: 0;
+    }
+    
+    .card {
+        height: auto;
+        width: 90%;
+        max-width: 530px;
+        max-height: 630px;
+        border-radius: 75px;
+    }
+    
+    .sign-in-form {
+        grid-area: 1/2/2/3;
+        padding: 2rem 1rem;
+    }
+}
+
+@media screen and (min-width: 1200px) {
+    .sign-in-form {
+        max-width: 520px;
+    }
+    
+    .card {
+        max-width: 560px;
+    }
+}
+
+/* Adding touch device optimization */
+@media (hover: none) and (pointer: coarse) {
+    .signin-button {
+        padding: clamp(1rem, 2vw, 1.3rem); /* Larger touch target */
+    }
+    
+    .signin-input {
+        padding: clamp(1rem, 2vw, 1.3rem); /* Easier to tap */
+    }
+}
+
+/* Fix for very small screens */
+@media screen and (max-width: 340px) {
+    .sign-in-form {
+        width: 95%;
+        padding: 1rem 0.5rem;
+    }
+    
+    .signin-input {
+        padding: 0.7rem;
+    }
+    
+    .signin-button {
+        padding: 0.7rem;
     }
 }

@@ -18,10 +18,10 @@
 }
 
 .primaryButton {
-  background-color: #2563eb;
-  color: white;
-  font-weight: 500;
-  padding: 0.75rem 1.5rem;
+  background-color: #3b5e9a;
+  color: #e5e7eb;
+  font-weight: 400;
+  padding: 0.65rem 1.25rem;
   border-radius: 0.375rem;
   display: flex;
   align-items: center;
@@ -29,11 +29,31 @@
   transition: background-color 0.2s;
   margin-top: 1.5rem;
   width: 100%;
-  max-width: 300px;
+  max-width: 250px;
+  font-size: 0.95rem;
+  border: 1px solid #4a6ea3;
 }
 
 .primaryButton:hover {
-  background-color: #1d4ed8;
+  background-color: #2d4d82;
+}
+
+.interviewMessage {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  max-width: 600px;
+  text-align: left;
+  margin: 0 auto;
+  position: relative;
+  border-left: 4px solid #1DB954;
+}
+
+.interviewText {
+  font-size: 1.125rem;
+  color: white;
+  line-height: 1.5;
+  padding: 1rem;
 }
 
 /* Add responsive styles */
@@ -49,15 +69,6 @@
 }
 
 @media (min-width: 768px) {
-  .title {
-    font-size: 2.25rem;
-  }
-  
-  .container {
-    padding: 3rem 2rem;
-    margin: 2rem auto;
-  }
-  
   .primaryButton {
     width: auto;
   }

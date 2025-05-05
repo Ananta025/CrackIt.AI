@@ -12,23 +12,24 @@ const optimizeProfileByUrl = async (req, res, next) => {
     // Get user ID from the authenticated user
     const userId = req.user._id;
     
-    // Scrape LinkedIn profile data
+    // Attempt to get basic info from LinkedIn URL
     let profileData;
     try {
       profileData = await linkedinService.scrapeProfile(profileUrl);
     } catch (error) {
-      // If scraping fails, return an error that suggests manual entry
+      // If even basic URL validation fails, return an error
       return res.status(400).json({ 
-        error: 'LinkedIn profile could not be automatically scraped.',
+        error: error.message || 'LinkedIn profile URL is invalid.',
         message: 'Please use the manual entry form instead.',
         code: 'SCRAPING_FAILED'
       });
     }
     
-    // If scraping returned placeholder data that needs manual completion
+    // Since LinkedIn doesn't allow scraping, we'll always get a placeholder response
+    // that requires manual completion
     if (profileData && profileData.scraped === false) {
       return res.status(202).json({
-        message: 'LinkedIn profile URL accepted, but data could not be fully extracted.',
+        message: 'LinkedIn profile URL accepted, but data extraction is not possible due to LinkedIn\'s security measures.',
         partialData: {
           profileUrl,
           username: profileData.username
@@ -36,6 +37,9 @@ const optimizeProfileByUrl = async (req, res, next) => {
         requiresManualEntry: true
       });
     }
+    
+    // This code will typically not be reached since we're immediately returning with requiresManualEntry
+    // but kept for future implementation possibilities
     
     // Optimize profile using AI
     const optimizationResults = await linkedinService.optimizeProfile(profileData);

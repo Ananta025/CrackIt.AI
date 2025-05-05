@@ -98,6 +98,7 @@ export default function Signup() {
                 console.log('Signup successful');
                 localStorage.setItem('userId', response.data.userId);
                 localStorage.setItem('token', response.data.token);
+                localStorage.setItem('userName', response.data.userName);
                 navigate('/home'); 
             }
         } catch (err) {

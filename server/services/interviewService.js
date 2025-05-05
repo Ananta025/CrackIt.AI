@@ -1,845 +1,1770 @@
+import Interview from '../models/interviewModel.js';
 import { GoogleGenAI } from "@google/genai";
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
 dotenv.config();
 
-class GeminiAIServices {
-  constructor() {
-    // Initialize the Gemini API client
-    this.genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    this.model = "gemini-2.0-flash";
-    this.interviewContexts = new Map();
-    this.interviewQuestions = new Map(); // Track questions for each interview
-    this.setupPrompts();
-  }
+// Initialize Google Generative AI client
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-  setupPrompts() {
-    // Interview type specific system prompts
-    this.systemPrompts = {
-      technical: `You are Rahul, an expert technical interviewer and Software Engineer at CrackIt.AI. 
-Your goal is to conduct a professional technical interview following best practices:
-1. Ask relevant questions specifically focused on the candidate's areas of interest
-2. Start with fundamental concepts before moving to more complex topics
-3. Ask detailed follow-up questions to explore depth of understanding
-4. NEVER repeat a question that was already asked
-5. Adapt questions based on the candidate's previous responses
-6. Provide constructive feedback on technical accuracy, problem-solving approach, and communication
-7. Address the candidate by name throughout the interview`,
+const interviewService = {
+  // Create a new interview
+  createInterview: async (userId, type, settings) => {
+    try {
+      const maxQuestions = getMaxQuestionsByDuration(settings.duration);
 
-      behavioral: `You are Rahul, an expert behavioral interviewer and Software Engineer at CrackIt.AI.
-Your goal is to assess a candidate's soft skills and experiences using the STAR method:
-1. Ask questions that focus specifically on the candidate's stated focus areas
-2. Probe for details about the Situation, Task, Action, and Result in responses
-3. Focus on leadership, teamwork, conflict resolution, problem-solving, and adaptability
-4. Provide feedback on the structure, specificity, and impact described in responses
-5. NEVER repeat a question that was already asked
-6. Address the candidate by name throughout the interview`,
+      const interview = new Interview({
+        user: userId,
+        type,
+        settings,
+        status: 'in-progress',
+        startTime: new Date(),
+        questions: [],
+        currentQuestionIndex: 0,
+        totalQuestions: maxQuestions
+      });
 
-      hr: `You are Rahul, an experienced HR interviewer and Software Engineer at CrackIt.AI.
-Your goal is to evaluate the candidate's fit for roles they're applying to:
-1. Ask personalized questions about career goals, background, and motivations
-2. Explore what they're looking for in their next role and company
-3. Assess communication skills, self-awareness, and professional presentation
-4. NEVER repeat a question that was already asked
-5. Address the candidate by name throughout the interview`
-    };
+      await interview.save();
+      console.log(`Created new interview with ID ${interview._id}, max questions: ${maxQuestions}`);
+      return interview;
+    } catch (error) {
+      console.error('Error creating interview:', error);
+      throw new Error('Failed to create interview');
+    }
+  },
 
-    // Interview difficulty modifiers
-    this.difficultyModifiers = {
-      easy: "Keep questions at an entry-level, focusing on fundamentals and common scenarios. Be encouraging in feedback.",
-      medium: "Ask moderately challenging questions suitable for professionals with 2-3 years of experience. Be balanced in feedback.",
-      hard: "Ask challenging questions that test deep understanding and edge cases. Suitable for senior candidates. Be rigorous but fair in feedback."
-    };
+  // Generate interview question based on role and settings
+  generateQuestion: async (interview, message, askedQuestions = [], isLastQuestion = false, questionIndex = null, answerAnalysis = null) => {
+    try {
+      const { type, settings } = interview;
+      const role = settings.focus && settings.focus.length > 0 ? settings.focus[0] : 'software engineer';
+      const difficulty = settings.difficulty || 'medium';
 
-    // Interview closing templates
-    this.closingTemplates = {
-      technical: "Thank you for your time today. I've enjoyed discussing these technical concepts with you. Is there anything else you'd like to ask me about the role or our technical stack at CrackIt.AI?",
-      behavioral: "I appreciate your thoughtful responses today. You've given me good insight into your experiences and approach to work. Do you have any questions for me about our team culture at CrackIt.AI?",
-      hr: "Thank you for sharing your background and career goals with me today. I've enjoyed learning more about you. Is there anything else you'd like to know about working at CrackIt.AI?"
-    };
-  }
+      if (isLastQuestion) {
+        const response = {
+          message: "That's all from my side. You did great!\n\nWe'll now analyze your responses and show you a summary. Thanks for taking the mock interview!",
+          isLastQuestion: true
+        };
 
-  /**
-   * Get or create a conversation context for an interview
-   */
-  async getOrCreateConversation(interviewId, interviewType, settings, userName) {
-    if (!this.interviewContexts.has(interviewId)) {
-      // Create system prompt based on interview type and settings
-      const systemPrompt = `${this.systemPrompts[interviewType]}
-${this.difficultyModifiers[settings.difficulty]}
-${settings.focus && settings.focus.length > 0 ? `Focus areas for this interview: ${settings.focus.join(", ")}. Ask questions specifically about these areas.` : ""}
+        interview.status = 'completed';
+        interview.endTime = new Date();
+        interview.duration = Math.round((interview.endTime - interview.startTime) / (1000 * 60));
+        await interview.save();
 
-For the first message only, start with: "Hi ${userName}, thanks for interviewing with us today. I'm Rahul, and I'm a Software Engineer here at CrackIt.AI."
+        return response;
+      }
 
-Each of your responses should have the following JSON structure:
-{
-  "question": "Your next interview question",
-  "feedback": {
-    "strengths": ["list of 2-3 specific strengths in the candidate's previous answer"],
-    "improvements": ["list of 2-3 specific areas for improvement"],
-    "score": <numeric score between 1-10 based on answer quality>,
-    "suggestedTopics": ["key points they could have mentioned but didn't"]
-  }
+      const targetIndex = questionIndex !== null ? questionIndex : (interview.currentQuestionIndex || 0);
+
+      console.log(`Generating question for position ${targetIndex + 1}`);
+
+      const isFirstQuestion = targetIndex === 0;
+      const isSecondQuestion = targetIndex === 1;
+
+      const candidateName = settings.userName || "there";
+      const extractedName = isSecondQuestion && interview.questions[0]?.answer ? 
+                            extractNameFromIntroduction(interview.questions[0].answer) : null;
+      
+      const personName = extractedName || candidateName;
+
+      let interviewContext = "This is the first question of the interview.";
+      let lastAnswer = "";
+      let answerAnalysisText = "";
+      let topicsToFollow = [];
+      let mentionedSkills = new Set();
+      let mentionedProjects = new Set();
+      let previousAnswerQuality = null;
+      let personalizedIntro = "";
+      let mentionedTechnologies = [];
+
+      if (!isFirstQuestion) {
+        if (targetIndex > 0 && interview.questions[targetIndex - 1]?.text) {
+          interviewContext = `The previous question was: "${interview.questions[targetIndex - 1].text}"`;
+
+          if (interview.questions[targetIndex - 1]?.answer) {
+            const previousAnswer = interview.questions[targetIndex - 1].answer;
+            lastAnswer = `The candidate answered: "${previousAnswer.substring(0, 300)}${previousAnswer.length > 300 ? '...' : ''}"`;
+
+            previousAnswerQuality = interview.questions[targetIndex - 1]?.answerMetadata?.analysis || 
+                                    analyzeAnswerContent(previousAnswer, interview.questions[targetIndex - 1].text);
+            
+            // For transition from introduction to technical questions
+            if (isSecondQuestion && targetIndex === 1) {
+              const introAnalysis = previousAnswerQuality || 
+                                    analyzeAnswerContent(previousAnswer, interview.questions[targetIndex - 1].text);
+              
+              const isMinimalIntro = introAnalysis.type === 'minimal_intro' || 
+                                    (previousAnswer.length < 30 && !extractedName);
+              
+              let backgroundItems = [];
+              if (!isMinimalIntro) {
+                backgroundItems = extractBackgroundFromIntroduction(previousAnswer);
+                mentionedTechnologies = extractTechnologiesFromIntroduction(previousAnswer);
+              }
+              
+              if (isMinimalIntro) {
+                personalizedIntro = `Let's start our discussion.`;
+              } else if (backgroundItems.length > 0) {
+                personalizedIntro = `Thanks for sharing your ${backgroundItems.join(", ")} with me, ${personName}.`;
+              } else {
+                personalizedIntro = `Thanks for the introduction, ${personName}.`;
+              }
+            }
+            
+            answerAnalysisText = analyzeAnswer(previousAnswer, role, previousAnswerQuality);
+
+            const extractedTopics = extractTopicsFromAnswer(previousAnswer);
+            topicsToFollow = extractedTopics.slice(0, 3);
+          }
+        }
+
+        const previousAnswers = [];
+        for (let i = 0; i < targetIndex; i++) {
+          if (interview.questions[i] && interview.questions[i].answer) {
+            previousAnswers.push({
+              question: interview.questions[i].text,
+              answer: interview.questions[i].answer
+            });
+
+            const answer = interview.questions[i].answer.toLowerCase();
+
+            const techSkills = ['javascript', 'python', 'react', 'node', 'express', 'mongodb', 'sql', 
+                               'kubernetes', 'cloud', 'typescript', 'angular', 'vue',
+                               'aws', 'azure', 'gcp', 'docker', 'java', 'c#', '.net', 'php'];
+
+            techSkills.forEach(tech => {
+              if (answer.includes(tech)) mentionedSkills.add(tech);
+            });
+
+            const softSkills = ['communication', 'teamwork', 'leadership', 'problem solving', 'agile', 
+                              'scrum', 'kanban', 'testing', 'ci/cd', 'devops', 'frontend',
+                              'backend', 'fullstack', 'performance', 'scalability', 'design'];
+
+            softSkills.forEach(skill => {
+              if (answer.includes(skill)) mentionedSkills.add(skill);
+            });
+
+            if (answer.includes('project') || answer.includes('application') || answer.includes('app')) {
+              const projectMatches = answer.match(/(?:project|application|app|developed|built|created)\s+(\w+(?:\s+\w+){0,3})/gi);
+              if (projectMatches) {
+                projectMatches.forEach(match => mentionedProjects.add(match.trim()));
+              }
+            }
+          }
+        }
+      }
+
+      const cleanedAskedQuestions = askedQuestions
+        .filter(q => q && q.length > 10)
+        .map(q => q.substring(0, 100));
+
+      const questionsToCover = determineTopicsToAsk(targetIndex, interview.totalQuestions, role, mentionedSkills, difficulty);
+
+      let prompt = `You are Rahul, a professional Software Engineer interviewer at Cisco.
+      
+      Interview type: ${type}
+      Difficulty level: ${difficulty}
+      Question number: ${targetIndex + 1} of ${interview.totalQuestions}
+      Role: ${role}
+      
+      ${interviewContext}
+      ${lastAnswer}
+      
+      ${answerAnalysisText ? `Analysis of the candidate's last answer: ${answerAnalysisText}` : ''}
+      ${previousAnswerQuality ? `The candidate's response quality: ${previousAnswerQuality.type}. ${previousAnswerQuality.message}` : ''}
+      ${topicsToFollow.length > 0 ? `Topics to potentially follow-up on: ${topicsToFollow.join(', ')}` : ''}
+      ${questionsToCover.length > 0 ? `Important topics that should be covered: ${questionsToCover.join(', ')}` : ''}
+      
+      I need you to generate a high-quality ${type} interview question for a ${difficulty}-level ${role} position.
+      
+      Guidelines:
+      1. Make the question relevant to the ${role} role and match the ${difficulty} difficulty level
+      2. Ensure it differs from previous questions: ${JSON.stringify(cleanedAskedQuestions)}
+      3. ${lastAnswer ? 'Create a natural follow-up based on the candidate\'s previous answer when possible' : 'Focus on real-world skills and practical problem-solving'}
+      4. If the candidate mentioned specific technologies or projects, consider including one of them
+      ${previousAnswerQuality && previousAnswerQuality.type === 'dont_know' ? 
+        "5. Since the candidate didn't know the answer to the previous question, ask a SIMPLER question on a DIFFERENT topic" : ''}
+      ${previousAnswerQuality && previousAnswerQuality.type === 'inappropriate' ? 
+        "5. The candidate used inappropriate language. Respond professionally but remind them about professional interview conduct before asking the next question" : ''}
+      ${previousAnswerQuality && previousAnswerQuality.type === 'off_topic' ? 
+        "5. The candidate's previous answer was off-topic. Politely redirect them to stay focused on relevant topics" : ''}
+      
+      VERY IMPORTANT FORMAT REQUIREMENTS:
+      1. NEVER use emojis or special characters
+      2. Use plain text only
+      3. Your question must fit the interview position (question #${targetIndex + 1})
+      4. Only introduce yourself in the first question, nowhere else
+      
+      ${isFirstQuestion ? 
+        `For the first question use EXACTLY this format:
+        "Hi ${candidateName}! I'm Rahul, a Software Engineer at Cisco. Nice to meet you. Let's start your mock interview — nothing to worry about, just be yourself.\\n\\nSo, to begin with, can you briefly introduce yourself?"` 
+        : isSecondQuestion ?
+        `For the second question use EXACTLY this format:
+        "${personalizedIntro || `Great, thank you for that.`} Let's dive into some technical questions to understand your skills better.\\n\\n${
+          mentionedTechnologies.length > 0 ?
+          `I see you mentioned ${mentionedTechnologies.slice(0, 3).join(', ')}. Could you tell me more about your experience with these technologies?` :
+          `Can you explain your experience with ${role} and what technologies you're most comfortable with?`
+        }"` 
+        : `For question #${targetIndex + 1}, use one of these exact formats WITHOUT mentioning your name:
+        ${previousAnswerQuality && previousAnswerQuality.type === 'inappropriate' ?
+          `"I'd like to remind you that this is a professional interview setting. Let's maintain appropriate language.\\n\\n[Your well-formed question here]"
+          "I understand you may feel frustrated, but let's keep our discussion professional.\\n\\n[Your well-formed question here]"` :
+         previousAnswerQuality && previousAnswerQuality.type === 'dont_know' ?
+          `"That's alright if you're not familiar with that topic. Let's try something different.\\n\\n[Your simpler question on a different topic]"
+          "No problem. Let's move to another area.\\n\\n[Your simpler question on a different topic]"` :
+         previousAnswerQuality && previousAnswerQuality.type === 'off_topic' ?
+          `"Let's focus on the interview questions.\\n\\n[Your well-formed question here]"
+          "To better assess your skills, I need to ask you about specific topics.\\n\\n[Your well-formed question here]"` :
+         lastAnswer ? 
+          `"Thanks for explaining that. I see you mentioned [something they mentioned]. Let's explore that further —\\n[Your follow-up question here]"
+          "That's interesting about [something they mentioned]. Now tell me —\\n[Your well-formed question here]"` : ''
+        }
+        "Nice explanation. Now, let's talk about [topic] —\\n[Your well-formed question here]"
+        "Alright. Imagine [scenario related to ${role}] — [Your well-formed question here]"
+        "Now switching gears a bit…\\n[Your well-formed question here]"
+        "Cool. Let's go into [relevant topic] —\\n[Your well-formed question here]"
+        ${targetIndex >= interview.totalQuestions - 2 ? '"For one of our last questions:\\n[Your well-formed question here]"' : ''}`
+      }`;
+
+      let question = await generateWithRetries(prompt, role, candidateName, isFirstQuestion, isSecondQuestion);
+
+      question = cleanupQuestion(question, candidateName, role, isFirstQuestion, isSecondQuestion);
+
+      console.log(`Updating question at index ${targetIndex}: ${question.substring(0, 50)}...`);
+
+      while (interview.questions.length <= targetIndex) {
+        interview.questions.push({
+          text: null,
+          answer: null,
+          feedback: null,
+          status: 'pending'
+        });
+      }
+
+      interview.questions[targetIndex].text = question;
+      interview.questions[targetIndex].status = 'generated';
+
+      await interview.save();
+      console.log(`Updated question at index ${targetIndex}, total questions now: ${interview.questions.length}`);
+
+      return {
+        message: question,
+        questionIndex: targetIndex,
+        isLastQuestion: false
+      };
+    } catch (error) {
+      console.error('Error generating question:', error);
+      throw new Error(`Failed to generate interview question: ${error.message}`);
+    }
+  },
+
+  processAnswer: async (interviewId, message, questionIndex) => {
+    try {
+      const interview = await Interview.findById(interviewId);
+      if (!interview) {
+        throw new Error('Interview not found');
+      }
+
+      if (interview.status !== 'in-progress') {
+        throw new Error('Interview is not in progress');
+      }
+
+      if (!interview.questions) {
+        console.log(`Creating questions array for interview ${interviewId}`);
+        interview.questions = [];
+      }
+
+      if (questionIndex < 0) {
+        throw new Error(`Invalid question index: ${questionIndex}. Index cannot be negative.`);
+      }
+
+      if (questionIndex >= interview.questions.length) {
+        console.log(`Question at index ${questionIndex} doesn't exist yet. Creating placeholder.`);
+        while (interview.questions.length <= questionIndex) {
+          interview.questions.push({
+            text: null,
+            answer: null,
+            feedback: null,
+            status: 'pending'
+          });
+        }
+      }
+
+      if (!interview.questions[questionIndex].text) {
+        console.log(`Question text at index ${questionIndex} is missing. Adding placeholder.`);
+        interview.questions[questionIndex].text = "Untitled question";
+        interview.questions[questionIndex].status = 'generated';
+      }
+
+      console.log(`Saving answer for question #${questionIndex + 1}`);
+      interview.questions[questionIndex].answer = message;
+      interview.questions[questionIndex].status = 'answered';
+
+      // Analyze the answer content and store the analysis
+      const answerAnalysis = analyzeAnswerContent(message, interview.questions[questionIndex].text);
+      const answerLength = message.length;
+      const keyTerms = extractKeyTerms(message);
+      const answerMetadata = {
+        length: answerLength,
+        keyTerms: keyTerms,
+        analysis: answerAnalysis,
+        timestamp: new Date()
+      };
+
+      try {
+        interview.questions[questionIndex].answerMetadata = answerMetadata;
+      } catch (err) {
+        console.log("Schema doesn't support answerMetadata, continuing without it");
+      }
+
+      const nextIndex = findNextUnansweredQuestionIndex(interview);
+      if (nextIndex !== -1 && nextIndex !== interview.currentQuestionIndex) {
+        console.log(`Advancing current question index from ${interview.currentQuestionIndex} to ${nextIndex}`);
+        interview.currentQuestionIndex = nextIndex;
+      }
+
+      await interview.save();
+
+      return { 
+        success: true,
+        message: "Answer saved successfully",
+        nextQuestionIndex: nextIndex,
+        answerAnalysis: answerAnalysis // Return the analysis to use for next question
+      };
+    } catch (error) {
+      console.error('Error processing answer:', error);
+      throw new Error(`Failed to process answer: ${error.message}`);
+    }
+  },
+
+  getInterviewById: async (interviewId) => {
+    try {
+      console.log(`Fetching interview details for ID: ${interviewId}`);
+
+      if (!interviewId) {
+        throw new Error('Interview ID is required');
+      }
+
+      const interview = await Interview.findById(interviewId);
+
+      if (!interview) {
+        throw new Error(`Interview with ID ${interviewId} not found`);
+      }
+
+      console.log('Found interview:', {
+        id: interview._id,
+        user: interview.user,
+        status: interview.status,
+        questionsCount: interview.questions ? interview.questions.length : 0
+      });
+
+      return interview;
+    } catch (error) {
+      console.error('Error fetching interview:', error);
+      throw new Error(`Failed to fetch interview: ${error.message}`);
+    }
+  },
+
+  advanceToNextQuestion: async (interviewId) => {
+    try {
+      const interview = await Interview.findById(interviewId);
+      if (!interview) {
+        throw new Error('Interview not found');
+      }
+
+      const nextIndex = findNextUnansweredQuestionIndex(interview);
+      if (nextIndex === -1) {
+        return {
+          success: false,
+          message: "No more questions available",
+          interviewEnded: true
+        };
+      }
+
+      interview.currentQuestionIndex = nextIndex;
+      await interview.save();
+
+      return {
+        success: true,
+        currentQuestionIndex: nextIndex,
+        isLastQuestion: nextIndex >= interview.totalQuestions - 1
+      };
+    } catch (error) {
+      console.error('Error advancing question:', error);
+      throw new Error(`Failed to advance to next question: ${error.message}`);
+    }
+  },
+
+  // Generate overall interview results
+  generateResults: async (interviewId) => {
+    try {
+      console.log(`Generating results for interview ${interviewId}`);
+      
+      // Find the interview
+      const interview = await Interview.findById(interviewId);
+      if (!interview) {
+        throw new Error('Interview not found');
+      }
+      
+      if (interview.status !== 'completed') {
+        interview.status = 'completed';
+        interview.endTime = new Date();
+        interview.duration = Math.round((interview.endTime - interview.startTime) / (1000 * 60));
+      }
+      
+      // Skip if results already exist
+      if (interview.results && interview.results.overallScore) {
+        console.log(`Results already exist for interview ${interviewId}`);
+        return interview;
+      }
+      
+      // Create initial results structure if it doesn't exist
+      if (!interview.results) {
+        interview.results = {
+          overallScore: 0,
+          feedback: '',
+          skillScores: {
+            communication: 0,
+            technical: 0,
+            problemSolving: 0,
+            behavioral: 0,
+            leadership: 0
+          },
+          strengths: [],
+          weaknesses: [],
+          improvementTips: [],
+          detailedAnalysis: {},
+          careerInsights: [],
+          learningResources: []
+        };
+      }
+      
+      // Generate feedback for each answered question that doesn't have feedback
+      const answeredQuestions = interview.questions.filter(q => 
+        q && q.answer && q.answer.trim().length > 0 && (!q.feedback || !q.feedback.rating)
+      );
+      
+      console.log(`Generating feedback for ${answeredQuestions.length} answered questions`);
+      
+      // Calculate scores based on answer quality
+      let totalScore = 0;
+      let technicalScore = 0;
+      let communicationScore = 0;
+      let problemSolvingScore = 0;
+      let behavioralScore = 0;
+      let leadershipScore = 0;
+      let questionCount = 0;
+      
+      // Track keywords and themes for detailed analysis
+      const commonKeywords = {};
+      const detailedStrengths = {};
+      const detailedWeaknesses = {};
+      
+      // Process each question to provide feedback
+      for (let i = 0; i < interview.questions.length; i++) {
+        const question = interview.questions[i];
+        
+        // Skip questions without text or answer
+        if (!question || !question.text || !question.answer) {
+          continue;
+        }
+        
+        questionCount++;
+        
+        // Generate feedback using simple heuristics if no AI available
+        if (!question.feedback || !question.feedback.rating) {
+          const answerQuality = evaluateAnswerQuality(question.answer, question.text);
+          const questionType = determineQuestionType(question.text);
+          
+          // Track keywords for content analysis
+          const extractedKeywords = extractKeyTerms(question.answer);
+          extractedKeywords.forEach(keyword => {
+            commonKeywords[keyword] = (commonKeywords[keyword] || 0) + 1;
+          });
+          
+          // Create feedback structure with more detailed analysis
+          question.feedback = {
+            strengths: generateStrengths(question.answer, answerQuality),
+            improvements: generateImprovements(question.answer, answerQuality),
+            rating: answerQuality.score,
+            star: {
+              situation: answerQuality.hasSituation ? 'Present' : 'Missing',
+              task: answerQuality.hasTask ? 'Present' : 'Missing',
+              action: answerQuality.hasAction ? 'Present' : 'Missing',
+              result: answerQuality.hasResult ? 'Present' : 'Missing'
+            },
+            keyInsight: generateKeyInsight(question.answer, question.text, answerQuality, questionType),
+            suggestedTopics: generateSuggestedTopics(question.answer, question.text, questionType)
+          };
+          
+          // Track strengths and weaknesses for detailed analysis
+          question.feedback.strengths.forEach(strength => {
+            detailedStrengths[strength] = (detailedStrengths[strength] || 0) + 1;
+          });
+          
+          question.feedback.improvements.forEach(improvement => {
+            detailedWeaknesses[improvement] = (detailedWeaknesses[improvement] || 0) + 1;
+          });
+          
+          // Update skill scores based on question type
+          switch(questionType) {
+            case 'technical':
+              technicalScore += answerQuality.score;
+              problemSolvingScore += answerQuality.score * 0.5;
+              break;
+            case 'behavioral':
+              behavioralScore += answerQuality.score;
+              communicationScore += answerQuality.score * 0.5;
+              break;
+            case 'leadership':
+              leadershipScore += answerQuality.score;
+              behavioralScore += answerQuality.score * 0.3;
+              break;
+            default:
+              communicationScore += answerQuality.score;
+          }
+          
+          totalScore += answerQuality.score;
+        } else {
+          // If feedback already exists, just use the existing rating
+          totalScore += question.feedback.rating || 5;
+          
+          // Ensure all questions have key insight and suggested topics
+          if (!question.feedback.keyInsight) {
+            const questionType = determineQuestionType(question.text);
+            question.feedback.keyInsight = generateKeyInsight(
+              question.answer, 
+              question.text, 
+              { score: question.feedback.rating || 5 }, 
+              questionType
+            );
+          }
+          
+          if (!question.feedback.suggestedTopics) {
+            question.feedback.suggestedTopics = generateSuggestedTopics(
+              question.answer, 
+              question.text,
+              determineQuestionType(question.text)
+            );
+          }
+        }
+      }
+      
+      // Calculate overall score and normalize skill scores
+      const overallScore = questionCount > 0 ? Math.round((totalScore / questionCount) * 10) / 10 : 5;
+      
+      // Normalize skill scores (avoid division by zero)
+      const normalizeDivisor = Math.max(1, questionCount);
+      const normalizedSkills = {
+        technical: Math.round((technicalScore / normalizeDivisor) * 10) / 10,
+        communication: Math.round((communicationScore / normalizeDivisor) * 10) / 10,
+        problemSolving: Math.round((problemSolvingScore / normalizeDivisor) * 10) / 10,
+        behavioral: Math.round((behavioralScore / normalizeDivisor) * 10) / 10,
+        leadership: Math.round((leadershipScore / normalizeDivisor) * 10) / 10
+      };
+      
+      // Generate overall feedback
+      let overallFeedback = generateOverallFeedback(overallScore, interview.settings?.focus?.[0] || 'software engineer');
+      
+      // Generate detailed analysis
+      const detailedAnalysis = {
+        keywordFrequency: commonKeywords,
+        starRatings: calculateStarRatings(interview.questions),
+        answerLengths: calculateAnswerLengths(interview.questions),
+        topicCoverage: analyzeTopicCoverage(interview.questions, interview.settings?.focus?.[0] || 'software engineer')
+      };
+      
+      // Get strengths and weaknesses
+      const skillEntries = Object.entries(normalizedSkills);
+      const sortedByStrength = [...skillEntries].sort((a, b) => b[1] - a[1]);
+      const sortedByWeakness = [...skillEntries].sort((a, b) => a[1] - b[1]);
+      
+      const strengths = sortedByStrength.slice(0, 3)
+        .filter(entry => entry[1] >= 6)
+        .map(entry => formatSkillFeedback(entry[0], true));
+      
+      const weaknesses = sortedByWeakness.slice(0, 3)
+        .filter(entry => entry[1] < 7)
+        .map(entry => formatSkillFeedback(entry[0], false));
+      
+      // Generate improvement tips
+      const improvementTips = generateImprovementTips(normalizedSkills);
+      
+      // Generate career insights based on performance
+      const careerInsights = generateCareerInsights(
+        normalizedSkills, 
+        interview.settings?.focus?.[0] || 'software engineer',
+        interview.settings?.difficulty || 'medium'
+      );
+      
+      // Generate learning resource recommendations
+      const learningResources = generateLearningResources(
+        weaknesses,
+        normalizedSkills,
+        interview.settings?.focus?.[0] || 'software engineer'
+      );
+      
+      // Update interview results with enhanced data
+      interview.results = {
+        overallScore,
+        feedback: overallFeedback,
+        skillScores: normalizedSkills,
+        strengths: strengths.length > 0 ? strengths : ["Structured communication"],
+        weaknesses: weaknesses.length > 0 ? weaknesses : ["Providing specific examples"],
+        improvementTips: improvementTips,
+        detailedAnalysis,
+        careerInsights,
+        learningResources
+      };
+      
+      // Save the interview with all feedback
+      await interview.save();
+      console.log(`Results generated for interview ${interviewId} with score ${overallScore}`);
+      
+      return interview;
+    } catch (error) {
+      console.error('Error generating results:', error);
+      throw new Error(`Failed to generate interview results: ${error.message}`);
+    }
+  },
+
+  // Get interview history for a user
+  getInterviewHistory: async (userId) => {
+    try {
+      console.log(`Fetching interview history for user: ${userId}`);
+      
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+      
+      // Find all interviews for this user, sort by most recent first
+      const interviews = await Interview.find({ user: userId })
+        .sort({ createdAt: -1 })
+        .limit(50); // Limit to reasonable number
+        
+      console.log(`Found ${interviews.length} interviews for user ${userId}`);
+      return interviews;
+    } catch (error) {
+      console.error('Error fetching interview history:', error);
+      throw new Error(`Failed to fetch interview history: ${error.message}`);
+    }
+  },
+
+  // New function to analyze introductions or other answers
+  analyzeIntroduction: async (message, questionText) => {
+    try {
+      return analyzeAnswerContent(message, questionText);
+    } catch (error) {
+      console.error('Error analyzing introduction:', error);
+      // Provide a safe default if analysis fails
+      return {
+        type: 'normal',
+        message: 'Standard introduction provided',
+        details: message.length > 300 ? 'Detailed introduction' : 'Brief introduction'
+      };
+    }
+  },
+};
+
+// Helper functions
+
+function extractKeyTerms(answer) {
+  if (!answer) return [];
+
+  const text = answer.toLowerCase();
+  const terms = [];
+
+  const technicalTerms = [
+    'javascript', 'python', 'java', 'typescript', 'c#', 'php', 'go', 'ruby',
+    'react', 'angular', 'vue', 'node', 'express', 'django', 'flask', 'rails',
+    'mongodb', 'postgresql', 'mysql', 'sql', 'nosql', 'redis', 'elasticsearch',
+    'aws', 'azure', 'gcp', 'cloud', 'docker', 'kubernetes', 'serverless',
+    'ci/cd', 'jenkins', 'github', 'gitlab', 'bitbucket', 'git',
+    'rest', 'graphql', 'api', 'microservices', 'architecture', 'design patterns',
+    'testing', 'tdd', 'agile', 'scrum', 'kanban', 'devops'
+  ];
+
+  technicalTerms.forEach(term => {
+    if (text.includes(term)) terms.push(term);
+  });
+
+  const softSkillTerms = [
+    'communication', 'teamwork', 'collaboration', 'leadership', 'management',
+    'problem solving', 'critical thinking', 'time management', 'organization',
+    'mentoring', 'conflict resolution'
+  ];
+
+  softSkillTerms.forEach(term => {
+    if (text.includes(term)) terms.push(term);
+  });
+
+  return terms;
 }
 
-For the first question, only include the question with introduction. For the last question, end with a professional closing.`;
-
-      // Initialize tracking for this interview
-      this.interviewContexts.set(interviewId, { 
-        history: [],
-        askedQuestions: new Set(),
-        userName,
-        type: interviewType,
-        settings
-      });
-      
-      console.log(`Created new interview context for interview ID: ${interviewId}`);
-    }
-
-    return this.interviewContexts.get(interviewId);
-  }
-
-  /**
-   * Process a user's response and generate the next question with feedback
-   */
-  async processUserResponse(userMessage, interviewType, interviewData) {
-    try {
-      const interviewId = interviewData._id.toString();
-      const settings = interviewData.settings;
-      const userName = interviewData.userName || "Candidate";
-      
-      // Get or create conversation context
-      const context = await this.getOrCreateConversation(interviewId, interviewType, settings, userName);
-      
-      // Check if this is the first message
-      const isFirstMessage = context.history.length === 0 || 
-                            (context.history.length === 1 && 
-                            userMessage.toLowerCase().includes("ready to begin"));
-
-      // Check if this is the last question
-      const isLastQuestion = this.isLastQuestion(interviewData);
-      
-      if (isFirstMessage) {
-        // For the first message, return introduction with the first question
-        const introduction = await this.generateFirstQuestion(interviewType, settings, userName);
-        
-        // Track this as the first question - extract just the question part after the greeting
-        if (introduction) {
-          const parts = introduction.split("CrackIt.AI.");
-          const questionPart = parts.length > 1 ? parts[1].trim() : introduction;
-          
-          context.askedQuestions.add(questionPart);
-          context.history.push({ role: "assistant", text: introduction });
-        }
-        
-        return {
-          response: introduction,
-          feedback: null,
-          lastQuestion: introduction
-        };
-      }
-
-      // Add user message to history
-      context.history.push({ role: "user", text: userMessage });
-      
-      // Prepare system prompt with stronger instructions against repetition
-      const systemPrompt = this.prepareSystemPrompt(interviewType, settings, context, isLastQuestion);
-      
-      try {
-        // Generate AI response
-        const response = await this.genAI.models.generateContent({
-          model: this.model,
-          contents: [
-            { role: "system", text: systemPrompt },
-            ...context.history.map(msg => ({ 
-              role: msg.role, 
-              text: msg.text 
-            }))
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            responseFormat: { type: "json" }
-          }
-        });
-        
-        let responseText = response.text;
-        
-        // FIXED: Properly call parseAIResponse as an instance method
-        let parsedResponse = this.parseAIResponse(responseText, userMessage, interviewType);
-        
-        // Handle special case for last question
-        if (isLastQuestion) {
-          // Only append closing template if Gemini didn't already include a closing statement
-          if (!parsedResponse.question.toLowerCase().includes("thank you for your time") && 
-              !parsedResponse.question.toLowerCase().includes("appreciate your")) {
-            parsedResponse.question += "\n\n" + this.closingTemplates[interviewType];
-          }
-        }
-        
-        // Make sure question is personalized
-        parsedResponse.question = this.ensurePersonalization(parsedResponse.question, userName);
-        
-        // Ensure question is not repeated - with enhanced checking
-        if (this.isQuestionRepeated(parsedResponse.question, context.askedQuestions)) {
-          console.log("Question repetition detected, generating new unique question");
-          parsedResponse.question = await this.generateUniqueQuestion(
-            interviewType, 
-            settings, 
-            context.askedQuestions, 
-            userName, 
-            isLastQuestion
-          );
-        }
-        
-        // Add to asked questions - store normalized version
-        const normalizedQuestion = this.normalizeQuestion(parsedResponse.question);
-        context.askedQuestions.add(normalizedQuestion);
-        
-        // Store the updated history
-        context.history.push({ role: "assistant", text: parsedResponse.question });
-        
-        return {
-          response: parsedResponse.question,
-          feedback: parsedResponse.feedback,
-          lastQuestion: interviewData.questions.length > 0 ? 
-            interviewData.questions[interviewData.questions.length - 1].text : 
-            parsedResponse.question
-        };
-      } catch (aiError) {
-        console.error("Error calling AI service:", aiError);
-        return this.createFallbackResponse(userMessage, interviewType, interviewData, userName, isLastQuestion);
-      }
-    } catch (error) {
-      console.error("Error processing user response:", error);
-      const userName = interviewData.userName || "Candidate";
-      const isLastQuestion = this.isLastQuestion(interviewData);
-      return this.createFallbackResponse(userMessage, interviewType, interviewData, userName, isLastQuestion);
-    }
-  }
-
-  /**
-   * Parse AI response and handle errors
-   * FIXED: Ensure this method is properly defined
-   */
-  parseAIResponse(responseText, userMessage, interviewType) {
-    try {
-      // Clean up potential text around JSON
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        responseText = jsonMatch[0];
-        try {
-          return JSON.parse(responseText);
-        } catch (parseError) {
-          console.error("JSON parse error:", parseError);
-          // Fall through to extraction if JSON parsing fails
-        }
-      }
-      
-      // If no JSON found or parsing failed, extract question and create feedback
-      const question = this.extractQuestion(responseText) || "Could you elaborate more on your approach to this subject?";
-      return {
-        question,
-        feedback: this.generateFallbackFeedback(userMessage, interviewType)
-      };
-    } catch (jsonError) {
-      console.error("Error parsing response as JSON:", jsonError);
-      console.log("Raw response:", responseText);
-      
-      // Use fallback parsing
-      return this.extractResponseComponents(responseText, userMessage, interviewType);
-    }
-  }
-
-  /**
-   * Generate first question with personalized introduction
-   */
-  async generateFirstQuestion(interviewType, settings, userName) {
-    try {
-      // IMPROVED: More emphasis on focus areas in first question
-      const focusAreas = settings.focus && settings.focus.length > 0 
-        ? `Focus specifically on these areas: ${settings.focus.join(", ")}. Your first question MUST relate directly to one of these topics.` 
-        : "";
-      
-      const systemPrompt = `You are Rahul, a Software Engineer at CrackIt.AI conducting a ${interviewType} interview.
-Generate a professional introduction and first question for ${userName}.
-Your response MUST start with EXACTLY this greeting: "Hi ${userName}, thanks for interviewing with us today. I'm Rahul, and I'm a Software Engineer here at CrackIt.AI."
-Then ask ONE relevant ${settings.difficulty} level question about ${interviewType} concepts. ${focusAreas}
-DO NOT repeat the greeting. DO NOT add any additional greeting.
-Keep your entire response concise and professional.`;
-
-      const response = await this.genAI.models.generateContent({
-        model: this.model,
-        contents: [
-          { role: "system", text: systemPrompt },
-          { role: "user", text: `I'm ${userName} and I'm ready to start my ${interviewType} interview.` }
-        ]
-      });
-
-      const result = response.text;
-      console.log("Generated introduction:", result);
-      
-      // Ensure the greeting appears exactly once
-      if (!result.startsWith(`Hi ${userName}`)) {
-        return `Hi ${userName}, thanks for interviewing with us today. I'm Rahul, and I'm a Software Engineer here at CrackIt.AI. ${result}`;
-      }
-      
-      return result;
-    } catch (error) {
-      console.error("Error generating introduction:", error);
-      return `Hi ${userName}, thanks for interviewing with us today. I'm Rahul, and I'm a Software Engineer here at CrackIt.AI. Let's start by discussing your experience with ${settings.focus?.[0] || interviewType} concepts. Could you tell me about a recent project you've worked on?`;
-    }
-  }
-
-  /**
-   * Prepare system prompt for AI with stronger anti-repetition guidance
-   */
-  prepareSystemPrompt(interviewType, settings, context, isLastQuestion) {
-    // IMPROVED: More emphasis on focus areas in all questions
-    const focusAreasPrompt = settings.focus && settings.focus.length > 0 
-      ? `Focus EXCLUSIVELY on these areas: ${settings.focus.join(", ")}. 
-Your questions MUST directly relate to these topics.
-Each question should explore a different aspect of these focus areas.` 
-      : "";
-    
-    // IMPROVED: Better detection of repeated questions
-    let askedQuestionsPrompt = "";
-    if (context.askedQuestions.size > 0) {
-      const askedList = Array.from(context.askedQuestions).slice(0, 5);
-      askedQuestionsPrompt = `
-CRITICAL: You've already asked these questions (or similar ones). DO NOT ask these or similar questions again:
-${askedList.map(q => `- "${q}"`).join("\n")}
-
-Your new question MUST be completely different in topic and wording from any previous question.`;
-    }
-    
-    const lastQuestionPrompt = isLastQuestion
-      ? "This is the FINAL question of the interview. Begin your response with 'This will be our final question.' Then ask your question, followed by a professional closing statement."
-      : "";
-    
-    return `${this.systemPrompts[interviewType]}
-${this.difficultyModifiers[settings.difficulty]}
-${focusAreasPrompt}
-${askedQuestionsPrompt}
-${lastQuestionPrompt}
-
-IMPORTANT INSTRUCTIONS:
-1. DO NOT repeat any question that has already been asked or anything similar
-2. DO NOT include any greeting like "Hi [name]" except in the very first question
-3. DO NOT ask more than one question at a time
-
-Respond with JSON in this format:
-{
-  "question": "Your next interview question for ${context.userName}",
-  "feedback": {
-    "strengths": ["list of 2-3 specific strengths in the candidate's previous answer"],
-    "improvements": ["list of 2-3 specific areas for improvement"],
-    "score": <numeric score between 1-10 based on answer quality>,
-    "suggestedTopics": ["key points they could have mentioned but didn't"]
-  }
-}`;
-  }
-
-  /**
-   * Check if a question is too similar to previously asked questions
-   * IMPROVED: Better similarity detection
-   */
-  isQuestionRepeated(question, askedQuestions) {
-    const normalized = this.normalizeQuestion(question);
-    
-    // Direct match check
-    if (askedQuestions.has(normalized)) {
-      return true;
-    }
-    
-    // Enhanced similarity detection for partial matches
-    for (const asked of askedQuestions) {
-      // If core concepts match
-      const questionKeywords = this.extractKeywords(normalized);
-      const askedKeywords = this.extractKeywords(asked);
-      
-      // If there's significant keyword overlap (more than 60%)
-      const commonKeywords = questionKeywords.filter(kw => askedKeywords.includes(kw));
-      if (commonKeywords.length > 0 && 
-          commonKeywords.length / Math.min(questionKeywords.length, askedKeywords.length) > 0.6) {
-        console.log("Question similarity detected via keywords:", commonKeywords);
-        return true;
-      }
-      
-      // If the core part of the question is the same
-      if (normalized.includes(asked) || asked.includes(normalized)) {
-        // Only consider it a match if the overlap is significant
-        if (Math.min(normalized.length, asked.length) > 15) {
-          return true;
-        }
-      }
-      
-      // Check for very similar questions (with small differences)
-      const similarity = this.getStringSimilarity(normalized, asked);
-      if (similarity > 0.7) { // 70% similarity threshold
-        return true;
-      }
-    }
-    
-    return false;
+function extractTechnologiesFromIntroduction(answer) {
+  if (!answer || answer.length < 30) return [];
+  
+  const answerLower = answer.toLowerCase();
+  
+  if (/^(hi|hello|hey|greetings|good morning|good afternoon|good evening)[.!,]?$/i.test(answerLower)) {
+    return [];
   }
   
-  /**
-   * Normalize a question for better comparison
-   * ADDED: Missing method that was causing errors
-   */
-  normalizeQuestion(question) {
-    // Remove greeting parts if present
-    let normalized = question;
-    if (question.includes("Hi ") && question.includes("I'm Rahul")) {
-      const parts = question.split("CrackIt.AI.");
-      if (parts.length > 1) {
-        normalized = parts[1].trim();
+  const technologies = [];
+  
+  const techKeywords = [
+    'javascript', 'python', 'java', 'typescript', 'c#', 'php', 'golang', 'ruby', 'swift',
+    'react', 'angular', 'vue', 'svelte', 'node', 'express', 'django', 'flask', 'spring',
+    'mongodb', 'postgresql', 'mysql', 'sql', 'nosql', 'redis', 'elasticsearch',
+    'aws', 'azure', 'gcp', 'cloud', 'docker', 'kubernetes', 'serverless',
+    'ci/cd', 'jenkins', 'github', 'gitlab', 'bitbucket', 'git',
+    'rest', 'graphql', 'api', 'microservices', 'architecture', 'design patterns',
+    'android', 'ios', 'mobile', 'responsive', 'ux', 'ui', 'web', 'testing', 'devops'
+  ];
+  
+  techKeywords.forEach(tech => {
+    if (answerLower.includes(tech)) {
+      if (!technologies.some(t => t.includes(tech) || tech.includes(t))) {
+        technologies.push(tech);
       }
     }
+  });
+  
+  const experiencePatterns = [
+    /experience (?:with|in) (\w+(?:\s+\w+){0,2})/gi,
+    /worked (?:with|on) (\w+(?:\s+\w+){0,2})/gi,
+    /using (\w+(?:\s+\w+){0,2})/gi,
+    /developed (?:in|with|using) (\w+(?:\s+\w+){0,2})/gi
+  ];
+  
+  experiencePatterns.forEach(pattern => {
+    const matches = [...answerLower.matchAll(pattern)];
+    matches.forEach(match => {
+      if (match && match[1]) {
+        const tech = match[1].trim();
+        if (tech.length > 2 && !['the', 'and', 'for', 'that', 'with'].includes(tech)) {
+          if (!technologies.includes(tech)) {
+            technologies.push(tech);
+          }
+        }
+      }
+    });
+  });
+  
+  return technologies;
+}
+
+function analyzeAnswer(answer, role, answerQuality = null) {
+  if (!answer) return "";
+
+  const analysis = [];
+
+  if (answerQuality) {
+    switch (answerQuality.type) {
+      case 'dont_know':
+        analysis.push("The candidate indicated they don't know the answer to this question.");
+        break;
+      case 'inappropriate':
+        analysis.push("The candidate used inappropriate language in their response.");
+        break;
+      case 'off_topic':
+        analysis.push("The candidate's response was not related to the question asked.");
+        break;
+      default:
+        if (answer.length < 100) {
+          analysis.push("The candidate provided a brief response that lacks detail.");
+        } else if (answer.length > 500) {
+          analysis.push("The candidate provided a detailed response.");
+        }
+    }
+  } else {
+    if (answer.length < 100) {
+      analysis.push("The candidate provided a brief response that lacks detail.");
+    } else if (answer.length > 500) {
+      analysis.push("The candidate provided a detailed response.");
+    }
+  }
+
+  const technicalTerms = ['algorithm', 'framework', 'library', 'architecture', 'pattern', 
+                         'optimization', 'performance', 'scaling', 'database', 'cloud'];
+  const containsTechnical = technicalTerms.some(term => answer.toLowerCase().includes(term));
+  if (containsTechnical) {
+    analysis.push("The candidate mentioned technical concepts.");
+  }
+
+  const experienceTerms = ['years', 'experience', 'worked on', 'developed', 'built', 'created', 'managed', 'led'];
+  const containsExperience = experienceTerms.some(term => answer.toLowerCase().includes(term));
+  if (containsExperience) {
+    analysis.push("The candidate referenced their professional experience.");
+  }
+
+  const problemSolvingTerms = ['solved', 'solution', 'approach', 'resolved', 'fixed', 'implemented', 'improved'];
+  const containsProblemSolving = problemSolvingTerms.some(term => answer.toLowerCase().includes(term));
+  if (containsProblemSolving) {
+    analysis.push("The candidate discussed problem-solving approaches.");
+  }
+
+  if (answer.toLowerCase().includes('example') || 
+      answer.toLowerCase().includes('instance') || 
+      answer.toLowerCase().includes('case study')) {
+    analysis.push("The candidate provided specific examples.");
+  }
+
+  if (answer.toLowerCase().includes('star') || 
+      (answer.toLowerCase().includes('situation') && answer.toLowerCase().includes('result'))) {
+    analysis.push("The candidate followed STAR format.");
+  }
+
+  return analysis.join(' ');
+}
+
+function analyzeAnswerContent(answer, question) {
+  if (!answer) return { 
+    type: 'empty',
+    message: 'No answer provided'
+  };
+
+  const answerLower = answer.toLowerCase().trim();
+  
+  // Check for "I don't know" type responses
+  if (/^(i don't know|not sure|no idea|i have no clue|unsure|can't answer)/i.test(answerLower) || 
+      (answerLower.length < 20 && !question.includes("introduce yourself"))) {
+    return {
+      type: 'dont_know',
+      message: 'Candidate lacks knowledge on this topic',
+      details: answerLower.length < 20 ? 'Very brief answer' : 'Explicitly stated lack of knowledge'
+    };
+  }
+  
+  // Check for abusive or inappropriate content
+  const abusivePatterns = /\b(fuck|shit|damn|bitch|asshole|cunt|dick|wtf|stfu)\b/i;
+  if (abusivePatterns.test(answerLower)) {
+    return {
+      type: 'inappropriate',
+      message: 'Candidate used inappropriate language',
+      details: 'Answer contains abusive language'
+    };
+  }
+  
+  // Don't check relevance for introduction question, but check if introduction is too brief
+  if (question.toLowerCase().includes("introduce yourself")) {
+    // Check if introduction is just a greeting with no actual introduction
+    if (answerLower.length < 30 || 
+        /^(hi|hello|hey|greetings|good morning|good afternoon|good evening)[.!,]?$/i.test(answerLower)) {
+      return {
+        type: 'minimal_intro',
+        message: 'Candidate provided only a brief greeting',
+        details: 'No substantial introduction content'
+      };
+    }
     
-    // Remove candidate name if present
-    const namePrefixes = [", ", ": ", " - "];
-    for (const prefix of namePrefixes) {
-      const index = normalized.indexOf(prefix);
-      if (index > 0 && index < 20) { // Name typically appears near the start
-        normalized = normalized.substring(index + prefix.length);
+    return {
+      type: 'normal',
+      message: 'Candidate provided an introduction',
+      details: answerLower.length > 300 ? 'Detailed introduction' : 'Brief introduction'
+    };
+  }
+  
+  const questionKeywords = extractKeywords(question.toLowerCase());
+  const answerKeywords = extractKeywords(answerLower);
+  
+  const matches = questionKeywords.filter(keyword => 
+    answerKeywords.some(answerWord => 
+      answerWord.includes(keyword) || keyword.includes(answerWord)
+    )
+  );
+  
+  if (matches.length < Math.min(2, questionKeywords.length * 0.2)) {
+    return {
+      type: 'off_topic',
+      message: 'Answer appears unrelated to the question',
+      details: 'Few or no matching keywords between question and answer'
+    };
+  }
+  
+  return {
+    type: 'normal',
+    message: 'Standard answer provided',
+    details: answerLower.length > 300 ? 'Detailed answer' : 'Brief but relevant answer'
+  };
+}
+
+function extractTopicsFromAnswer(answer) {
+  if (!answer) return [];
+
+  const topics = [];
+  const text = answer.toLowerCase();
+
+  const topicKeywords = {
+    'frontend': ['react', 'angular', 'vue', 'javascript', 'html', 'css', 'ui', 'ux', 'design'],
+    'backend': ['api', 'server', 'database', 'node', 'express', 'django', 'flask', 'spring'],
+    'devops': ['ci/cd', 'pipeline', 'docker', 'kubernetes', 'deployment', 'aws', 'azure', 'cloud'],
+    'architecture': ['design', 'patterns', 'microservices', 'monolith', 'serverless', 'scale'],
+    'testing': ['unit test', 'integration test', 'test-driven', 'tdd', 'quality assurance', 'qa'],
+    'agile': ['scrum', 'sprint', 'kanban', 'jira', 'backlog', 'user story'],
+    'data': ['database', 'sql', 'nosql', 'mongodb', 'postgres', 'mysql', 'redis']
+  };
+
+  for (const [topic, keywords] of Object.entries(topicKeywords)) {
+    if (keywords.some(keyword => text.includes(keyword))) {
+      topics.push(topic);
+    }
+  }
+
+  const projectMatches = answer.match(/(?:project|application|app|developed|built|created)\s+(\w+(?:\s+\w+){0,3})/gi);
+  if (projectMatches && projectMatches.length > 0) {
+    topics.push('projects');
+  }
+
+  if (/(junior|entry|associate|graduate)/i.test(text)) {
+    topics.push('junior level experience');
+  } else if (/(senior|lead|architect|manager)/i.test(text)) {
+    topics.push('senior level experience');
+  }
+
+  return topics;
+}
+
+function extractNameFromIntroduction(answer) {
+  if (!answer) return null;
+  
+  const namePatterns = [
+    /my name is (\w+)/i,
+    /I'm (\w+)/i,
+    /I am (\w+)/i,
+    /This is (\w+)/i,
+    /^(\w+) here/i,
+    /^Hi,?\s+I'm (\w+)/i,
+    /^Hello,?\s+I'm (\w+)/i
+  ];
+  
+  for (const pattern of namePatterns) {
+    const match = answer.match(pattern);
+    if (match && match[1]) {
+      const lowercaseName = match[1].toLowerCase();
+      const commonWords = ['here', 'just', 'glad', 'happy', 'excited', 'looking', 'going'];
+      if (!commonWords.includes(lowercaseName) && lowercaseName.length > 1) {
+        return match[1];
+      }
+    }
+  }
+  
+  return null;
+}
+
+function extractBackgroundFromIntroduction(answer) {
+  if (!answer || answer.length < 30) return [];
+  const answerLower = answer.toLowerCase();
+  
+  if (/^(hi|hello|hey|greetings|good morning|good afternoon|good evening)[.!,]?$/i.test(answerLower)) {
+    return [];
+  }
+  
+  const background = [];
+  
+  const expPatterns = [
+    /(\d+)\s*(?:\+\s*)?years? of experience/i,
+    /working (?:for|since) (\d+)\s*(?:\+\s*)?years/i,
+    /(\d+)\s*(?:\+\s*)? years in/i
+  ];
+  
+  for (const pattern of expPatterns) {
+    const match = answer.match(pattern);
+    if (match && match[1]) {
+      const years = parseInt(match[1]);
+      if (years > 0) {
+        background.push(`${years} years of experience`);
         break;
       }
     }
-    
-    // Remove closing statement if present
-    const closingMarkers = [
-      "Thank you for your time", 
-      "This will be our final question",
-      "Is there anything else you'd like to ask"
-    ];
-    
-    for (const marker of closingMarkers) {
-      const index = normalized.indexOf(marker);
-      if (index > 0) {
-        normalized = normalized.substring(0, index).trim();
-      }
-    }
-    
-    return normalized.trim();
-  }
-
-  /**
-   * Calculate string similarity (Levenshtein distance based)
-   */
-  getStringSimilarity(str1, str2) {
-    // Convert to lowercase for case-insensitive comparison
-    const s1 = str1.toLowerCase();
-    const s2 = str2.toLowerCase();
-    
-    // If the strings are identical, return 1
-    if (s1 === s2) return 1.0;
-    
-    // If either string is empty, similarity is 0
-    if (s1.length === 0 || s2.length === 0) return 0.0;
-    
-    // Use the longer string as reference
-    const longer = s1.length > s2.length ? s1 : s2;
-    const shorter = s1.length > s2.length ? s2 : s1;
-    
-    // Calculate Levenshtein distance
-    let distance = 0;
-    
-    // Create two work vectors of integer distances
-    let v0 = Array(shorter.length + 1).fill(0);
-    let v1 = Array(shorter.length + 1).fill(0);
-    
-    // Initialize v0 (previous row of distances)
-    // This row is A[0][i]: edit distance from an empty string to the first i characters of longer
-    for (let i = 0; i <= shorter.length; i++) {
-      v0[i] = i;
-    }
-    
-    for (let i = 0; i < longer.length; i++) {
-      // Calculate v1 (current row distances) from the previous row v0
-      
-      // First element of v1 is A[i+1][0]
-      // Edit distance is delete (i+1) chars from longer to match empty string
-      v1[0] = i + 1;
-      
-      // Use formula to fill in the rest of the row
-      for (let j = 0; j < shorter.length; j++) {
-        // Calculating costs for A[i+1][j+1]
-        const deletionCost = v0[j + 1] + 1;
-        const insertionCost = v1[j] + 1;
-        const substitutionCost = longer[i] === shorter[j] ? v0[j] : v0[j] + 1;
-        
-        v1[j + 1] = Math.min(deletionCost, insertionCost, substitutionCost);
-      }
-      
-      // Swap v0 and v1 for next iteration
-      const temp = v0;
-      v0 = v1;
-      v1 = temp;
-    }
-    
-    // After the final swap, v0 contains the Levenshtein distance
-    distance = v0[shorter.length];
-    
-    // Calculate similarity score (0 to 1)
-    const maxLength = Math.max(s1.length, s2.length);
-    const similarity = (maxLength - distance) / maxLength;
-    
-    return similarity;
-  }
-
-  /**
-   * Extract important keywords from a question to check for conceptual similarity
-   */
-  extractKeywords(text) {
-    // Common filler words to ignore
-    const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'with', 'to', 'from', 
-                      'for', 'about', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 
-                      'have', 'has', 'had', 'do', 'does', 'did', 'can', 'could', 'would',
-                      'should', 'might', 'may', 'must', 'shall'];
-    
-    // Normalize and split text
-    const words = text.toLowerCase()
-                      .replace(/[.,?!;:()"']/g, '')
-                      .split(/\s+/)
-                      .filter(word => word.length > 2 && !stopWords.includes(word));
-    
-    // Return unique keywords
-    return [...new Set(words)];
-  }
-
-  /**
-   * Check if this should be the last question based on interview data
-   * FIXED: Improved detection of last question
-   */
-  isLastQuestion(interviewData) {
-    const maxQuestions = this.getMaxQuestions(interviewData.settings.duration);
-    return interviewData.questions.length >= maxQuestions - 1; // Changed from -2 to -1
-  }
-
-  /**
-   * Get max questions based on interview duration
-   */
-  getMaxQuestions(duration) {
-    switch (duration) {
-      case "short": return 5;
-      case "medium": return 8;
-      case "long": return 12;
-      default: return 8;
-    }
-  }
-
-  /**
-   * Generate a unique question when one is repeated
-   */
-  async generateUniqueQuestion(interviewType, settings, askedQuestions, userName, isLastQuestion) {
-    // Build a prompt specifically requesting a unique question
-    const focusAreas = settings.focus && settings.focus.length > 0 
-      ? `Focus on these specific areas: ${settings.focus.join(", ")}` 
-      : "";
-    
-    const askedList = Array.from(askedQuestions).slice(0, 5).join("\n- ");
-    
-    const systemPrompt = `You are Rahul, a Software Engineer at CrackIt.AI.
-Generate a NEW ${interviewType} interview question on ${settings.difficulty} level that is DIFFERENT from these already asked questions:
-- ${askedList}
-
-${focusAreas}
-${isLastQuestion ? "This will be the final question of the interview." : ""}
-The question should be appropriate for a ${settings.difficulty} level ${interviewType} interview.
-Return ONLY the question addressed to ${userName}, no other text.`;
-
-    try {
-      const response = await this.genAI.models.generateContent({
-        model: this.model,
-        contents: [
-          { role: "system", text: systemPrompt }
-        ],
-      });
-      
-      const question = response.text;
-      console.log("Generated unique question:", question);
-      return question;
-    } catch (error) {
-      console.error("Error generating unique question:", error);
-      return `${userName}, could you tell me about a challenge you faced with ${settings.focus?.[0] || interviewType} and how you overcame it?`;
-    }
   }
   
-  /**
-   * Ensure the question is personalized with the candidate's name
-   */
-  ensurePersonalization(question, userName) {
-    if (!question.includes(userName)) {
-      return `${userName}, ${question}`;
-    }
-    return question;
-  }
-
-  /**
-   * Create a fallback response when AI processing fails
-   */
-  createFallbackResponse(userMessage, interviewType, interviewData, userName, isLastQuestion) {
-    let question = this.getFallbackQuestion(interviewType, userName);
-    
-    if (isLastQuestion) {
-      question += "\n\n" + this.closingTemplates[interviewType];
-    }
-    
-    return {
-      response: question,
-      feedback: this.generateFallbackFeedback(userMessage, interviewType),
-      lastQuestion: interviewData.questions.length > 0 ? 
-        interviewData.questions[interviewData.questions.length - 1].text : 
-        question
-    };
-  }
-
-  /**
-   * Extract response components from text if JSON parsing fails
-   */
-  extractResponseComponents(text, userMessage, interviewType) {
-    const question = this.extractQuestion(text);
-    return {
-      question: question || "Could you tell me more about your experience in this area?",
-      feedback: this.generateFallbackFeedback(userMessage, interviewType)
-    };
+  if (answerLower.includes("graduate") || 
+      answerLower.includes("degree") ||
+      answerLower.includes("university") ||
+      answerLower.includes("college") ||
+      answerLower.includes("bachelor") ||
+      answerLower.includes("master") ||
+      answerLower.includes("phd")) {
+    background.push("educational background");
   }
   
-  /**
-   * Extract a question from text
-   */
-  extractQuestion(text) {
-    // Try to find a question in the text
-    const lines = text.split(/[\n\r]+/);
-    for (const line of lines) {
-      if (line.trim().endsWith('?')) {
-        return line.trim();
-      }
+  if (answerLower.includes("currently") || answerLower.includes("working as") || answerLower.includes("work as")) {
+    background.push("current role");
+  }
+  
+  const techTerms = extractKeyTerms(answer);
+  if (techTerms.length > 0) {
+    background.push("technical skills");
+  }
+  
+  return background;
+}
+
+function determineTopicsToAsk(currentIndex, totalQuestions, role, mentionedSkills, difficulty) {
+  const roleLower = role.toLowerCase();
+  const progress = currentIndex / totalQuestions;
+  const topics = [];
+
+  if (progress < 0.3) {
+    if (roleLower.includes('frontend') && !mentionedSkills.has('javascript')) {
+      topics.push('JavaScript fundamentals');
+    } else if (roleLower.includes('backend') && !mentionedSkills.has('api')) {
+      topics.push('API design');
+    } else if (roleLower.includes('full')) {
+      topics.push('frontend-backend integration');
     }
-    
-    // If no question found, return first substantial line
-    for (const line of lines) {
-      if (line.trim().length > 20) {
-        return line.trim();
-      }
+  } else if (progress >= 0.3 && progress < 0.7) {
+    if (difficulty === 'hard' || difficulty === 'medium') {
+      topics.push('system design');
     }
-    
-    return null;
-  }
 
-  /**
-   * Generate fallback feedback when AI processing fails
-   */
-  generateFallbackFeedback(answer, interviewType) {
-    const wordCount = answer.split(/\s+/).length;
-    const score = wordCount > 100 ? 7 : wordCount > 50 ? 5 : 3;
-    
-    return {
-      strengths: [
-        "You provided a response to the question",
-        wordCount > 100 ? "Your answer was detailed" : "You addressed the core question"
-      ],
-      improvements: [
-        "Consider structuring your answer using the STAR method",
-        "Add specific examples to strengthen your response",
-        "Quantify results where possible"
-      ],
-      score: score,
-      suggestedTopics: [
-        "Specific examples from your experience",
-        "Quantifiable results or metrics",
-        "Lessons learned from the situation"
-      ]
-    };
-  }
+    topics.push('problem-solving approach');
 
-  /**
-   * Get a fallback question if Gemini API call fails
-   */
-  getFallbackQuestion(interviewType, userName) {
-    const questions = {
-      technical: [
-        `${userName}, how would you approach debugging a complex performance issue in a web application?`,
-        `${userName}, what's your approach to ensuring code quality and maintainability in team projects?`,
-        `${userName}, how do you stay current with industry trends and new technologies?`
-      ],
-      behavioral: [
-        `${userName}, describe a situation where you had to influence someone without having direct authority.`,
-        `${userName}, tell me about a time when you received difficult feedback. How did you respond?`,
-        `${userName}, how have you handled disagreements with team members in the past?`
-      ],
-      hr: [
-        `${userName}, what are you looking for in your next role?`,
-        `${userName}, how would you describe your ideal work environment?`,
-        `${userName}, what are your greatest strengths and areas for improvement?`
-      ]
-    };
-    
-    const questionPool = questions[interviewType] || questions.behavioral;
-    return questionPool[Math.floor(Math.random() * questionPool.length)];
-  }
-
-  /**
-   * Generate comprehensive interview results
-   */
-  async generateInterviewResults(interview) {
-    try {
-      // Use Gemini to analyze the entire interview
-      const interviewSummary = this.prepareInterviewSummary(interview);
-      
-      const systemPrompt = `You are an expert interview coach analyzing an interview.
-Based on the interview summary provided, generate a comprehensive evaluation with the following structure:
-{
-  "overallScore": <number between 1-10>,
-  "feedback": "<detailed paragraph with overall assessment>",
-  "skillScores": {
-    "communication": <number between 1-10>,
-    "technical": <number between 1-10 or null if not applicable>,
-    "problemSolving": <number between 1-10>,
-    "behavioral": <number between 1-10 or null if not applicable>,
-    "leadership": <number between 1-10>
-  },
-  "strengths": ["list of 3-5 key strengths demonstrated"],
-  "weaknesses": ["list of 3-4 key areas for improvement"],
-  "improvementTips": ["list of 5 specific actionable tips to improve"]
-}`;
-
-      // Generate interview results with new format
-      const response = await this.genAI.models.generateContent({
-        model: this.model,
-        contents: [
-          { role: "system", text: systemPrompt },
-          { role: "user", text: `Please analyze this interview and provide feedback: ${interviewSummary}` }
-        ],
-        generationConfig: {
-          temperature: 0.2,
-          responseFormat: { type: "json" }
-        }
-      });
-
-      // Handle the response
-      const responseText = response.text;
-      
-      try {
-        // Clean up potential text around JSON
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsedResults = JSON.parse(jsonMatch[0]);
-          console.log("Generated interview results successfully");
-          return parsedResults;
-        }
-      } catch (error) {
-        console.error("Error parsing interview results:", error);
-      }
-      
-      // Fallback to manual calculation if parsing fails
-      return this.calculateFallbackResults(interview);
-      
-    } catch (error) {
-      console.error("Error generating interview results:", error);
-      return this.calculateFallbackResults(interview);
+    if (!mentionedSkills.has('testing')) {
+      topics.push('testing strategies');
     }
-  }
-
-  /**
-   * Calculate fallback results if AI fails
-   */
-  calculateFallbackResults(interview) {
-    // Simple score calculation based on available feedback
-    let totalScore = 0;
-    let validScores = 0;
-    
-    interview.questions.forEach(q => {
-      if (q.feedback && typeof q.feedback.score === 'number') {
-        totalScore += q.feedback.score;
-        validScores++;
-      } else if (q.feedback && typeof q.feedback.rating === 'number') {
-        totalScore += q.feedback.rating;
-        validScores++;
-      }
-    });
-    
-    const overallScore = validScores > 0 ? Math.round(totalScore / validScores) : 5;
-    
-    // Generate a basic feedback message
-    let feedbackMessage;
-    if (overallScore >= 8) {
-      feedbackMessage = "Excellent performance! You demonstrated strong knowledge and communication skills throughout the interview. Your answers were well-structured and showed depth of understanding.";
-    } else if (overallScore >= 6) {
-      feedbackMessage = "Good job on your interview. You showed solid knowledge in several areas. With some additional preparation and more specific examples, you could further strengthen your responses.";
-    } else {
-      feedbackMessage = "Thank you for participating in this interview. There are several areas where additional preparation would help. Focus on structuring your answers with specific examples and demonstrating your problem-solving approach.";
+  } else {
+    if (!mentionedSkills.has('teamwork')) {
+      topics.push('team collaboration');
     }
-    
-    return {
-      overallScore,
-      feedback: feedbackMessage,
-      skillScores: {
-        communication: Math.min(overallScore + 1, 10),
-        technical: interview.type === 'technical' ? overallScore : null,
-        problemSolving: Math.max(overallScore - 1, 1),
-        behavioral: interview.type === 'behavioral' ? overallScore : null,
-        leadership: Math.max(overallScore - 2, 1)
-      },
-      strengths: [
-        "Attempted to answer all questions",
-        "Participated actively in the interview process",
-        "Showed interest in the subject matter"
-      ],
-      weaknesses: [
-        "Could provide more specific examples",
-        "May need to structure answers more clearly",
-        "Could demonstrate deeper technical knowledge"
-      ],
-      improvementTips: [
-        "Practice the STAR method for answering behavioral questions",
-        "Prepare specific examples from your experience ahead of time",
-        "Quantify your achievements when possible",
-        "Research common interview questions for your role",
-        "Consider mock interviews for additional practice"
-      ]
-    };
-  }
 
-  /**
-   * Prepare a summary of the interview for analysis
-   */
-  prepareInterviewSummary(interview) {
-    let summary = `Interview Type: ${interview.type}\n`;
-    summary += `Difficulty Level: ${interview.settings.difficulty}\n`;
-    summary += `Focus Areas: ${interview.settings.focus ? interview.settings.focus.join(", ") : "None specified"}\n\n`;
-    
-    // Add Q&A pairs
-    interview.questions.forEach((q, index) => {
-      summary += `Question ${index + 1}: ${q.text}\n`;
-      summary += `Answer: ${q.answer}\n`;
-      
-      // Add feedback if available
-      if (q.feedback) {
-        summary += `Rating: ${q.feedback.score || q.feedback.rating || 0}/10\n`;
-        summary += `Strengths: ${q.feedback.strengths ? q.feedback.strengths.join(", ") : "None provided"}\n`;
-        summary += `Improvements: ${q.feedback.improvements ? q.feedback.improvements.join(", ") : "None provided"}\n`;
-      }
-      summary += '\n';
-    });
-    
-    return summary;
-  }
-
-  /**
-   * Clear interview context when interview is completed
-   */
-  clearInterviewContext(interviewId) {
-    if (this.interviewContexts.has(interviewId)) {
-      this.interviewContexts.delete(interviewId);
-      console.log(`Cleared interview context for interview ID: ${interviewId}`);
-      return true;
+    if (difficulty === 'hard') {
+      topics.push('leadership experience');
     }
-    return false;
+
+    topics.push('project challenges');
+  }
+
+  return topics;
+}
+
+function getMaxQuestionsByDuration(duration) {
+  switch (duration) {
+    case 'short': return 5;
+    case 'medium': return 8;
+    case 'long': return 12;
+    default: return 8;
   }
 }
 
-// Initialize and export the service
-const aiService = new GeminiAIServices();
-export default aiService;
+// Generate a question with retries
+async function generateWithRetries(prompt, role, candidateName, isFirstQuestion, isSecondQuestion) {
+  let retries = 0;
+  const maxRetries = 5;
+  
+  while (retries < maxRetries) {
+    try {
+      console.log(`Attempt ${retries + 1} to generate question`);
+      const response = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: prompt,
+        generationConfig: {
+          temperature: 0.4, // Lower temperature for more consistent output
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        }
+      });
+      
+      const question = response.text.trim();
+      
+      console.log(`Generated (first 60 chars): "${question.substring(0, 60)}..."`);
+      
+      const isValid = validateQuestionFormat(question, isFirstQuestion, isSecondQuestion);
+      if (isValid) {
+        return question;
+      }
+      
+      console.log(`Invalid question format on attempt ${retries + 1}. Retrying...`);
+    } catch (error) {
+      console.error(`Error on attempt ${retries + 1}:`, error);
+    }
+    
+    retries++;
+    await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, retries)));
+  }
+  
+  console.warn("All question generation attempts failed. Using fallback question");
+  return getFallbackQuestion(role, candidateName, isFirstQuestion, isSecondQuestion);
+}
+
+// Validate question format
+function validateQuestionFormat(question, isFirstQuestion, isSecondQuestion) {
+  if (!question || question.length < 20) {
+    console.log("Question validation failed: Too short or empty question");
+    return false;
+  }
+  
+  if (isFirstQuestion) {
+    const hasHi = question.includes("Hi");
+    const hasRahul = question.includes("Rahul");
+    const hasIntroduce = question.includes("introduce yourself");
+    
+    const isValid = hasHi && hasRahul && hasIntroduce;
+    
+    if (!isValid) {
+      console.log(`First question validation failed: hasHi=${hasHi}, hasRahul=${hasRahul}, hasIntroduce=${hasIntroduce}`);
+    }
+    
+    return isValid;
+  }
+  
+  if (isSecondQuestion) {
+    const hasAcknowledgment = 
+      question.includes("Great, thank you") || 
+      question.includes("Thanks for") || 
+      question.includes("Thank you for") ||
+      question.includes("Thanks for sharing") ||
+      question.includes("Let's start our discussion");
+      
+    const hasTechnicalTransition = 
+      question.includes("Let's dive into") || 
+      question.includes("Let's talk about") ||
+      question.includes("Let's get into") ||
+      question.includes("Let's discuss") ||
+      question.includes("Let's start with");
+    
+    const hasQuestion = 
+      question.includes("Can you explain") || 
+      question.includes("Tell me about") || 
+      question.includes("Could you describe") ||
+      question.includes("What technologies");
+    
+    const isValid = hasAcknowledgment && (hasTechnicalTransition || hasQuestion);
+    
+    if (!isValid) {
+      console.log(`Second question validation failed: hasAcknowledgment=${hasAcknowledgment}, hasTechnicalTransition=${hasTechnicalTransition}, hasQuestion=${hasQuestion}`);
+      console.log(`Second question content: "${question.substring(0, 100)}..."`);
+    }
+    
+    return isValid;
+  }
+  
+  const hasQuestionMark = question.includes("?");
+  const hasQuestionWord = 
+    question.toLowerCase().includes("describe") || 
+    question.toLowerCase().includes("explain") || 
+    question.toLowerCase().includes("tell me about") || 
+    question.toLowerCase().includes("how would you");
+  
+  const isValid = hasQuestionMark || hasQuestionWord;
+  
+  if (!isValid) {
+    console.log(`Regular question validation failed: hasQuestionMark=${hasQuestionMark}, hasQuestionWord=${hasQuestionWord}`);
+  }
+  
+  return isValid;
+}
+
+// Get fallback question
+function getFallbackQuestion(role, candidateName, isFirstQuestion, isSecondQuestion) {
+  if (isFirstQuestion) {
+    return `Hi ${candidateName}! I'm Rahul, a Software Engineer at Cisco. Nice to meet you. Let's start your mock interview — nothing to worry about, just be yourself.\n\nSo, to begin with, can you briefly introduce yourself?`;
+  }
+  
+  if (isSecondQuestion) {
+    return `Let's start our discussion. I'd like to dive into some technical questions to understand your skills better.\n\nCan you explain your experience with ${role} and what technologies you're most comfortable with?`;
+  }
+  
+  const fallbacks = [
+    `Nice explanation. Now, let's talk about problem-solving —\n\nCan you describe a challenging technical problem you faced as a ${role} and how you solved it?`,
+    `Alright. Imagine your app is getting slower — what are 2-3 techniques you'd use to optimize performance in a large application?`,
+    `Now switching gears a bit…\n\nHow do you stay updated with the latest technologies and trends in the ${role} field?`,
+    `Cool. Let's go into collaboration —\n\nCan you describe your experience working in a team environment and how you handle conflicts?`
+  ];
+  
+  return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+}
+
+// Clean up question text
+function cleanupQuestion(question, candidateName, role, isFirstQuestion, isSecondQuestion) {
+  question = question.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}]/ug, '');
+  
+  question = question.replace(/\n{3,}/g, '\n\n').trim();
+  
+  if (!isFirstQuestion) {
+    const patterns = [
+      /Hi,?\s+I'm Rahul.*?\./i,
+      /Hello,?\s+I'm Rahul.*?\./i,
+      /This is Rahul.*?\./i,
+      /My name is Rahul.*?\./i,
+    ];
+    
+    for (const pattern of patterns) {
+      question = question.replace(pattern, '');
+    }
+    
+    question = question.trim().replace(/^[a-z]/, match => match.toUpperCase());
+  }
+  
+  if (isFirstQuestion && (!question.includes("Hi") || !question.includes("Rahul"))) {
+    return getFallbackQuestion(role, candidateName, true, false);
+  }
+  
+  if (isSecondQuestion) {
+    const hasTechnicalTransition = 
+      question.includes("Let's dive into") || 
+      question.includes("Let's talk about") ||
+      question.includes("Let's get into") ||
+      question.includes("Let's discuss") ||
+      question.includes("Let's start with");
+      
+    if (!hasTechnicalTransition) {
+      return getFallbackQuestion(role, candidateName, false, true);
+    }
+  }
+  
+  return question;
+}
+
+// Find next unanswered question
+function findNextUnansweredQuestionIndex(interview) {
+  for (let i = 0; i < interview.questions.length; i++) {
+    const question = interview.questions[i];
+    if (question && question.text && question.status !== 'answered') {
+      return i;
+    }
+  }
+  return -1;
+}
+
+// Helper function to evaluate answer quality
+function evaluateAnswerQuality(answer, question) {
+  if (!answer) return { score: 3, hasSituation: false, hasTask: false, hasAction: false, hasResult: false };
+  
+  const answerText = answer.toLowerCase();
+  const questionText = question.toLowerCase();
+  
+  const length = answer.length;
+  const hasTechnicalTerms = /\b(algorithm|function|method|class|component|api|database|code|system|architecture|design pattern)\b/i.test(answerText);
+  const hasExamples = /\b(example|for instance|for example|such as|like when|once when|i worked on|i developed|i created)\b/i.test(answerText);
+  const hasDetails = length > 300;
+  
+  const hasSituation = /\b(situation|context|background|when i|there was a time|in my previous|at my last|scenario)\b/i.test(answerText);
+  const hasTask = /\b(task|goal|objective|needed to|had to|was asked to|responsible for|assigned to)\b/i.test(answerText);
+  const hasAction = /\b(i implemented|i designed|i developed|i created|i wrote|i used|i applied|i resolved|i decided|i led)\b/i.test(answerText);
+  const hasResult = /\b(result|outcome|achieved|improved|increased|decreased|reduced|enhanced|successfully|completed|delivered)\b/i.test(answerText);
+  
+  const isRelevant = checkRelevance(answerText, questionText);
+  
+  let score = 5;
+  
+  if (length < 100) score -= 2;
+  else if (length > 500) score += 1;
+  
+  if (hasTechnicalTerms) score += 1;
+  if (hasExamples) score += 1;
+  if (hasDetails) score += 1;
+  
+  let starPoints = 0;
+  if (hasSituation) starPoints += 0.5;
+  if (hasTask) starPoints += 0.5;
+  if (hasAction) starPoints += 0.5;
+  if (hasResult) starPoints += 0.5;
+  score += starPoints;
+  
+  if (!isRelevant) score -= 2;
+  
+  score = Math.max(1, Math.min(10, score));
+  
+  return { 
+    score, 
+    hasSituation, 
+    hasTask, 
+    hasAction, 
+    hasResult
+  };
+}
+
+// Check relevance of answer to question
+function checkRelevance(answer, question) {
+  const questionKeywords = extractKeywords(question);
+  const answerKeywords = extractKeywords(answer);
+  
+  const matches = questionKeywords.filter(keyword => 
+    answerKeywords.some(answerWord => 
+      answerWord.includes(keyword) || keyword.includes(answerWord)
+    )
+  );
+  
+  return matches.length >= Math.min(2, questionKeywords.length * 0.3);
+}
+
+// Extract keywords from text
+function extractKeywords(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .split(/\s+/)
+    .filter(word => word.length > 3)
+    .filter(word => !['what', 'when', 'where', 'which', 'while', 'would', 'could', 'should', 
+                       'tell', 'explain', 'about', 'have', 'your', 'with', 'that', 'this',
+                       'there', 'their', 'were', 'from', 'will', 'more', 'much', 'some'].includes(word));
+}
+
+// Generate strengths based on answer quality
+function generateStrengths(answer, quality) {
+  const strengths = [];
+  
+  if (quality.score >= 7) {
+    strengths.push("Provided a comprehensive and well-structured answer");
+  }
+  
+  if (answer.length > 300) {
+    strengths.push("Good level of detail in your response");
+  }
+  
+  if (quality.hasSituation && quality.hasResult) {
+    strengths.push("Effectively used the STAR method to structure your answer");
+  }
+  
+  if (/\b(specific|concrete|particular|detailed|measurable)\b/i.test(answer)) {
+    strengths.push("Used specific examples to illustrate your points");
+  }
+  
+  if (/\b(data|metrics|numbers|percent|percentage|improved|increased|reduced|enhanced)\b/i.test(answer)) {
+    strengths.push("Included quantifiable results and metrics");
+  }
+  
+  if (strengths.length < 2) {
+    strengths.push("Clear communication style");
+    if (strengths.length < 2) {
+      strengths.push("Demonstrated relevant knowledge");
+    }
+  }
+  
+  return strengths.slice(0, 3);
+}
+
+// Generate improvement areas based on answer quality
+function generateImprovements(answer, quality) {
+  const improvements = [];
+  
+  if (answer.length < 200) {
+    improvements.push("Provide more detailed explanations and examples");
+  }
+  
+  if (!quality.hasSituation || !quality.hasTask || !quality.hasAction || !quality.hasResult) {
+    improvements.push("Structure your answer using the STAR method (Situation, Task, Action, Result)");
+  }
+  
+  if (!/\b(example|instance|scenario|case|situation)\b/i.test(answer.toLowerCase())) {
+    improvements.push("Include specific examples from your experience");
+  }
+  
+  if (!/\b(numbers|metrics|data|statistics|percent|percentage|quantify|measure)\b/i.test(answer.toLowerCase())) {
+    improvements.push("Quantify your achievements with metrics when possible");
+  }
+  
+  if (answer.split(/[.!?]/).length < 4) {
+    improvements.push("Develop more complete narratives with beginning, middle, and end");
+  }
+  
+  if (improvements.length < 2) {
+    improvements.push("Focus more on your specific contributions rather than team efforts");
+    if (improvements.length < 2) {
+      improvements.push("Practice more concise and focused responses");
+    }
+  }
+  
+  return improvements.slice(0, 3);
+}
+
+// Format skill feedback
+function formatSkillFeedback(skill, isStrength) {
+  const skillMap = {
+    technical: isStrength ? 
+      "Strong technical knowledge and application" : 
+      "Technical concept explanation could be improved",
+    communication: isStrength ? 
+      "Clear and effective communication" : 
+      "Communication clarity and structure",
+    problemSolving: isStrength ? 
+      "Excellent problem-solving approach" : 
+      "Problem-solving methodology needs development",
+    behavioral: isStrength ? 
+      "Strong behavioral examples" : 
+      "More detailed behavioral scenarios needed",
+    leadership: isStrength ? 
+      "Demonstrated leadership qualities" : 
+      "Leadership examples could be stronger"
+  };
+  
+  return skillMap[skill] || (isStrength ? 
+    `Strong ${skill} skills` : 
+    `${skill.charAt(0).toUpperCase() + skill.slice(1)} needs improvement`);
+}
+
+// Generate improvement tips
+function generateImprovementTips(skillScores) {
+  const tips = [];
+  
+  if (skillScores.technical < 7) {
+    tips.push("Review technical fundamentals and practice explaining concepts clearly");
+  }
+  
+  if (skillScores.communication < 7) {
+    tips.push("Practice structured responses using the STAR method");
+  }
+  
+  if (skillScores.problemSolving < 7) {
+    tips.push("Work on breaking down problems step-by-step when explaining solutions");
+  }
+  
+  if (skillScores.behavioral < 7) {
+    tips.push("Prepare more specific examples of past experiences to showcase your skills");
+  }
+  
+  if (tips.length < 2) {
+    tips.push("Quantify your achievements with metrics when discussing past experiences");
+  }
+  
+  if (tips.length < 3) {
+    tips.push("Focus on demonstrating business impact in your answers");
+  }
+  
+  return tips;
+}
+
+// Determine question type from text
+function determineQuestionType(questionText) {
+  const text = questionText.toLowerCase();
+  
+  if (/\b(code|algorithm|design pattern|architecture|system design|technical|function|implementation|data structure)\b/i.test(text)) {
+    return 'technical';
+  }
+  
+  if (/\b(lead|team|manage|mentor|guided|directed|leadership|strategy|vision)\b/i.test(text)) {
+    return 'leadership';
+  }
+  
+  if (/\b(tell me about a time|situation|challenge|conflict|difficult|disagree|mistake|fail|success)\b/i.test(text)) {
+    return 'behavioral';
+  }
+  
+  return 'general';
+}
+
+// Generate key insight for an answer
+function generateKeyInsight(answer, question, quality, questionType) {
+  if (!answer || answer.length < 30) return "Answer was too brief to provide meaningful insight.";
+  
+  if (questionType === 'technical') {
+    if (quality.score >= 8) {
+      return "Your technical explanation demonstrates strong domain knowledge. Continue to tie your technical discussion to business value.";
+    } else if (quality.score >= 5) {
+      return "You have a solid technical foundation but could benefit from more concrete examples.";
+    } else {
+      return "Focus on building a stronger understanding of technical concepts and practice explaining them clearly.";
+    }
+  } else if (questionType === 'behavioral') {
+    if (quality.score >= 8) {
+      return "Your structured response using the STAR method effectively showcased your experience.";
+    } else if (quality.score >= 5) {
+      return "While you shared relevant experiences, aim to more clearly outline the situation, task, action, and result.";
+    } else {
+      return "Try using the STAR method to better structure your behavioral responses with specific examples.";
+    }
+  } else if (questionType === 'leadership') {
+    if (quality.score >= 8) {
+      return "You effectively demonstrated leadership qualities with strong examples.";
+    } else if (quality.score >= 5) {
+      return "You touched on leadership concepts, but could provide more specific instances of your impact.";
+    } else {
+      return "Focus on highlighting specific leadership experiences and their measurable outcomes.";
+    }
+  } else {
+    if (quality.score >= 8) {
+      return "Your answer was comprehensive and well-articulated.";
+    } else if (quality.score >= 5) {
+      return "Your answer addressed the question but could benefit from more specificity.";
+    } else {
+      return "Try to provide more detailed responses with concrete examples from your experience.";
+    }
+  }
+}
+
+// Generate suggested topics for further study
+function generateSuggestedTopics(answer, question, questionType) {
+  const questionText = question.toLowerCase();
+  const answerText = answer.toLowerCase();
+  const topics = [];
+  
+  if (questionType === 'technical') {
+    if (questionText.includes('performance') && !answerText.includes('profil')) {
+      topics.push("Performance profiling techniques");
+    }
+    if (questionText.includes('scale') && !answerText.includes('load balanc')) {
+      topics.push("Load balancing strategies");
+    }
+    if (questionText.includes('security') && !answerText.includes('vulnerab')) {
+      topics.push("Common security vulnerabilities");
+    }
+    if (questionText.includes('design') && !answerText.includes('pattern')) {
+      topics.push("Design patterns");
+    }
+  } else if (questionType === 'behavioral') {
+    if (questionText.includes('conflict') && !answerText.includes('resolv')) {
+      topics.push("Conflict resolution techniques");
+    }
+    if (questionText.includes('challeng') && !answerText.includes('outcome')) {
+      topics.push("Outcome-oriented storytelling");
+    }
+    if (questionText.includes('fail') && !answerText.includes('learn')) {
+      topics.push("Learning from failures");
+    }
+  }
+  
+  if (topics.length === 0) {
+    if (questionType === 'technical') {
+      topics.push("Technical implementation details");
+      topics.push("Industry best practices");
+    } else if (questionType === 'behavioral') {
+      topics.push("STAR method implementation");
+      topics.push("Quantifying achievements");
+    } else if (questionType === 'leadership') {
+      topics.push("Leadership frameworks");
+      topics.push("Team motivation strategies");
+    } else {
+      topics.push("Concrete examples from experience");
+      topics.push("Structured communication");
+    }
+  }
+  
+  return topics.slice(0, 2);
+}
+
+// Calculate STAR ratings across all questions
+function calculateStarRatings(questions) {
+  const validQuestions = questions.filter(q => q && q.answer && q.feedback && q.feedback.star);
+  
+  if (validQuestions.length === 0) return {
+    situation: 0,
+    task: 0,
+    action: 0,
+    result: 0
+  };
+  
+  let situationCount = 0;
+  let taskCount = 0;
+  let actionCount = 0;
+  let resultCount = 0;
+  
+  validQuestions.forEach(q => {
+    if (q.feedback.star.situation === 'Present') situationCount++;
+    if (q.feedback.star.task === 'Present') taskCount++;
+    if (q.feedback.star.action === 'Present') actionCount++;
+    if (q.feedback.star.result === 'Present') resultCount++;
+  });
+  
+  const totalQuestions = validQuestions.length;
+  
+  return {
+    situation: Math.round((situationCount / totalQuestions) * 100),
+    task: Math.round((taskCount / totalQuestions) * 100),
+    action: Math.round((actionCount / totalQuestions) * 100),
+    result: Math.round((resultCount / totalQuestions) * 100)
+  };
+}
+
+// Calculate answer length statistics
+function calculateAnswerLengths(questions) {
+  const lengths = questions
+    .filter(q => q && q.answer)
+    .map(q => q.answer.length);
+    
+  if (lengths.length === 0) return { average: 0, min: 0, max: 0 };
+  
+  const sum = lengths.reduce((acc, len) => acc + len, 0);
+  
+  return {
+    average: Math.round(sum / lengths.length),
+    min: Math.min(...lengths),
+    max: Math.max(...lengths)
+  };
+}
+
+// Analyze topic coverage based on role
+function analyzeTopicCoverage(questions, role) {
+  const roleTopics = getRoleSpecificTopics(role);
+  const coverage = {};
+  
+  roleTopics.forEach(topic => {
+    coverage[topic] = 0;
+  });
+  
+  questions.forEach(q => {
+    if (!q || !q.answer) return;
+    
+    const answerLower = q.answer.toLowerCase();
+    roleTopics.forEach(topic => {
+      if (answerLower.includes(topic.toLowerCase())) {
+        coverage[topic] += 1;
+      }
+    });
+  });
+  
+  return coverage;
+}
+
+// Get role-specific topics
+function getRoleSpecificTopics(role) {
+  const roleLower = role.toLowerCase();
+  
+  if (roleLower.includes('frontend')) {
+    return ['JavaScript', 'HTML', 'CSS', 'React', 'Angular', 'Vue', 'Responsive design', 'State management', 'Performance'];
+  } else if (roleLower.includes('backend')) {
+    return ['APIs', 'Database', 'Security', 'Scalability', 'Performance', 'Architecture', 'Caching', 'Microservices'];
+  } else if (roleLower.includes('full')) {
+    return ['Frontend', 'Backend', 'Database', 'API integration', 'Authentication', 'Deployment', 'Architecture'];
+  } else if (roleLower.includes('devops')) {
+    return ['CI/CD', 'Docker', 'Kubernetes', 'Cloud', 'Monitoring', 'Security', 'Automation'];
+  } else {
+    return ['Problem solving', 'Collaboration', 'Communication', 'Architecture', 'Code quality', 'Testing'];
+  }
+}
+
+// Generate personalized overall feedback
+function generateOverallFeedback(overallScore, role) {
+  const rolePart = getRoleFeedbackPart(role);
+  
+  if (overallScore >= 8) {
+    return `Excellent interview performance! You demonstrated strong ${rolePart} knowledge, good communication skills, and provided detailed answers with relevant examples. You're well-prepared for real interviews.`;
+  } else if (overallScore >= 6) {
+    return `Good interview performance overall. You have a solid foundation in ${rolePart} concepts and were able to answer most questions effectively. Some areas could benefit from more preparation and specific examples.`;
+  } else if (overallScore >= 4) {
+    return `You provided reasonable answers but need more preparation in key ${rolePart} areas. Try to be more specific, provide more concrete examples, and structure your answers more clearly.`;
+  } else {
+    return `You need more preparation before a real ${rolePart} interview. Focus on developing more detailed answers, practicing technical explanations, and using the STAR method to structure your responses.`;
+  }
+}
+
+// Get role-specific feedback part
+function getRoleFeedbackPart(role) {
+  const roleLower = role.toLowerCase();
+  
+  if (roleLower.includes('frontend')) {
+    return 'frontend development';
+  } else if (roleLower.includes('backend')) {
+    return 'backend development';
+  } else if (roleLower.includes('full')) {
+    return 'full-stack';
+  } else if (roleLower.includes('devops')) {
+    return 'DevOps';
+  } else if (roleLower.includes('data')) {
+    return 'data science';
+  } else if (roleLower.includes('qa')) {
+    return 'quality assurance';
+  } else {
+    return 'technical';
+  }
+}
+
+// Generate career insights based on performance
+function generateCareerInsights(skillScores, role, difficulty) {
+  const insights = [];
+  const roleLower = role.toLowerCase();
+  const avgScore = Object.values(skillScores).reduce((a, b) => a + b, 0) / Object.values(skillScores).length;
+  
+  if (roleLower.includes('frontend')) {
+    if (skillScores.technical > 7) {
+      insights.push("Your strong technical knowledge positions you well for frontend roles requiring deep JS expertise.");
+    }
+    if (skillScores.problemSolving > 7) {
+      insights.push("Your problem-solving approach would be valuable in frontend architecture positions.");
+    }
+  } else if (roleLower.includes('backend')) {
+    if (avgScore > 7 && difficulty === 'hard') {
+      insights.push("Your performance indicates readiness for senior backend engineering roles.");
+    }
+  } else if (roleLower.includes('full')) {
+    if (skillScores.technical > 6 && skillScores.problemSolving > 6) {
+      insights.push("Your balanced skillset is well-suited for full-stack positions requiring versatility.");
+    }
+  }
+  
+  if (skillScores.leadership > 7) {
+    insights.push("Consider roles with team leadership opportunities, as you communicate leadership experience effectively.");
+  }
+  
+  if (skillScores.communication > 7 && skillScores.technical > 6) {
+    insights.push("Your combination of communication skills and technical knowledge would be valuable in client-facing engineering roles.");
+  }
+  
+  if (insights.length === 0) {
+    if (avgScore > 6) {
+      insights.push(`You demonstrate the core competencies needed for ${role} positions. Focus on highlighting your strengths during interviews.`);
+    } else {
+      insights.push(`With additional preparation in the highlighted areas, you'll be better positioned for ${role} opportunities.`);
+    }
+  }
+  
+  return insights;
+}
+
+// Generate learning resource recommendations
+function generateLearningResources(weaknesses, skillScores, role) {
+  const resources = [];
+  const roleLower = role.toLowerCase();
+  
+  if (roleLower.includes('frontend')) {
+    if (skillScores.technical < 7) {
+      resources.push({
+        title: "Frontend Masters JavaScript Path",
+        type: "course",
+        description: "Comprehensive JavaScript courses from basics to advanced patterns"
+      });
+    }
+    if (weaknesses.some(w => w.includes('design'))) {
+      resources.push({
+        title: "UI/UX Design for Developers",
+        type: "book",
+        description: "Learn design principles applicable to frontend development"
+      });
+    }
+  } else if (roleLower.includes('backend')) {
+    if (skillScores.technical < 7) {
+      resources.push({
+        title: "System Design Interview",
+        type: "book",
+        description: "Step-by-step guide to ace the system design interview"
+      });
+    }
+    if (weaknesses.some(w => w.includes('performance'))) {
+      resources.push({
+        title: "Database Performance Optimization",
+        type: "course",
+        description: "Techniques for improving database query performance"
+      });
+    }
+  }
+  
+  if (skillScores.communication < 7) {
+    resources.push({
+      title: "STAR Method for Technical Interviews",
+      type: "article",
+      description: "Framework for structuring behavioral interview responses"
+    });
+  }
+  
+  if (skillScores.behavioral < 7) {
+    resources.push({
+      title: "Cracking the Coding Interview",
+      type: "book",
+      description: "Comprehensive interview preparation guide with practice problems"
+    });
+  }
+  
+  if (resources.length < 3) {
+    resources.push({
+      title: "Behavioral Interview Preparation",
+      type: "video",
+      description: "Tips and examples for answering common behavioral questions"
+    });
+  }
+  
+  return resources.slice(0, 3);
+}
+
+export default interviewService;

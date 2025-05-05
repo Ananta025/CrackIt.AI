@@ -11,7 +11,6 @@ import authMiddleware from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// Fix: Use the middleware function correctly
 // Add authentication to routes that need it
 router.use(authMiddleware.authenticateUser);
 

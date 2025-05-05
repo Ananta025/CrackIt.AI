@@ -1,5 +1,5 @@
 import Interview from "../models/interviewModel.js";
-import aiService from "../services/interviewService.js";
+import interviewService from "../services/interviewService.js";
 
 const startInterview = async (req, res) => {
   const { user, type, settings, userName } = req.body;
@@ -18,13 +18,20 @@ const startInterview = async (req, res) => {
 
   try {
     // Create new interview with user name for personalization
-    const interview = await Interview.create({
+    // Ensure userName is properly sanitized and available
+    const updatedSettings = {
+      ...settings,
+      userName: userName || settings.userName || 'there'
+    };
+    
+    // Log the name being used for debugging
+    console.log(`Starting interview for user: ${updatedSettings.userName}`);
+    
+    const interview = await interviewService.createInterview(
       user,
       type,
-      settings,
-      status: "in-progress",
-      userName: userName || req.user?.name || "Candidate" // Store user name for personalization
-    });
+      updatedSettings
+    );
 
     return res.status(201).json({
       message: "Interview started successfully",
@@ -39,7 +46,17 @@ const startInterview = async (req, res) => {
 
 const sendMessage = async (req, res) => {
   try {
-    const { message, interviewId, askedQuestions, isLastQuestion } = req.body;
+    const { 
+      message, 
+      interviewId, 
+      askedQuestions, 
+      isLastQuestion, 
+      forceNew,
+      questionIndex,
+      nextQuestionIndex,
+      isFirstQuestion,
+      userName // Make sure we capture the userName when sent from client
+    } = req.body;
 
     if (!message) {
       return res.status(400).json({ message: "Message is required" });
@@ -87,102 +104,135 @@ const sendMessage = async (req, res) => {
       });
     }
 
-    // Check if this is the first message
-    const isFirstMessage = interview.questions.length === 0 && 
-                          message.toLowerCase().includes("ready to begin");
-
-    // Track asked questions from client to prevent repetition
-    if (!interview.askedQuestions) {
-      interview.askedQuestions = [];
-    }
-    
-    if (askedQuestions && Array.isArray(askedQuestions)) {
-      // Filter out duplicates before adding
-      askedQuestions.forEach(q => {
-        if (!interview.askedQuestions.includes(q)) {
-          interview.askedQuestions.push(q);
-        }
-      });
-    }
-
-    // Process the user response with our AI service
-    let aiResponse;
-    try {
-      aiResponse = await aiService.processUserResponse(
-        message,
-        interview.type,
-        interview
-      );
-    } catch (serviceError) {
-      console.error("Error in AI service:", serviceError);
-      // Provide a fallback response when the AI service fails
-      aiResponse = {
-        response: `Thank you for your response. Let me ask you another question about ${interview.settings.focus?.[0] || interview.type}. Could you describe a challenging problem you've solved in this area?`,
-        feedback: {
-          strengths: ["You provided a detailed response", "You addressed the key points"],
-          improvements: ["Consider providing more specific examples", "Structure your answers using the STAR method"],
-          score: 6,
-          suggestedTopics: ["Specific technical challenges", "Problem-solving approach", "Results and impact"]
-        },
-        lastQuestion: interview.questions.length > 0 ? 
-          interview.questions[interview.questions.length - 1].text : 
-          "Tell me about your experience"
-      };
-    }
-
-    if (!aiResponse) {
-      return res.status(500).json({ message: "Error processing AI response" });
-    }
-
-    // For the first message, we don't store it as an answer but just get the first question
-    if (isFirstMessage) {
-      // Save the interview with potentially updated askedQuestions
+    // Initialize questions array if needed
+    if (!interview.questions) {
+      console.log(`Initializing questions array for interview ${interviewId}`);
+      interview.questions = [];
       await interview.save();
-      
-      return res.json({
-        message: aiResponse.response,
-        feedback: null,
-        interviewEnded: false,
-      });
     }
-
-    // Update interview in database with the new question and answer
-    interview.questions.push({
-      text: interview.questions.length === 0
-        ? aiResponse.lastQuestion
-        : interview.questions[interview.questions.length - 1].text,
-      answer: message,
-      feedback: aiResponse.feedback,
-    });
-
-    // Check if interview should end based on max questions or explicit request
-    const maxQuestions = getMaxQuestions(interview.settings.duration);
-    const shouldInterviewEnd = isLastQuestion || interview.questions.length >= maxQuestions;
     
-    console.log(`Question count: ${interview.questions.length}, Max: ${maxQuestions}, Should end: ${shouldInterviewEnd}`);
-
-    if (shouldInterviewEnd) {
-      interview.status = "completed";
-      interview.endTime = new Date();
-      interview.duration = Math.round(
-        (interview.endTime - interview.startTime) / (1000 * 60)
-      );
-
-      // Generate results and clean up context
-      interview.results = await aiService.generateInterviewResults(interview);
-      aiService.clearInterviewContext(interviewId);
-      
-      // Signal to client that interview has ended
-      aiResponse.interviewEnded = true;
+    // Determine if this is the first message
+    const isActualFirstMessage = isFirstQuestion || interview.questions.length === 0;
+    
+    // Track asked questions from client to prevent repetition
+    let currentAskedQuestions = Array.isArray(askedQuestions) ? askedQuestions : [];
+    
+    // Determine current question index based on input or current state
+    // This is important for the sequential question numbering
+    const currentQuestionIdx = questionIndex !== null ? 
+      questionIndex : 
+      Math.max(0, interview.questions.length - 1);
+    
+    console.log(`Processing message for question ${currentQuestionIdx + 1}, forceNew=${forceNew}, isFirstMessage=${isActualFirstMessage}`);
+    
+    // Use the firstName from the request if available
+    if (userName && interview.settings) {
+      // Update interview settings with the latest name if needed
+      if (userName !== interview.settings.userName) {
+        interview.settings.userName = userName;
+        await interview.save();
+        console.log(`Updated interview ${interviewId} with user name: ${userName}`);
+      }
     }
-
-    await interview.save();
-
-    res.json({
-      message: aiResponse.response,
-      feedback: aiResponse.feedback,
-      interviewEnded: shouldInterviewEnd || aiResponse.interviewEnded,
-    });
+    
+    try {
+      // Process answer if not first message, not forcing a new question
+      let answerAnalysis = null;
+      if (!isActualFirstMessage && !forceNew) {
+        console.log(`Processing answer for question ${currentQuestionIdx + 1}`);
+        
+        // Add validation to ensure question exists
+        if (currentQuestionIdx >= interview.questions.length || 
+            !interview.questions[currentQuestionIdx]?.text) {
+          
+          // Create placeholder question if needed
+          if (currentQuestionIdx >= interview.questions.length) {
+            while (interview.questions.length <= currentQuestionIdx) {
+              interview.questions.push({
+                text: "Untitled question",
+                status: 'generated'
+              });
+            }
+          } else if (!interview.questions[currentQuestionIdx].text) {
+            interview.questions[currentQuestionIdx].text = "Untitled question";
+            interview.questions[currentQuestionIdx].status = 'generated';
+          }
+          
+          // Save the interview with placeholders
+          await interview.save();
+        }
+        
+        // Process the answer and capture the analysis
+        const processResult = await interviewService.processAnswer(interviewId, message, currentQuestionIdx);
+        answerAnalysis = processResult.answerAnalysis;
+      } else if (isActualFirstMessage) {
+        // For the first question, still analyze the message to use it in the second question
+        const dummyQuestion = "introduce yourself";
+        // Ensure we're getting a complete analysis with all extracted information
+        answerAnalysis = await interviewService.analyzeIntroduction(message, dummyQuestion);
+        console.log("Analyzed introduction:", answerAnalysis);
+      }
+      
+      // If this is the last question, wrap up the interview
+      if (isLastQuestion) {
+        const finalResponse = await interviewService.generateQuestion(
+          interview,
+          message,
+          currentAskedQuestions,
+          true // This is the last question
+        );
+        
+        // Generate the final results
+        await interviewService.generateResults(interviewId);
+        
+        return res.status(200).json({
+          message: finalResponse.message,
+          interviewEnded: true,
+          hasResults: true
+        });
+      }
+      
+      // Generate next question with explicit target index if provided
+      const targetQuestionIndex = nextQuestionIndex !== null ? 
+        nextQuestionIndex : 
+        (forceNew ? currentQuestionIdx : currentQuestionIdx + 1);
+      
+      console.log(`Generating question at index ${targetQuestionIndex}`);
+      
+      // Make sure to pass the answer analysis to the generateQuestion function
+      const nextResponse = await interviewService.generateQuestion(
+        interview,
+        message,
+        currentAskedQuestions,
+        false, // Not last question
+        targetQuestionIndex, // Pass the explicit target question index
+        answerAnalysis // Pass the answer analysis
+      );
+      
+      // Return with improved response data
+      return res.status(200).json({
+        message: nextResponse.message,
+        questionIndex: nextResponse.questionIndex, // Return the question index
+        nextQuestionIndex: nextResponse.questionIndex + 1, // Help client track next index
+        feedback: null, // No feedback during interview
+        interviewEnded: false
+      });
+    } catch (processingError) {
+      // Special handling for question not found errors - return a more actionable error
+      if (processingError.message && processingError.message.includes("not found or not generated")) {
+        console.error("Question not found error:", processingError.message);
+        
+        return res.status(400).json({
+          message: processingError.message,
+          error: "QUESTION_NOT_FOUND",
+          suggestion: "Force new question generation" 
+        });
+      }
+      
+      // Rethrow other errors
+      throw processingError;
+    }
+    
   } catch (error) {
     console.error("Interview error:", error);
     res.status(500).json({ message: error.message });
@@ -192,11 +242,9 @@ const sendMessage = async (req, res) => {
 // Get interview history for a user
 const getInterviewHistory = async (req, res) => {
   try {
-    const interviews = await Interview.find({ user: req.user._id })
-      .populate("user", "name email")
-      .sort({ createdAt: -1 });
+    const interviews = await interviewService.getInterviewHistory(req.user._id);
 
-    // Transform interviews for frontend
+    // Transform interviews for frontend if needed
     const transformedInterviews = interviews.map((interview) => ({
       id: interview._id,
       title: getInterviewTitle(interview),
@@ -222,17 +270,50 @@ const getInterviewHistory = async (req, res) => {
 // Get interview details by ID
 const getInterviewById = async (req, res) => {
   try {
-    const interview = await Interview.findOne({
-      _id: req.params.id,
-      user: req.user._id,
-    });
-
-    if (!interview) {
-      return res.status(404).json({ message: "Interview not found" });
+    const interviewId = req.params.id;
+    
+    if (!interviewId) {
+      return res.status(400).json({ message: "Interview ID is required" });
+    }
+    
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ 
+        message: "Authentication failed", 
+        error: "User not authenticated"
+      });
+    }
+    
+    console.log(`Getting interview ${interviewId} for user ${req.user._id}`);
+    
+    // Get interview with potential error catching
+    let interview;
+    try {
+      interview = await interviewService.getInterviewById(interviewId);
+      
+      if (!interview) {
+        return res.status(404).json({
+          message: `Interview with ID ${interviewId} not found`
+        });
+      }
+    }
+    catch (fetchError) {
+      console.error("Error fetching interview:", fetchError);
+      return res.status(404).json({
+        message: `Failed to retrieve interview: ${fetchError.message}`
+      });
     }
 
+    // Check if interview belongs to this user - with more robust error handling
+    if (!interview.user || interview.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: 'Access denied',
+        error: 'You do not have permission to access this interview'
+      });
+    }
+    
     res.json({ interview });
   } catch (error) {
+    console.error("Interview detail error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -259,19 +340,6 @@ const calculateDuration = (interview) => {
   return 0;
 };
 
-const getMaxQuestions = (duration) => {
-  switch (duration) {
-    case "short":
-      return 5;
-    case "medium":
-      return 10;
-    case "long":
-      return 15;
-    default:
-      return 10;
-  }
-};
-
 const getInterviewTitle = (interview) => {
   const typeMap = {
     technical: "Technical Interview",
@@ -284,7 +352,7 @@ const getInterviewTitle = (interview) => {
 
 const getInterviewTags = (interview) => {
   const tags = [];
-  if (interview.settings.difficulty) {  // Fixed from diffiulty to difficulty
+  if (interview.settings.difficulty) {
     tags.push(
       interview.settings.difficulty.charAt(0).toUpperCase() +
         interview.settings.difficulty.slice(1)
@@ -327,12 +395,12 @@ const calculateUserStats = (interviews) => {
   }
 
   const totalScore = completedInterviews.reduce(
-    (acc, Interview) => acc + (Interview.results?.overallScore || 0),
+    (acc, interview) => acc + (interview.results?.overallScore || 0),
     0
   );
 
   stats.averageScore =
-    Math.round((totalScore / completedInterviews.length) * 10) / 10; // Round to 2 decimal places
+    Math.round((totalScore / completedInterviews.length) * 10) / 10; // Round to 1 decimal place
 
   // Calculate average skill scores
   completedInterviews.forEach((interview) => {
@@ -347,7 +415,7 @@ const calculateUserStats = (interviews) => {
 
   Object.keys(stats.scores).forEach((skill) => {
     stats.scores[skill] =
-      Math.round((stats.scores[skill] / completedInterviews.length) * 10) / 10; // Round to 2 decimal places
+      Math.round((stats.scores[skill] / completedInterviews.length) * 10) / 10; // Round to 1 decimal place
   });
 
   const skillScores = Object.entries(stats.scores).map(([skill, score]) => ({ skill, score }));

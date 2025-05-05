@@ -24,7 +24,22 @@ const authenticateUser = async (req, res, next) => {
         }
 
         // Verify the token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (tokenError) {
+            return res.status(httpStatus.UNAUTHORIZED).json({
+                message: 'Invalid authentication token',
+                error: tokenError.message
+            });
+        }
+        
+        if (!decoded || !decoded.id) {
+            return res.status(httpStatus.UNAUTHORIZED).json({
+                message: 'Invalid token payload',
+                error: 'Token missing required data'
+            });
+        }
         
         // Find the user
         const user = await userModel.findById(decoded.id);

@@ -127,8 +127,31 @@ export default function Dashboard() {
 
           // Process monthly data for line chart
           processInterviewData(interviewHistory.interviews);
+        } else if (Array.isArray(interviewHistory)) {
+          // Handle array response format
+          if (interviewHistory.length > 0) {
+            setHasInterviewData(true);
+            
+            // Format interview data
+            const formattedData = interviewHistory
+              .slice(0, 5)
+              .map((interview) => ({
+                role: interview.type || "Interview",
+                score: interview.results?.overallScore || 0,
+                date: new Date(interview.createdAt || interview.startTime).toLocaleDateString(),
+              }));
+            
+            setInterviewData(formattedData);
+            
+            // Process monthly data for line chart
+            processInterviewData(interviewHistory);
+          } else {
+            console.log("No interview history found");
+            setHasInterviewData(false);
+            setInterviewData([]);
+          }
         } else {
-          console.log("No interview history found");
+          console.log("No interview history found or invalid format");
           setHasInterviewData(false);
           setInterviewData([]);
         }
@@ -155,6 +178,11 @@ export default function Dashboard() {
 
   // Process interview data to generate monthly stats
   const processInterviewData = (interviews) => {
+    if (!Array.isArray(interviews) || interviews.length === 0) {
+      setInterviewMonthlyData({ labels: [], data: [] });
+      return;
+    }
+    
     // Group interviews by month and calculate average scores
     const monthlyData = {};
 

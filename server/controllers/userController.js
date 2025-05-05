@@ -37,6 +37,7 @@ const registerUser = async (req, res) => {
         return res.status(httpStatus.CREATED).json({
             message: "User created successfully",
             userId : newUser._id,
+            userName : newUser.name,
             token
         });
 
@@ -75,8 +76,10 @@ const loginUser = async (req, res) => {
         return res.status(httpStatus.OK).json({
             message: "User logged in successfully",
             userId : user._id,
+            userName : user.name,
             token
         });
+        
 
     }catch(error){
         return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message: "Internal server error", error: error.message});

@@ -28,63 +28,57 @@ async function scrapeProfile(url) {
         );
       }
 
-      // NOTE: LinkedIn has strong protection against scraping
-      // In production, you would need to:
-      // 1. Use a proper LinkedIn API with authentication
-      // 2. OR use a specialized scraping service with proxy rotation
+      // Extract username from URL
+      const username = url.split('linkedin.com/in/')[1]?.split('/')[0]?.split('?')[0] || '';
       
-      try {
-        // Attempt to scrape with basic approach
-        const response = await axios.get(url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Cookie': config.linkedin?.cookie || ''
-          },
-          timeout: 10000 // 10 second timeout
-        });
-        
-        const $ = cheerio.load(response.data);
-        // Extract profile information
-        const profileData = {
-            name: $('h1.text-heading-xlarge').text().trim(),
-            headline: $('div.text-body-medium').text().trim(),
-            about: $('section.summary div.display-flex').text().trim(),
-            experience: $('section#experience ul.pvs-list li').map((i, el) => {
-              return $(el).text().trim();
-            }).get(),
-            education: $('section#education ul.pvs-list li').map((i, el) => {
-              return $(el).text().trim();
-            }).get(),
-            skills: $('section#skills ul.pvs-list li').map((i, el) => {
-              return $(el).text().trim();
-            }).get()
-        };
-        
-        return profileData;
-      } catch (scrapingError) {
-        console.error('Direct scraping failed, falling back to manual entry:', scrapingError);
-        
-        // Extract username from URL to provide some basic info
-        const username = url.split('linkedin.com/in/')[1]?.split('/')[0] || '';
-        
-        // Return placeholder data that requires manual completion
-        return {
-          name: '',
-          headline: '',
-          about: '',
-          experience: [],
-          education: [],
-          skills: [],
-          scraped: false,
-          profileUrl: url,
-          username,
-          error: 'LinkedIn profile could not be automatically scraped. Please provide information manually.'
-        };
+      if (!username) {
+        throw new ScrapingError(
+          'Could not extract username from LinkedIn URL',
+          { url }
+        );
       }
+      
+      console.log(`LinkedIn scraping attempted for: ${username}`);
+      
+      // IMPORTANT: Direct scraping of LinkedIn is not reliable due to their anti-scraping measures
+      // Return a response indicating manual entry is required
+      return {
+        name: '',
+        headline: '',
+        about: '',
+        experience: [],
+        education: [],
+        skills: [],
+        scraped: false,
+        profileUrl: url,
+        username,
+        error: 'LinkedIn profiles cannot be automatically scraped due to LinkedIn\'s security measures. Please enter your profile information manually.'
+      };
+      
+      /* 
+      // This code is intentionally commented out as it will not work reliably
+      // In a production environment, you would need to:
+      // 1. Use LinkedIn's official API with proper authentication
+      // 2. Use a specialized scraping service with proxy rotation and browser emulation
+      // 3. Or guide users to manually enter their profile data
+      
+      const response = await axios.get(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Cookie': config.linkedin?.cookie || ''
+        },
+        timeout: 10000 // 10 second timeout
+      });
+      
+      const $ = cheerio.load(response.data);
+      // Extract profile information
+      // ...
+      */
+      
     } catch (error) {
       console.error('LinkedIn scraping error:', error);
       throw new ScrapingError(
-        'Failed to process LinkedIn profile. Please enter your profile details manually.',
+        'LinkedIn profile could not be accessed. Please enter your profile details manually.',
         { url, originalError: error.message }
       );
     }
