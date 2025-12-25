@@ -9,27 +9,27 @@ const resumeFormSteps = [
         id: 'name',
         label: 'Full Name',
         type: 'text',
-        placeholder: 'John Doe',
+        placeholder: 'Rahul Sharma',
         required: true
       },
       {
         id: 'email',
         label: 'Email Address',
         type: 'email',
-        placeholder: 'john.doe@example.com',
+        placeholder: 'rahul.sharma@example.com',
         required: true
       },
       {
         id: 'phone',
         label: 'Phone Number',
         type: 'tel',
-        placeholder: '(123) 456-7890'
+        placeholder: '+91 98765 43210',
       },
       {
         id: 'linkedin',
         label: 'LinkedIn Profile',
         type: 'text',
-        placeholder: 'linkedin.com/in/johndoe'
+        placeholder: 'linkedin.com/in/rahulsharma'
       },
       {
         id: 'location',

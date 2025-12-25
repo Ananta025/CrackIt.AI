@@ -1,15 +1,15 @@
-import { 
-  processResumeFile,
-  processResumeFileStructured,
-  analyzeResumeStructured,
-  generateResumeSection
+import {
+  processResumeFileStructured,
+  analyzeResumeStructured,
+  generateResumeSection
 } from '../services/resumeService.js';
 import ResumeTemplate from '../models/resumeTemplateModel.js';
-import UserResume from '../models/userResumeModel.js';
+import UserResume from '../models/userResumeModel.js'; // Assuming this model exists
 import { generateResumePDF } from '../utils/pdfGenerator.js';
 import config from '../config/config.js';
 import mongoose from 'mongoose';
 import { responseFormatter } from '../utils/responseFormatter.js';
+import { getAllTemplates as getResumeTemplatesFromTemplateController } from './templateController.js';
 
 /**
  * Controller to handle resume analysis
@@ -42,28 +42,11 @@ export const analyzeResume = async (req, res) => {
 
 /**
  * Get available resume templates
+ * This function now delegates to the ResumeTemplateController's getAllTemplates
  */
 export const getResumeTemplates = async (req, res) => {
-  try {
-    const templates = await ResumeTemplate.find({ isActive: true }, 
-      'name category description previewImage');
-    
-    if (templates.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No templates available. Please create a template first.'
-      });
-    }
-    
-    return res.status(200).json(responseFormatter.formatResumeTemplatesResponse(templates));
-  } catch (error) {
-    console.error('Error fetching templates:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to fetch resume templates',
-      error: error.message
-    });
-  }
+  // Delegate to the actual template controller function
+  return getResumeTemplatesFromTemplateController(req, res);
 };
 
 /**
@@ -120,10 +103,19 @@ export const saveResume = async (req, res) => {
       });
     }
     
-    // Process content to ensure data types are correct
+    // Process content to ensure data types are correct for saving to DB
+    // Specifically, ensure summary is a plain string.
+    let processedSummaryForSave = '';
+    if (typeof content.summary === 'string') {
+        processedSummaryForSave = content.summary;
+    } else if (typeof content.summary === 'object' && content.summary !== null) {
+        // If it's an object, try to extract the actual summary text
+        processedSummaryForSave = content.summary.summary || content.summary.text || content.summary.content || JSON.stringify(content.summary);
+    }
+
     const processedContent = {
       ...content,
-      summary: typeof content.summary === 'string' ? content.summary : JSON.stringify(content.summary),
+      summary: processedSummaryForSave, // Ensure summary is a plain string here
     };
     
     // Find template by name or ID
@@ -139,11 +131,11 @@ export const saveResume = async (req, res) => {
         template = await ResumeTemplate.findOne({ name: { $regex: new RegExp(`^${templateId}$`, 'i') } });
       }
       
-      // If still not found, use default template
+      // If still not found, use default template (e.g., 'Modern')
       if (!template) {
         template = await ResumeTemplate.findOne({ name: 'Modern' });
         if (!template) {
-          // Get the first available template as a fallback
+          // Get the first available template as a fallback if 'Modern' is also not found
           template = await ResumeTemplate.findOne();
         }
       }
@@ -246,9 +238,10 @@ export const generatePDF = async (req, res) => {
       pdfBuffer = await generateResumePDF(template, resume.content);
     } catch (error) {
       console.error('PDF generation failed:', error);
+      // Crucial: Re-throw the specific Puppeteer error message to the client
       return res.status(500).json({
         success: false,
-        message: `PDF generation failed: ${error.message}`
+        message: `PDF generation failed: ${error.message}` // Pass the specific error message
       });
     }
     
@@ -284,10 +277,10 @@ export const generatePDF = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('PDF generation error:', error);
+    console.error('PDF generation error (top level):', error); // Catch any unexpected errors
     return res.status(500).json({
       success: false,
-      message: 'Failed to generate PDF',
+      message: 'Failed to generate PDF due to an unexpected error',
       error: error.message
     });
   }

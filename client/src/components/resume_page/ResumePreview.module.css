@@ -4,7 +4,7 @@
   color: #111827;
   border-radius: 0.375rem;
   overflow: hidden;
-  min-height: 29.7cm; 
+  min-height: 29.7cm;
   position: relative;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
@@ -26,6 +26,20 @@
 
 .previewContent::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
+}
+
+/* Common bullet point style */
+.bulletItem {
+  position: relative;
+  padding-left: 1rem; /* Space for the bullet */
+  margin-bottom: 0.25rem;
+}
+
+.bulletItem::before {
+  content: '•'; /* Unicode bullet character */
+  position: absolute;
+  left: 0;
+  color: #4b5563; /* Adjust color as needed */
 }
 
 /* Modern Template */
@@ -188,16 +202,21 @@
 }
 
 .classicCompanyHeader {
+  display: flex; /* Added display flex for alignment */
+  justify-content: space-between; /* To align title/company and date */
   margin-bottom: 0.375rem;
   min-height: 1.5rem;
+  font-weight: bold; /* Consistent with your component */
 }
 
+/* Note: classicDescription applies to main description blocks */
 .classicDescription {
   max-height: 12rem;
   overflow: auto;
   font-size: clamp(0.75rem, 1.5vw, 0.875rem);
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
+  white-space: pre-line; /* Added for consistency */
 }
 
 .classicDescription::-webkit-scrollbar {
@@ -206,6 +225,364 @@
 
 .classicSkills {
   min-height: 2rem;
+  display: flex; /* Added for skill item layout */
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* New: specific styles for classic skills, projects, and certifications if needed, or reuse .modernSkill */
+.classicSkillItem {
+  background-color: #f3f4f6; /* Light gray background */
+  color: #333;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid #e0e0e0;
+}
+
+.classicProjectLink {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.classicProjectLink:hover {
+  text-decoration: underline;
+}
+
+/* --- Creative Template --- */
+.templateCreative {
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+}
+
+.creativeHeader {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); /* Purple gradient */
+  color: white;
+  padding: 2rem 1.5rem;
+  border-radius: 0.5rem; /* Rounded corners */
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.creativeName {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.creativeContact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.25rem;
+  font-size: 0.938rem;
+}
+
+.creativeContact span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.creativeSection {
+  margin-bottom: 2rem;
+}
+
+.creativeSectionTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #8b5cf6; /* Primary accent color */
+  margin-bottom: 1rem;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.creativeSectionTitle::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 3rem; /* Underline length */
+  height: 3px;
+  background: #8b5cf6;
+}
+
+.creativeSummary {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.creativeExperienceItem,
+.creativeEducationItem,
+.creativeProjectItem,
+.creativeCertificationItem {
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  border-left: 4px solid #6366f1; /* Accent border */
+}
+
+.creativeJobHeader,
+.creativeEducationHeader,
+.creativeProjectHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.creativeJobTitle,
+.creativeDegree,
+.creativeProjectName,
+.creativeCertName {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #6366f1; /* Accent color for titles */
+}
+
+.creativeJobCompany,
+.creativeInstitution,
+.creativeProjectTechnologies,
+.creativeIssuer {
+  font-style: italic;
+  font-size: 0.938rem;
+  color: #555;
+}
+
+.creativeJobDuration,
+.creativeEducationDuration,
+.creativeCertDetails {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.creativeDescription {
+  font-size: 0.938rem;
+  color: #4b5563;
+  line-height: 1.5;
+  margin-top: 0.5rem;
+  white-space: pre-line;
+}
+
+.creativeSkillsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.creativeSkillItem {
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 1.5rem; /* Pill shape */
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.creativeProjectLink {
+  color: #8b5cf6;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.creativeProjectLink:hover {
+  text-decoration: underline;
+}
+
+/* --- Minimal Template --- */
+.templateMinimal {
+  font-family: 'Roboto', sans-serif;
+  color: #333;
+}
+
+.minimalHeader {
+  text-align: center;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #eee;
+}
+
+.minimalName {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 0.5rem;
+}
+
+.minimalContact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.minimalSection {
+  margin-bottom: 1.75rem;
+}
+
+.minimalSectionTitle {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #ccc;
+  text-transform: uppercase;
+}
+
+.minimalSummaryText,
+.minimalDescription {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.minimalExperienceItem,
+.minimalEducationItem,
+.minimalProjectItem,
+.minimalCertificationItem {
+  margin-bottom: 1rem;
+}
+
+.minimalJobTitle,
+.minimalDegree,
+.minimalProjectName,
+.minimalCertName {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+  color: #444;
+}
+
+.minimalDate {
+  font-size: 0.85rem;
+  color: #777;
+  margin-bottom: 0.5rem;
+}
+
+.minimalProjectTech {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.2rem;
+}
+
+.minimalSkillsList {
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.6;
+}
+
+.minimalProjectLink {
+  color: #007bff; /* Standard link blue */
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.minimalProjectLink:hover {
+  text-decoration: underline;
+}
+
+/* --- Executive Template --- */
+.templateExecutive {
+  font-family: 'Georgia', serif;
+  color: #1a202c; /* Darker, more professional text */
+}
+
+.executiveHeader {
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 3px solid #1e3a8a; /* Strong, professional blue line */
+}
+
+.executiveName {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e3a8a; /* Professional blue */
+  margin-bottom: 0.75rem;
+}
+
+.executiveContact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  font-size: 0.95rem;
+  color: #4a5568; /* Slightly muted for contact info */
+}
+
+.executiveSection {
+  margin-bottom: 2rem;
+}
+
+.executiveSectionTitle {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #a0aec0; /* Subtle underline */
+  text-transform: uppercase;
+  letter-spacing: 0.08em; /* Spaced out for formal look */
+}
+
+.executiveSummaryText,
+.executiveDescription {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #2d3748;
+}
+
+.executiveExperienceItem,
+.executiveEducationItem,
+.executiveProjectItem,
+.executiveCertificationItem {
+  margin-bottom: 1.5rem;
+  padding-left: 0.5rem;
+  border-left: 2px solid #cbd5e0; /* Subtle left border */
+}
+
+.executiveJobTitle,
+.executiveDegree,
+.executiveProjectName,
+.executiveCertName {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+  color: #2d3748;
+}
+
+.executiveDate {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.executiveProjectTech {
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: 0.2rem;
+}
+
+.executiveSkillsList {
+  font-size: 1rem;
+  color: #2d3748;
+  line-height: 1.7;
+  /* Can use flexbox for a tagged look or just comma-separated */
+}
+
+.executiveProjectLink {
+  color: #1e3a8a;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.executiveProjectLink:hover {
+  text-decoration: underline;
 }
 
 /* Placeholder styles */
